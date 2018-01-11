@@ -34,6 +34,7 @@ import math
 import requests
 from requests.exceptions import HTTPError, ConnectionError
 from clint.textui import colored, progress
+from mutagen.easyid3 import EasyID3
 
 logger = logging.getLogger(__file__)
 ch = logging.StreamHandler()
@@ -312,6 +313,22 @@ def run():
                     if chunk:
                         outfile.write(chunk)
             os.rename(part_tmp_filename, part_filename)
+
+            try:
+                audiofile = EasyID3(part_filename)
+                if not audiofile.get('title'):
+                    audiofile['title'] = u'{}'.format(title)
+                if not audiofile.get('album'):
+                    audiofile['album'] = u'{}'.format(title)
+                if not audiofile.get('artist'):
+                    audiofile['artist'] = u'{}'.format(authors[0])
+                if not audiofile.get('albumartist'):
+                    audiofile['albumartist'] = u'{}'.format(authors[0])
+                if not audiofile.get('tracknumber'):
+                    audiofile['tracknumber'] = u'{:02d}'.format(part_number)
+                audiofile.save()
+            except Exception as e:
+                logger.warn('Error saving ID3: {}'.format(str(e)))
 
             logger.info('Saved {}'.format(colored.magenta(part_filename)))
 
