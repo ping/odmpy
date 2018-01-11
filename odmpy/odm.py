@@ -79,16 +79,22 @@ def run():
     subparsers = parser.add_subparsers(
         title='Available commands', dest='subparser_name',
         help='To get more help, use the -h option with the command.')
-    parser_info = subparsers.add_parser('info', help='Get information about a loan file.')
+    parser_info = subparsers.add_parser(
+        'info', description='Get information about a loan file.',
+        help='Get information about a loan file.')
     parser_info.add_argument('odm_file', type=str, help='ODM file path')
 
-    parser_dl = subparsers.add_parser('dl', help='Download from a loan file.')
+    parser_dl = subparsers.add_parser(
+        'dl', description='Download from a loan file.',
+        help='Download from a loan file.')
     parser_dl.add_argument(
         '-d', '--downloaddir', dest='download_dir', default='.',
         help='Download folder path.')
     parser_dl.add_argument('odm_file', type=str, help='ODM file path')
 
-    parser_ret = subparsers.add_parser('ret', help='Return a loan file.')
+    parser_ret = subparsers.add_parser(
+        'ret', description='Return a loan file.',
+        help='Return a loan file.')
     parser_ret.add_argument('odm_file', type=str, help='ODM file path')
     # parser_info.add_argument('odm_file', type=str, help='ODM file path')
 
@@ -144,14 +150,16 @@ def run():
             u'{} ({})'.format(c.text, c.attrib['role'])
             for c in metadata.find('Creators')
         ]))))
-        logger.info(u'{:10} {}'.format('Publisher:', metadata.find('Publisher').text))
+        logger.info(u'{:10} {}'.format(
+            'Publisher:', metadata.find('Publisher').text))
         logger.info(u'{:10} {}'.format('Subjects:', u', '.join([
             c.text for c in metadata.find('Subjects')
         ])))
         logger.info(u'{:10} {}'.format('Languages:', u', '.join([
             c.text for c in metadata.find('Languages')
         ])))
-        logger.info(u'{:10} \n{}'.format('Description:', metadata.find('Description').text))
+        logger.info(u'{:10} \n{}'.format(
+            'Description:', metadata.find('Description').text))
 
         for formats in root.findall('Formats'):
             for f in formats:

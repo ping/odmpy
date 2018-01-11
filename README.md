@@ -37,14 +37,55 @@ Available commands:
 Version 0.1.0. Source at https://github.com/ping/odmpy/
 ```
 
+```
+usage: odmpy dl [-h] [-d DOWNLOAD_DIR] odm_file
+
+Download from a loan file.
+
+positional arguments:
+  odm_file              ODM file path
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
+                        Download folder path.
+```
+
+```
+usage: odmpy ret [-h] odm_file
+
+Return a loan file.
+
+positional arguments:
+  odm_file    ODM file path
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+```
+usage: odmpy info [-h] odm_file
+
+Get information about a loan file.
+
+positional arguments:
+  odm_file    ODM file path
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
 ### Examples
 
 ```bash
 
 # Download a book to MyLoans/
-odmpy dl -d 'MyLoans/' MyLoans/Book1.odm
+odmpy dl -d "MyLoans/" "MyLoans/Book1.odm"
 
 # Return Book1.odm
-odmpy ret MyLoans/Book1.odm
+odmpy ret "MyLoans/Book1.odm"
+
+# Get information about a loan Book1.odm
+odmpy info "MyLoans/Book1.odm"
 
 ```
