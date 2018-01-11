@@ -151,16 +151,13 @@ def run():
         logger.info(u'{:10} {}'.format('Title:', colored.blue(title)))
         logger.info(u'{:10} {}'.format('Creators:', colored.blue(u', '.join([
             u'{} ({})'.format(c.text, c.attrib['role'])
-            for c in metadata.find('Creators')
-        ]))))
+            for c in metadata.find('Creators')]))))
         logger.info(u'{:10} {}'.format(
             'Publisher:', metadata.find('Publisher').text))
         logger.info(u'{:10} {}'.format('Subjects:', u', '.join([
-            c.text for c in metadata.find('Subjects')
-        ])))
+            c.text for c in metadata.find('Subjects')])))
         logger.info(u'{:10} {}'.format('Languages:', u', '.join([
-            c.text for c in metadata.find('Languages')
-        ])))
+            c.text for c in metadata.find('Languages')])))
         logger.info(u'{:10} \n{}'.format(
             'Description:', metadata.find('Description').text))
 
