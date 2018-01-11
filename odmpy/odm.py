@@ -143,6 +143,8 @@ def run():
     authors = [
         c.text for c in metadata.find('Creators')
         if 'Author' in c.attrib.get('role', '')]
+    if not authors:
+        authors = [c.text for c in metadata.find('Creators')]
 
     if args.subparser_name == 'info':
         logger.info(u'{:10} {}'.format('Title:', colored.blue(title)))
@@ -192,7 +194,7 @@ def run():
 
     book_folder = os.path.join(
         args.download_dir,
-        "{} - {}".format(title, ', '.join(authors)))
+        u'{} - {}'.format(title, u', '.join(authors)))
     if not os.path.exists(book_folder):
         os.makedirs(book_folder)
 
@@ -273,13 +275,14 @@ def run():
         part_number = int(p['number'])
         part_filename = os.path.join(
             book_folder,
-            '{}.mp3'.format(
+            u'{}.mp3'.format(
                 slugify(u'{} - Part {:02d}'.format(
-                    title, part_number)
+                    title, part_number),
+                    allow_unicode=True
                 )
             )
         )
-        part_tmp_filename = '{}.part'.format(part_filename)
+        part_tmp_filename = u'{}.part'.format(part_filename)
 
         if os.path.isfile(part_filename):
             logger.warn('Already saved {}'.format(
