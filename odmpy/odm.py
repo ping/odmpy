@@ -72,16 +72,25 @@ def run():
         description='Download/return an Overdrive loan audiobook.',
         epilog='Version {}. Source at https://github.com/ping/odmpy/'.format(
             __version__))
-    parser.add_argument('odm_file', type=str, help='ODM file path')
-    parser.add_argument(
-        '-d', '--downloaddir', dest='download_dir', default='.',
-        help='Download folder path.')
-    parser.add_argument(
-        '-r', '--return', dest='is_return', action='store_true',
-        help='Return loan.')
     parser.add_argument(
         '-v', '--verbose', dest='verbose', action='store_true',
         help='Enable more verbose messages for debugging.')
+
+    subparsers = parser.add_subparsers(
+        title='Available commands', dest='subparser_name',
+        help='To get more help, use the -h option with the command.')
+    parser_info = subparsers.add_parser('info', help='Get information about a loan file.')
+    parser_info.add_argument('odm_file', type=str, help='ODM file path')
+
+    parser_dl = subparsers.add_parser('dl', help='Download from a loan file.')
+    parser_dl.add_argument(
+        '-d', '--downloaddir', dest='download_dir', default='.',
+        help='Download folder path.')
+    parser_dl.add_argument('odm_file', type=str, help='ODM file path')
+
+    parser_ret = subparsers.add_parser('ret', help='Return a loan file.')
+    parser_ret.add_argument('odm_file', type=str, help='ODM file path')
+    # parser_info.add_argument('odm_file', type=str, help='ODM file path')
 
     args = parser.parse_args()
     if args.verbose:
@@ -90,7 +99,7 @@ def run():
     xml_doc = xml.etree.ElementTree.parse(args.odm_file)
     root = xml_doc.getroot()
 
-    if args.is_return:
+    if args.subparser_name == 'ret':
         logger.info('Returning {} ...'.format(args.odm_file))
         early_return_url = root.find('EarlyReturnURL').text
         try:
@@ -128,6 +137,31 @@ def run():
     authors = [
         c.text for c in metadata.find('Creators')
         if 'Author' in c.attrib.get('role', '')]
+
+    if args.subparser_name == 'info':
+        logger.info(u'{:10} {}'.format('Title:', colored.blue(title)))
+        logger.info(u'{:10} {}'.format('Creators:', colored.blue(u', '.join([
+            u'{} ({})'.format(c.text, c.attrib['role'])
+            for c in metadata.find('Creators')
+        ]))))
+        logger.info(u'{:10} {}'.format('Publisher:', metadata.find('Publisher').text))
+        logger.info(u'{:10} {}'.format('Subjects:', u', '.join([
+            c.text for c in metadata.find('Subjects')
+        ])))
+        logger.info(u'{:10} {}'.format('Languages:', u', '.join([
+            c.text for c in metadata.find('Languages')
+        ])))
+        logger.info(u'{:10} \n{}'.format('Description:', metadata.find('Description').text))
+
+        for formats in root.findall('Formats'):
+            for f in formats:
+                logger.info(u'{:10} {}'.format('Format:', f.attrib['name']))
+                parts = f.find('Parts')
+                for p in parts:
+                    logger.info('  * {} - {} ({:,.0f}kB)'.format(
+                        p.attrib['name'], p.attrib['duration'],
+                        math.ceil(1.0 * int(p.attrib['filesize']) / 1024)))
+        sys.exit()
 
     download_baseurl = ''
     download_parts = []

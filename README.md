@@ -1,6 +1,6 @@
 # odmpy
 
-A simple console manager for OverDrive audiobook loans.
+A simple console manager for OverDrive audiobook loans. A python port of [overdrive](https://github.com/chbrown/overdrive).
 
 ## Features
 
@@ -20,19 +20,19 @@ pip uninstall odmpy
 ## Usage
 
 ```
-usage: odmpy [-h] [-d DOWNLOAD_DIR] [-r] [-v] odm_file
+usage: odmpy [-h] [-v] {info,dl,ret} ...
 
 Download/return an Overdrive loan audiobook.
 
-positional arguments:
-  odm_file              ODM file path
-
 optional arguments:
-  -h, --help            show this help message and exit
-  -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
-                        Download folder path.
-  -r, --return          Return loan.
-  -v, --verbose         Enable more verbose messages for debugging.
+  -h, --help     show this help message and exit
+  -v, --verbose  Enable more verbose messages for debugging.
+
+Available commands:
+  {info,dl,ret}  To get more help, use the -h option with the command.
+    info         Get information about a loan file.
+    dl           Download from a loan file.
+    ret          Return a loan file.
 
 Version 0.1.0. Source at https://github.com/ping/odmpy/
 ```
@@ -42,9 +42,9 @@ Version 0.1.0. Source at https://github.com/ping/odmpy/
 ```bash
 
 # Download a book to MyLoans/
-odmpy -d 'MyLoans/' MyLoans/Book1.odm
+odmpy dl -d 'MyLoans/' MyLoans/Book1.odm
 
 # Return Book1.odm
-odmpy -r MyLoans/Book1.odm
+odmpy ret MyLoans/Book1.odm
 
 ```
