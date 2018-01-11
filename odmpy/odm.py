@@ -95,7 +95,7 @@ def run():
         early_return_url = root.find('EarlyReturnURL').text
         try:
             early_return_res = requests.get(
-                early_return_url, headers={'User-Agent': UA})
+                early_return_url, headers={'User-Agent': UA_LONG})
             early_return_res.raise_for_status()
             logger.info('Loan returned successfully: {}'.format(args.odm_file))
         except HTTPError as he:
