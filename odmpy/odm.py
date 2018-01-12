@@ -234,12 +234,14 @@ def run():
             acquisition_url,
             params=params,
             headers={'User-Agent': UA},
-            timeout=10
+            timeout=10,
+            stream=True
         )
         try:
             license_res.raise_for_status()
-            with open(license_file, 'w') as outfile:
-                outfile.write(license_res.content)
+            with open(license_file, 'wb') as outfile:
+                for chunk in license_res.iter_content(1024):
+                    outfile.write(chunk)
             logger.debug('Saved license file {}'.format(license_file))
 
         except HTTPError as he:
