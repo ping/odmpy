@@ -111,7 +111,7 @@ def run():
         early_return_url = root.find('EarlyReturnURL').text
         try:
             early_return_res = requests.get(
-                early_return_url, headers={'User-Agent': UA_LONG})
+                early_return_url, headers={'User-Agent': UA_LONG}, timeout=10)
             early_return_res.raise_for_status()
             logger.info('Loan returned successfully: {}'.format(args.odm_file))
         except HTTPError as he:
@@ -294,11 +294,14 @@ def run():
         part_download_url = '{}/{}'.format(download_baseurl, part_url_filename)
 
         try:
-            part_download_res = requests.get(part_download_url, headers={
-                'User-Agent': UA,
-                'ClientID': license_client_id,
-                'License': lic_file_contents
-            }, stream=True)
+            part_download_res = requests.get(
+                part_download_url,
+                headers={
+                    'User-Agent': UA,
+                    'ClientID': license_client_id,
+                    'License': lic_file_contents
+                },
+                timeout=10, stream=True)
 
             part_download_res.raise_for_status()
 
