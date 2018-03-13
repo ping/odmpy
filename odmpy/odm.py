@@ -163,10 +163,10 @@ def run():
 
         for formats in root.findall('Formats'):
             for f in formats:
-                logger.info(u'{:10} {}'.format('Format:', f.attrib['name']))
+                logger.info(u'\n{:10} {}'.format('Format:', f.attrib['name']))
                 parts = f.find('Parts')
                 for p in parts:
-                    logger.info('  * {} - {} ({:,.0f}kB)'.format(
+                    logger.info('* {} - {} ({:,.0f}kB)'.format(
                         p.attrib['name'], p.attrib['duration'],
                         math.ceil(1.0 * int(p.attrib['filesize']) / 1024)))
         sys.exit()
