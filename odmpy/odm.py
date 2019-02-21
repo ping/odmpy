@@ -50,7 +50,7 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
 
-__version__ = '0.1.0'   # also update ../setup.py
+__version__ = '0.2.0'   # also update ../setup.py
 
 OMC = '1.2.0'
 OS = '10.11.6'
