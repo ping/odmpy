@@ -1,11 +1,14 @@
-# odmpy
+# odmpy ![Python >= 3.5](https://img.shields.io/badge/Python-%3E%3D%203.5-3776ab.svg?maxAge=2592000)
 
 A simple console manager for OverDrive audiobook loans. A python port of [overdrive](https://github.com/chbrown/overdrive).
+
+Requires Python >=3.5.
 
 ## Features
 
 1. Downloads the cover and audio files for an audiobook loan
 1. Supports the return of a loan
+
 
 ## Install
 
@@ -22,23 +25,23 @@ pip uninstall odmpy
 ```
 usage: odmpy [-h] [-v] {info,dl,ret} ...
 
-Download/return an Overdrive loan audiobook.
+Download/return an Overdrive loan audiobook
 
 optional arguments:
   -h, --help     show this help message and exit
-  -v, --verbose  Enable more verbose messages for debugging.
+  -v, --verbose  Enable more verbose messages for debugging
 
 Available commands:
   {info,dl,ret}  To get more help, use the -h option with the command.
-    info         Get information about a loan file.
-    dl           Download from a loan file.
+    info         Get information about a loan file
+    dl           Download from a loan file
     ret          Return a loan file.
 
 Version 0.1.0. Source at https://github.com/ping/odmpy/
 ```
 
 ```
-usage: odmpy dl [-h] [-d DOWNLOAD_DIR] odm_file
+usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [-k] odm_file
 
 Download from a loan file.
 
@@ -48,7 +51,10 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
-                        Download folder path.
+                        Download folder path
+  -c, --chapters        Add chapter marks (experimental)
+  -m, --merge           Merge into 1 file (experimental, requires ffmpeg)
+  -k, --keepcover       Always generate the cover image file (cover.jpg)
 ```
 
 ```

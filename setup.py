@@ -46,12 +46,12 @@ setup(
             'odmpy = odmpy.__main__:main',
         ]
     },
-    install_requires=['requests', 'clint', 'mutagen'],
+    install_requires=['requests', 'clint', 'eyed3'],
     include_package_data=True,
     platforms='any',
     long_description=__long_description__,
     keywords='overdrive audiobook',
-    description='A console downloader for OverDrive audiobook loan.',
+    description='A console downloader for an OverDrive audiobook loan.',
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
