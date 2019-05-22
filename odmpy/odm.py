@@ -43,6 +43,7 @@ from requests.exceptions import HTTPError, ConnectionError
 from clint.textui import colored, progress
 import eyed3
 from eyed3.utils import art
+from mutagen.mp3 import MP3
 
 logger = logging.getLogger(__file__)
 ch = logging.StreamHandler()
@@ -77,6 +78,14 @@ def slugify(value, allow_unicode=False):
     value = re.sub(r'[^\w\s-]', '', value).strip().lower()
     return re.sub(r'[-\s]+', '-', value)
 
+def mp3_duration_ms(filename):
+    # returns the length of the mp3 in ms
+    # eyeD3's audio length function:
+    # audiofile.info.time_secs
+    # returns incorrect times due to it's header computation
+    # mutagen does not have this issue
+    audio = MP3(filename)
+    return round(audio.info.length * 1000)
 
 def run():
     parser = argparse.ArgumentParser(
@@ -367,7 +376,7 @@ def run():
                     art.TO_ID3_ART_TYPES[art.FRONT_COVER][0], cover_bytes, 'image/jpeg', description=u'Cover')
                 audiofile.tag.save()
 
-                audio_lengths_ms.append(int(round(audiofile.info.time_secs * 1000)))
+                audio_lengths_ms.append(mp3_duration_ms(part_filename))
 
                 for frame in audiofile.tag.frame_set.get(eyed3.id3.frames.USERTEXT_FID, []):
                     if frame.description != 'OverDrive MediaMarkers':
@@ -483,12 +492,15 @@ def run():
                 colored.magenta(book_filename)))
             sys.exit(0)
 
+        # You need mp3cat installed. find it here:
+        # https://darrenmulholland.com/dev/mp3cat.html
+        # or build from source here:
+        # https://github.com/dmulholl/mp3cat
         cmd = [
-            'ffmpeg', '-y',
-            '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
-            '-i', 'concat:{}'.format('|'.join([f['file'] for f in file_tracks])),
-            '-acodec', 'copy',
-            book_filename]
+            'mp3cat'
+        ]
+        cmd.extend([f['file'] for f in file_tracks])
+        cmd.extend(['-o', book_filename])
         exit_code = subprocess.call(cmd)
 
         if exit_code:
@@ -497,6 +509,8 @@ def run():
             exit(exit_code)
 
         audiofile = eyed3.load(book_filename)
+        if audiofile.tag is None:
+            audiofile.initTag()
         audiofile.tag.title = u'{}'.format(title)
         if not audiofile.tag.album:
             audiofile.tag.album = u'{}'.format(title)
