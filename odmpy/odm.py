@@ -33,6 +33,7 @@ import re
 import unicodedata
 import logging
 import math
+import json
 try:
     from functools import reduce
 except ImportError:
@@ -43,6 +44,7 @@ from requests.exceptions import HTTPError, ConnectionError
 from clint.textui import colored, progress
 import eyed3
 from eyed3.utils import art
+from mutagen.mp3 import MP3
 
 logger = logging.getLogger(__file__)
 ch = logging.StreamHandler()
@@ -59,6 +61,29 @@ UA_LONG = 'OverDrive Media Console/3.7.0.28 iOS/10.3.3'
 
 MARKER_TIMESTAMP_MMSS = r'(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)'
 MARKER_TIMESTAMP_HHMMSS = r'(?P<hr>[0-9]+):(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)'
+
+
+def mp3_duration_ms(filename):
+    # Ref: https://github.com/ping/odmpy/pull/3
+    # returns the length of the mp3 in ms
+
+    # eyeD3's audio length function:
+    # audiofile.info.time_secs
+    # returns incorrect times due to it's header computation
+    # mutagen does not have this issue
+    audio = MP3(filename)
+    return int(round(audio.info.length * 1000))
+
+
+def unescape_html(text):
+    """py2/py3 compatible html unescaping"""
+    try:
+        import html
+        return html.unescape(text)
+    except ImportError:
+        import HTMLParser
+        parser = HTMLParser.HTMLParser()
+        return parser.unescape(text)
 
 
 # From django
@@ -82,11 +107,21 @@ def run():
     parser = argparse.ArgumentParser(
         prog='odmpy',
         description='Download/return an Overdrive loan audiobook',
-        epilog='Version {}. Source at https://github.com/ping/odmpy/'.format(
-            __version__))
+        epilog='Version {version}. [Python {py_major}.{py_minor}.{py_micro}-{platform}] '
+               'Source at https://github.com/ping/odmpy/'.format(
+                    version=__version__,
+                    py_major=sys.version_info.major,
+                    py_minor=sys.version_info.minor,
+                    py_micro=sys.version_info.micro,
+                    platform=sys.platform,
+                )
+    )
     parser.add_argument(
         '-v', '--verbose', dest='verbose', action='store_true',
         help='Enable more verbose messages for debugging')
+    parser.add_argument(
+        '-t', '--timeout', dest='timeout', type=int, default=10,
+        help='Timeout (seconds) for network requests. Default 10.')
 
     subparsers = parser.add_subparsers(
         title='Available commands', dest='subparser_name',
@@ -109,8 +144,17 @@ def run():
         '-m', '--merge', dest='merge_output', action='store_true',
         help='Merge into 1 file (experimental, requires ffmpeg)')
     parser_dl.add_argument(
+        '--mergeformat', dest='merge_format', choices=['mp3', 'm4b'], default='mp3',
+        help='Merged file format (m4b is slow, experimental, requires ffmpeg)')
+    parser_dl.add_argument(
         '-k', '--keepcover', dest='always_keep_cover', action='store_true',
         help='Always generate the cover image file (cover.jpg)')
+    parser_dl.add_argument(
+        '-f', '--keepmp3', dest='keep_mp3', action='store_true',
+        help='Keep downloaded mp3 files (after merging)')
+    parser_dl.add_argument(
+        '-j', '--writejson', dest='write_json', action='store_true',
+        help='Generate a meta json file (for debugging)')
     parser_dl.add_argument('odm_file', type=str, help='ODM file path')
 
     parser_ret = subparsers.add_parser(
@@ -122,6 +166,13 @@ def run():
     args = parser.parse_args()
     if args.verbose:
         logger.setLevel(logging.DEBUG)
+
+    try:
+        # test for odm file
+        args.odm_file
+    except AttributeError:
+        parser.print_help()
+        exit(0)
 
     xml_doc = xml.etree.ElementTree.parse(args.odm_file)
     root = xml_doc.getroot()
@@ -159,15 +210,25 @@ def run():
             re.sub(r'\s&\s', ' &amp; ', t))
         break
 
+    debug_meta = {}
+
     title = metadata.find('Title').text
-    cover_url = metadata.find('CoverUrl').text
+    cover_url = metadata.find('CoverUrl').text if metadata.find('CoverUrl') else metadata.find('CoverUrl').text
     authors = [
-        c.text for c in metadata.find('Creators')
+        unescape_html(c.text) for c in metadata.find('Creators')
         if 'Author' in c.attrib.get('role', '')]
     if not authors:
-        authors = [c.text for c in metadata.find('Creators')]
+        authors = [unescape_html(c.text) for c in metadata.find('Creators')]
     publisher = metadata.find('Publisher').text
     description = metadata.find('Description').text if metadata.find('Description') is not None else ''
+
+    debug_meta['meta'] = {
+        'title': title,
+        'coverUrl': cover_url,
+        'authors': authors,
+        'publisher': publisher,
+        'description': description,
+    }
 
     if args.subparser_name == 'info':
         logger.info(u'{:10} {}'.format('Title:', colored.blue(title)))
@@ -206,6 +267,7 @@ def run():
             parts = f.find('Parts')
             for p in parts:
                 download_parts.append(p.attrib)
+    debug_meta['download_parts'] = download_parts
 
     logger.info('Downloading "{}" by "{}" in {} parts...'.format(
         colored.blue(title, bold=True),
@@ -214,11 +276,12 @@ def run():
 
     book_folder = os.path.join(
         args.download_dir,
-        u'{} - {}'.format(title, u', '.join(authors)))
+        u'{} - {}'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
     if not os.path.exists(book_folder):
         os.makedirs(book_folder)
 
     cover_filename = os.path.join(book_folder, 'cover.jpg')
+    debug_filename = os.path.join(book_folder, 'debug.json')
     if not os.path.isfile(cover_filename):
         cover_res = requests.get(cover_url, headers={'User-Agent': UA})
         cover_res.raise_for_status()
@@ -256,7 +319,7 @@ def run():
             acquisition_url,
             params=params,
             headers={'User-Agent': UA},
-            timeout=10,
+            timeout=args.timeout,
             stream=True
         )
         try:
@@ -313,181 +376,217 @@ def run():
             )
         )
         part_tmp_filename = u'{}.part'.format(part_filename)
-
-        if os.path.isfile(part_filename):
-            logger.warning('Already saved {}'.format(
-                colored.magenta(part_filename)))
-            continue
-
         part_file_size = int(p['filesize'])
         part_url_filename = p['filename']
         part_download_url = '{}/{}'.format(download_baseurl, part_url_filename)
         part_markers = []
 
-        try:
-            part_download_res = requests.get(
-                part_download_url,
-                headers={
-                    'User-Agent': UA,
-                    'ClientID': license_client_id,
-                    'License': lic_file_contents
-                },
-                timeout=10, stream=True)
-
-            part_download_res.raise_for_status()
-
-            chunk_size = 1024
-            expected_chunk_count = math.ceil(1.0 * part_file_size / chunk_size)
-            with open(part_tmp_filename, 'wb') as outfile:
-                for chunk in progress.bar(
-                        part_download_res.iter_content(chunk_size=chunk_size),
-                        label='Part {}'.format(part_number),
-                        expected_size=expected_chunk_count):
-                    if chunk:
-                        outfile.write(chunk)
-            os.rename(part_tmp_filename, part_filename)
-
+        if os.path.isfile(part_filename):
+            logger.warning('Already saved {}'.format(
+                colored.magenta(part_filename)))
+        else:
             try:
-                audiofile = eyed3.load(part_filename)
-                if not audiofile.tag.title:
-                    audiofile.tag.title = u'{}'.format(title)
-                if not audiofile.tag.album:
-                    audiofile.tag.album = u'{}'.format(title)
-                if not audiofile.tag.artist:
-                    audiofile.tag.artist = u'{}'.format(authors[0])
-                if not audiofile.tag.album_artist:
-                    audiofile.tag.album_artist = u'{}'.format(authors[0])
-                if not audiofile.tag.track_num:
-                    audiofile.tag.track_num = (part_number, len(download_parts))
-                if not audiofile.tag.publisher:
-                    audiofile.tag.publisher = u'{}'.format(publisher)
-                if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
-                    audiofile.tag.comments.set(u'{}'.format(description), description=u'Description')
-                audiofile.tag.images.set(
-                    art.TO_ID3_ART_TYPES[art.FRONT_COVER][0], cover_bytes, 'image/jpeg', description=u'Cover')
+                part_download_res = requests.get(
+                    part_download_url,
+                    headers={
+                        'User-Agent': UA,
+                        'ClientID': license_client_id,
+                        'License': lic_file_contents
+                    },
+                    timeout=args.timeout, stream=True)
+
+                part_download_res.raise_for_status()
+
+                chunk_size = 1024
+                expected_chunk_count = math.ceil(1.0 * part_file_size / chunk_size)
+                with open(part_tmp_filename, 'wb') as outfile:
+                    for chunk in progress.bar(
+                            part_download_res.iter_content(chunk_size=chunk_size),
+                            label='Part {}'.format(part_number),
+                            expected_size=expected_chunk_count):
+                        if chunk:
+                            outfile.write(chunk)
+
+                # try to remux file to remove mp3 lame tag errors
+                cmd = [
+                    'ffmpeg', '-y',
+                    '-hide_banner',
+                    '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
+                    '-i', part_tmp_filename,
+                    '-c:a', 'copy', '-c:v', 'copy',
+                    part_filename
+                ]
+                try:
+                    exit_code = subprocess.call(cmd)
+                    if exit_code:
+                        logger.warning('ffmpeg exited with the code: {0!s}'.format(exit_code))
+                        logger.warning('Command: {0!s}'.format(' '.join(cmd)))
+                        os.rename(part_tmp_filename, part_filename)
+                    else:
+                        os.remove(part_tmp_filename)
+                except Exception as ffmpeg_ex:
+                    logger.warning('Error executing ffmpeg: {}'.format(str(ffmpeg_ex)))
+                    os.rename(part_tmp_filename, part_filename)
+
+            except HTTPError as he:
+                logger.error('HTTPError: {}'.format(str(he)))
+                logger.debug(he.response.content)
+                sys.exit(1)
+
+            except ConnectionError as ce:
+                logger.error('ConnectionError: {}'.format(str(ce)))
+                sys.exit(1)
+
+        try:
+            audiofile = eyed3.load(part_filename)
+            if not audiofile.tag:
+                audiofile.initTag()
+            if not audiofile.tag.title:
+                audiofile.tag.title = u'{}'.format(title)
+            if not audiofile.tag.album:
+                audiofile.tag.album = u'{}'.format(title)
+            if not audiofile.tag.artist:
+                audiofile.tag.artist = u'{}'.format(authors[0])
+            if not audiofile.tag.album_artist:
+                audiofile.tag.album_artist = u'{}'.format(authors[0])
+            if not audiofile.tag.track_num:
+                audiofile.tag.track_num = (part_number, len(download_parts))
+            if not audiofile.tag.publisher:
+                audiofile.tag.publisher = u'{}'.format(publisher)
+            if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
+                audiofile.tag.comments.set(u'{}'.format(description), description=u'Description')
+            audiofile.tag.images.set(
+                art.TO_ID3_ART_TYPES[art.FRONT_COVER][0], cover_bytes, 'image/jpeg', description=u'Cover')
+            audiofile.tag.save()
+
+            audio_lengths_ms.append(mp3_duration_ms(part_filename))
+
+            for frame in audiofile.tag.frame_set.get(eyed3.id3.frames.USERTEXT_FID, []):
+                if frame.description != 'OverDrive MediaMarkers':
+                    continue
+                if frame.text:
+                    try:
+                        tree = xml.etree.ElementTree.fromstring(frame.text)
+                    except UnicodeEncodeError:
+                        tree = xml.etree.ElementTree.fromstring(frame.text.encode('ascii', 'ignore').decode('ascii'))
+
+                    for m in tree.iter('Marker'):
+                        marker_name = m.find('Name').text
+                        marker_timestamp = m.find('Time').text
+
+                        timestamp = None
+                        ts_mark = 0
+                        for r in ('%M:%S.%f', '%H:%M:%S.%f'):
+                            try:
+                                timestamp = time.strptime(marker_timestamp, r)
+                                ts = datetime.timedelta(
+                                    hours=timestamp.tm_hour, minutes=timestamp.tm_min, seconds=timestamp.tm_sec)
+                                ts_mark = int(1000 * ts.total_seconds())
+                                break
+                            except ValueError:
+                                pass
+
+                        if not timestamp:
+                            # some invalid timestamp string, e.g. 60:15.00
+                            mobj = re.match(MARKER_TIMESTAMP_HHMMSS, marker_timestamp)
+                            if mobj:
+                                ts_mark = int(mobj.group('hr')) * 60 * 60 * 1000 + \
+                                            int(mobj.group('min')) * 60 * 1000 + \
+                                            int(mobj.group('sec')) * 1000 + \
+                                            int(mobj.group('ms'))
+                            else:
+                                mobj = re.match(MARKER_TIMESTAMP_MMSS, marker_timestamp)
+                                if mobj:
+                                    ts_mark = int(mobj.group('min')) * 60 * 1000 + \
+                                                int(mobj.group('sec')) * 1000 + \
+                                                int(mobj.group('ms'))
+                                else:
+                                    raise ValueError('Invalid marker timestamp: {}'.format(marker_timestamp))
+
+                        track_count += 1
+                        part_markers.append((u'ch{:02d}'.format(track_count), marker_name, ts_mark))
+                break
+
+            if args.add_chapters and not args.merge_output:
+                # set the chapter marks
+                generated_markers = []
+                for j, file_marker in enumerate(part_markers):
+                    generated_markers.append({
+                        'id': file_marker[0],
+                        'text': file_marker[1],
+                        'start_time': int(file_marker[2]),
+                        'end_time': int(
+                            round(audiofile.info.time_secs * 1000)
+                            if j == (len(part_markers) - 1)
+                            else part_markers[j + 1][2]),
+                    })
+
+                toc = audiofile.tag.table_of_contents.set(
+                    'toc'.encode('ascii'), toplevel=True, ordered=True,
+                    child_ids=[], description=u"Table of Contents")
+
+                for i, m in enumerate(generated_markers):
+                    title_frameset = eyed3.id3.frames.FrameSet()
+                    title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, u'{}'.format(m['text']))
+
+                    chap = audiofile.tag.chapters.set(
+                        m['id'].encode('ascii'), times=(m['start_time'], m['end_time']), sub_frames=title_frameset)
+                    toc.child_ids.append(chap.element_id)
+                    start_time = datetime.timedelta(milliseconds=m['start_time'])
+                    end_time = datetime.timedelta(milliseconds=m['end_time'])
+                    logger.debug(
+                        u'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
+                            colored.cyan(m['id']), start_time, end_time,
+                            colored.cyan(m['text']),
+                            colored.blue(part_filename)))
+
+                if len(generated_markers) == 1:
+                    # Weird player problem on voice where title is shown instead of chapter title
+                    audiofile.tag.title = u'{}'.format(generated_markers[0]['text'])
+                    audiofile.tag.frame_set.get(eyed3.id3.frames.TITLE_FID)[0].encoding = eyed3.id3.UTF_8_ENCODING
+
                 audiofile.tag.save()
 
-                audio_lengths_ms.append(int(round(audiofile.info.time_secs * 1000)))
+        except Exception as e:
+            logger.warning('Error saving ID3: {}'.format(colored.red(str(e), bold=True)))
+            keep_cover = True
 
-                for frame in audiofile.tag.frame_set.get(eyed3.id3.frames.USERTEXT_FID, []):
-                    if frame.description != 'OverDrive MediaMarkers':
-                        continue
-                    if frame.text:
-                        try:
-                            tree = xml.etree.ElementTree.fromstring(frame.text)
-                        except UnicodeEncodeError:
-                            tree = xml.etree.ElementTree.fromstring(frame.text.encode('ascii', 'ignore').decode('ascii'))
+        logger.info('Saved "{}"'.format(colored.magenta(part_filename)))
 
-                        for m in tree.iter('Marker'):
-                            marker_name = m.find('Name').text
-                            marker_timestamp = m.find('Time').text
+        file_tracks.append({
+            'file': part_filename,
+            'markers': part_markers,
+        })
+    # end loop: for p in download_parts:
 
-                            timestamp = None
-                            ts_mark = 0
-                            for r in ('%M:%S.%f', '%H:%M:%S.%f'):
-                                try:
-                                    timestamp = time.strptime(marker_timestamp, r)
-                                    ts = datetime.timedelta(
-                                        hours=timestamp.tm_hour, minutes=timestamp.tm_min, seconds=timestamp.tm_sec)
-                                    ts_mark = int(1000 * ts.total_seconds())
-                                    break
-                                except ValueError:
-                                    pass
-
-                            if not timestamp:
-                                # some invalid timestamp string, e.g. 60:15.00
-                                mobj = re.match(MARKER_TIMESTAMP_HHMMSS, marker_timestamp)
-                                if mobj:
-                                    ts_mark = int(mobj.group('hr')) * 60 * 60 * 1000 + \
-                                              int(mobj.group('min')) * 60 * 1000 + \
-                                              int(mobj.group('sec'))* 1000 + \
-                                              int(mobj.group('ms'))
-                                else:
-                                    mobj = re.match(MARKER_TIMESTAMP_MMSS, marker_timestamp)
-                                    if mobj:
-                                        ts_mark = int(mobj.group('min')) * 60 * 1000 + \
-                                                  int(mobj.group('sec')) * 1000 + \
-                                                  int(mobj.group('ms'))
-                                    else:
-                                        raise ValueError('Invalid marker timestamp: {}'.format(marker_timestamp))
-
-                            track_count += 1
-                            part_markers.append((u'ch{:02d}'.format(track_count), marker_name, ts_mark))
-                    break
-
-                if args.add_chapters and not args.merge_output:
-                    # set the chapter marks
-                    generated_markers = []
-                    for j, file_marker in enumerate(part_markers):
-                        generated_markers.append({
-                            'id': file_marker[0],
-                            'text': file_marker[1],
-                            'start_time': int(file_marker[2]),
-                            'end_time': int(
-                                round(audiofile.info.time_secs * 1000)
-                                if j == (len(part_markers) - 1)
-                                else part_markers[j + 1][2]),
-                        })
-
-                    toc = audiofile.tag.table_of_contents.set(
-                        'toc'.encode('ascii'), toplevel=True, ordered=True,
-                        child_ids=[], description=u"Table of Contents")
-
-                    for i, m in enumerate(generated_markers):
-                        title_frameset = eyed3.id3.frames.FrameSet()
-                        title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, u'{}'.format(m['text']))
-
-                        chap = audiofile.tag.chapters.set(
-                            m['id'].encode('ascii'), times=(m['start_time'], m['end_time']), sub_frames=title_frameset)
-                        toc.child_ids.append(chap.element_id)
-                        logger.debug(
-                            u'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
-                                colored.cyan(m['id']), m['start_time'], m['end_time'],
-                                colored.cyan(m['text']),
-                                colored.blue(part_filename)))
-
-                    if len(generated_markers) == 1:
-                        # Weird player problem on voice where title is shown instead of chapter title
-                        audiofile.tag.title = u'{}'.format(generated_markers[0]['text'])
-                        audiofile.tag.frame_set.get(eyed3.id3.frames.TITLE_FID)[0].encoding = eyed3.id3.UTF_8_ENCODING
-
-                    audiofile.tag.save()
-
-            except Exception as e:
-                logger.warning('Error saving ID3: {}'.format(colored.red(str(e), bold=True)))
-                keep_cover = True
-
-            logger.info('Saved "{}"'.format(colored.magenta(part_filename)))
-
-            file_tracks.append({
-                'file': part_filename,
-                'markers': part_markers,
-            })
-
-        except HTTPError as he:
-            logger.error('HTTPError: {}'.format(str(he)))
-            logger.debug(he.response.content)
-            sys.exit(1)
-
-        except ConnectionError as ce:
-            logger.error('ConnectionError: {}'.format(str(ce)))
-            sys.exit(1)
+    debug_meta['audio_lengths_ms'] = audio_lengths_ms
+    debug_meta['file_tracks'] = file_tracks
 
     if args.merge_output:
         book_filename = os.path.join(
             book_folder,
-            u'{} - {}.mp3'.format(title, u', '.join(authors)))
+            u'{} - {}.mp3'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
 
-        if os.path.isfile(book_filename):
+        book_m4b_filename = os.path.join(
+            book_folder,
+            u'{} - {}.m4b'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
+
+        if os.path.isfile(book_filename if args.merge_format == 'mp3' else book_m4b_filename):
             logger.warning('Already saved "{}"'.format(
-                colored.magenta(book_filename)))
+                colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
             sys.exit(0)
 
+        logger.info('Generating "{}"...'.format(
+            colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
+
+        # We can't directly generate a m4b here even if specified because eyed3 doesn't support m4b/mp4
         cmd = [
             'ffmpeg', '-y',
-            '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
-            '-i', 'concat:{}'.format('|'.join([f['file'] for f in file_tracks])),
+            '-hide_banner',
+            '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
+            '-i', 'concat:{}'.format('|'.join([ft['file'] for ft in file_tracks])),
             '-acodec', 'copy',
+            '-b:a', '64k',       # explicitly set audio bitrate
             book_filename]
         exit_code = subprocess.call(cmd)
 
@@ -525,6 +624,7 @@ def run():
                             if j == (len(file_markers) - 1)
                             else file_markers[j + 1][2] + prev_tracks_len_ms),
                     })
+            debug_meta['merged_markers'] = merged_markers
 
             toc = audiofile.tag.table_of_contents.set(
                 'toc'.encode('ascii'), toplevel=True, ordered=True,
@@ -536,22 +636,58 @@ def run():
                 chap = audiofile.tag.chapters.set(
                     m['id'].encode('ascii'), times=(m['start_time'], m['end_time']), sub_frames=title_frameset)
                 toc.child_ids.append(chap.element_id)
+                start_time = datetime.timedelta(milliseconds=m['start_time'])
+                end_time = datetime.timedelta(milliseconds=m['end_time'])
                 logger.debug(
                     u'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
-                        colored.cyan(m['id']), m['start_time'], m['end_time'],
+                        colored.cyan(m['id']), start_time, end_time,
                         colored.cyan(m['text']),
                         colored.blue(book_filename)))
 
         audiofile.tag.save()
 
-        for f in file_tracks:
+        if args.merge_format == 'mp3':
+            logger.info('Merged files into "{}"'.format(
+                colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
+
+        if args.merge_format == 'm4b':
+            temp_book_m4b_filename = '{}.part'.format(book_filename)
+            cmd = [
+                'ffmpeg', '-y',
+                '-hide_banner',
+                '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
+                '-i', book_filename,
+                '-c:a', 'aac',
+                '-b:a', '64k',          # explicitly set audio bitrate
+                '-f', 'mp4',
+                temp_book_m4b_filename]
+            exit_code = subprocess.call(cmd)
+
+            if exit_code:
+                logger.error('ffmpeg exited with the code: {0!s}'.format(exit_code))
+                logger.error('Command: {0!s}'.format(' '.join(cmd)))
+                exit(exit_code)
+
+            os.rename(temp_book_m4b_filename, book_m4b_filename)
+            logger.info('Merged files into "{}"'.format(colored.magenta(book_m4b_filename)))
             try:
-                os.remove(f['file'])
+                os.remove(book_filename)
             except Exception as e:
-                logger.warning('Error deleting "{}": {}'.format(f['file'], str(e)))
+                logger.warning('Error deleting "{}": {}'.format(book_filename, str(e)))
+
+        if not args.keep_mp3:
+            for f in file_tracks:
+                try:
+                    os.remove(f['file'])
+                except Exception as e:
+                    logger.warning('Error deleting "{}": {}'.format(f['file'], str(e)))
 
     if not keep_cover:
         try:
             os.remove(cover_filename)
         except Exception as e:
             logger.warning('Error deleting "{}": {}'.format(cover_filename, str(e)))
+
+    if args.write_json:
+        with open(debug_filename, 'w') as outfile:
+            json.dump(debug_meta, outfile, indent=2)

@@ -1,3 +1,4 @@
 requests
 clint
 eyed3
+mutagen

@@ -9,7 +9,6 @@ Requires Python >=3.5.
 1. Downloads the cover and audio files for an audiobook loan
 1. Supports the return of a loan
 
-
 ## Install
 
 ```bash
