@@ -22,25 +22,29 @@ pip uninstall odmpy
 ## Usage
 
 ```
-usage: odmpy [-h] [-v] {info,dl,ret} ...
+usage: odmpy [-h] [-v] [-t TIMEOUT] {info,dl,ret} ...
 
 Download/return an Overdrive loan audiobook
 
 optional arguments:
-  -h, --help     show this help message and exit
-  -v, --verbose  Enable more verbose messages for debugging
+  -h, --help            show this help message and exit
+  -v, --verbose         Enable more verbose messages for debugging
+  -t TIMEOUT, --timeout TIMEOUT
+                        Timeout (seconds) for network requests. Default 10.
 
 Available commands:
-  {info,dl,ret}  To get more help, use the -h option with the command.
-    info         Get information about a loan file
-    dl           Download from a loan file
-    ret          Return a loan file.
+  {info,dl,ret}         To get more help, use the -h option with the command.
+    info                Get information about a loan file
+    dl                  Download from a loan file
+    ret                 Return a loan file.
 
-Version 0.1.0. Source at https://github.com/ping/odmpy/
+Version 0.3.0. [Python 3.7.4-darwin] Source at https://github.com/ping/odmpy/
 ```
 
 ```
-usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [-k] odm_file
+usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
+                [-k] [-f] [-j]
+                odm_file
 
 Download from a loan file.
 
@@ -53,7 +57,12 @@ optional arguments:
                         Download folder path
   -c, --chapters        Add chapter marks (experimental)
   -m, --merge           Merge into 1 file (experimental, requires ffmpeg)
+  --mergeformat {mp3,m4b}
+                        Merged file format (m4b is slow, experimental,
+                        requires ffmpeg)
   -k, --keepcover       Always generate the cover image file (cover.jpg)
+  -f, --keepmp3         Keep downloaded mp3 files (after merging)
+  -j, --writejson       Generate a meta json file (for debugging)
 ```
 
 ```
