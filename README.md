@@ -13,10 +13,10 @@ Requires Python >=3.5.
 
 ```bash
 # Install / Update
-pip install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
+pip3 install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
 
 # Uninstall
-pip uninstall odmpy
+pip3 uninstall odmpy
 ```
 
 ## Usage
