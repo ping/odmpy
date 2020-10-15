@@ -213,7 +213,7 @@ def run():
     debug_meta = {}
 
     title = metadata.find('Title').text
-    cover_url = metadata.find('CoverUrl').text if metadata.find('CoverUrl') else metadata.find('CoverUrl').text
+    cover_url = metadata.find('CoverUrl').text if metadata.find('CoverUrl') != None else ''
     authors = [
         unescape_html(c.text) for c in metadata.find('Creators')
         if 'Author' in c.attrib.get('role', '')]
@@ -282,7 +282,7 @@ def run():
 
     cover_filename = os.path.join(book_folder, 'cover.jpg')
     debug_filename = os.path.join(book_folder, 'debug.json')
-    if not os.path.isfile(cover_filename):
+    if not os.path.isfile(cover_filename) and cover_url:
         cover_res = requests.get(cover_url, headers={'User-Agent': UA})
         cover_res.raise_for_status()
         with open(cover_filename, 'wb') as outfile:
@@ -357,8 +357,9 @@ def run():
         lic_file_contents = lic_file.read()
 
     cover_bytes = None
-    with open(cover_filename, 'rb') as f:
-        cover_bytes = f.read()
+    if os.path.isfile(cover_filename):
+        with open(cover_filename, 'rb') as f:
+            cover_bytes = f.read()
 
     track_count = 0
     file_tracks = []
@@ -455,8 +456,9 @@ def run():
                 audiofile.tag.publisher = u'{}'.format(publisher)
             if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
                 audiofile.tag.comments.set(u'{}'.format(description), description=u'Description')
-            audiofile.tag.images.set(
-                art.TO_ID3_ART_TYPES[art.FRONT_COVER][0], cover_bytes, 'image/jpeg', description=u'Cover')
+            if cover_bytes:
+                audiofile.tag.images.set(
+                    art.TO_ID3_ART_TYPES[art.FRONT_COVER][0], cover_bytes, 'image/jpeg', description=u'Cover')
             audiofile.tag.save()
 
             audio_lengths_ms.append(mp3_duration_ms(part_filename))
