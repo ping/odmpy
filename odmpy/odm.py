@@ -657,6 +657,7 @@ def run():
                 '-hide_banner',
                 '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
                 '-i', book_filename,
+                '-map', '0:a',          # ignore the video track (embedded artwork so ffmpeg command will not fail)
                 '-c:a', 'aac',
                 '-b:a', '64k',          # explicitly set audio bitrate
                 '-f', 'mp4',
