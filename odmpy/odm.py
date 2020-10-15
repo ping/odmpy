@@ -650,7 +650,7 @@ def run():
             logger.info('Merged files into "{}"'.format(
                 colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
 
-        if args.merge_format == 'm4b':
+        if args.merge_format == 'm4b':  # encode merged mp3 into mp4/m4b
             temp_book_m4b_filename = '{}.part'.format(book_filename)
             cmd = [
                 'ffmpeg', '-y',
@@ -675,6 +675,19 @@ def run():
                 os.remove(book_filename)
             except Exception as e:
                 logger.warning('Error deleting "{}": {}'.format(book_filename, str(e)))
+
+        if args.merge_format == 'm4b':  # embed cover art using mp4art
+            cmd = [
+                'mp4art',
+                '--verbose', '3' if logger.level == logging.DEBUG else '1',
+                '--add', cover_filename,
+                book_m4b_filename]
+            exit_code = subprocess.call(cmd)
+
+            if exit_code:
+                logger.error('mp4art exited with the code: {0!s}'.format(exit_code))
+                logger.error('Command: {0!s}'.format(' '.join(cmd)))
+                exit(exit_code)
 
         if not args.keep_mp3:
             for f in file_tracks:
