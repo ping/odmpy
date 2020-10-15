@@ -278,7 +278,17 @@ def run():
         args.download_dir,
         u'{} - {}'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
     if not os.path.exists(book_folder):
-        os.makedirs(book_folder)
+        try:
+            os.makedirs(book_folder)
+        except OSError as exc:
+            if exc.errno != 36:
+                raise  # re-raise previously caught exception
+
+            # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
+            # create book folder with just the title
+            book_folder = os.path.join(
+                args.download_dir, u'{}'.format(title.replace(os.sep, '-')))
+
 
     cover_filename = os.path.join(book_folder, 'cover.jpg')
     debug_filename = os.path.join(book_folder, 'debug.json')
