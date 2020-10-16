@@ -483,9 +483,8 @@ def run():
                         tree = xml.etree.ElementTree.fromstring(frame.text.encode('ascii', 'ignore').decode('ascii'))
 
                     for m in tree.iter('Marker'):
-                        marker_name = m.find('Name').text
+                        marker_name = m.find('Name').text.strip()
                         marker_timestamp = m.find('Time').text
-
                         timestamp = None
                         ts_mark = 0
                         for r in ('%M:%S.%f', '%H:%M:%S.%f'):
