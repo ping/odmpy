@@ -537,9 +537,8 @@ def run():
                     child_ids=[], description=u"Table of Contents")
 
                 for i, m in enumerate(generated_markers):
-                    chapter_title = m['text'].strip()
                     title_frameset = eyed3.id3.frames.FrameSet()
-                    title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, u'{}'.format(chapter_title))
+                    title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, u'{}'.format(m['text']))
 
                     chap = audiofile.tag.chapters.set(
                         m['id'].encode('ascii'), times=(m['start_time'], m['end_time']), sub_frames=title_frameset)
@@ -549,7 +548,7 @@ def run():
                     logger.debug(
                         u'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
                             colored.cyan(m['id']), start_time, end_time,
-                            colored.cyan(chapter_title),
+                            colored.cyan(m['text']),
                             colored.blue(part_filename)))
 
                 if len(generated_markers) == 1:
@@ -643,9 +642,8 @@ def run():
                 child_ids=[], description=u'Table of Contents')
 
             for i, m in enumerate(merged_markers):
-                chapter_title = m['text'].strip()
                 title_frameset = eyed3.id3.frames.FrameSet()
-                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, u'{}'.format(chapter_title))
+                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, u'{}'.format(m['text']))
                 chap = audiofile.tag.chapters.set(
                     m['id'].encode('ascii'), times=(m['start_time'], m['end_time']), sub_frames=title_frameset)
                 toc.child_ids.append(chap.element_id)
@@ -654,7 +652,7 @@ def run():
                 logger.debug(
                     u'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
                         colored.cyan(m['id']), start_time, end_time,
-                        colored.cyan(chapter_title),
+                        colored.cyan(m['text']),
                         colored.blue(book_filename)))
 
         audiofile.tag.save()
