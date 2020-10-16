@@ -671,10 +671,25 @@ def run():
                 '-hide_banner',
                 '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
                 '-i', book_filename,
+            ]
+            if os.path.isfile(cover_filename):
+                cmd.extend(['-i', cover_filename])
+
+            cmd.extend(['-map', '0:a'])
+            if os.path.isfile(cover_filename):
+                cmd.extend(['-map', '1'])
+
+            cmd.extend([
                 '-c:a', 'aac',
                 '-b:a', '64k',          # explicitly set audio bitrate
-                '-f', 'mp4',
-                temp_book_m4b_filename]
+            ])
+            if os.path.isfile(cover_filename):
+                cmd.extend([
+                    '-c', 'copy',
+                    '-disposition:v:0', 'attached_pic',
+                ])
+
+            cmd.extend(['-f', 'mp4', temp_book_m4b_filename])
             exit_code = subprocess.call(cmd)
 
             if exit_code:
