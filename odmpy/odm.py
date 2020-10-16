@@ -218,6 +218,10 @@ def run():
         unescape_html(c.text) for c in metadata.find('Creators')
         if 'Author' in c.attrib.get('role', '')]
     if not authors:
+        authors = [
+            unescape_html(c.text) for c in metadata.find('Creators')
+            if 'Editor' in c.attrib.get('role', '')]
+    if not authors:
         authors = [unescape_html(c.text) for c in metadata.find('Creators')]
     publisher = metadata.find('Publisher').text
     description = metadata.find('Description').text if metadata.find('Description') is not None else ''
