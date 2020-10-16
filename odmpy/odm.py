@@ -678,7 +678,7 @@ def run():
 
             if os.path.isfile(cover_filename):
                 cmd.extend([
-                    '-c', 'copy',
+                    '-c:v', 'copy',
                     '-disposition:v:0', 'attached_pic',
                 ])
             cmd.extend([
