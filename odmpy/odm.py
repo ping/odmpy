@@ -676,15 +676,15 @@ def run():
             if os.path.isfile(cover_filename):
                 cmd.extend(['-map', '1'])
 
-            cmd.extend([
-                '-c:a', 'aac',
-                '-b:a', '64k',          # explicitly set audio bitrate
-            ])
             if os.path.isfile(cover_filename):
                 cmd.extend([
                     '-c', 'copy',
                     '-disposition:v:0', 'attached_pic',
                 ])
+            cmd.extend([
+                '-c:a', 'aac',
+                '-b:a', '64k',          # explicitly set audio bitrate
+            ])
 
             cmd.extend(['-f', 'mp4', temp_book_m4b_filename])
             exit_code = subprocess.call(cmd)
