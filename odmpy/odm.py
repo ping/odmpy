@@ -278,21 +278,39 @@ def run():
         colored.blue(', '.join(authors)), len(download_parts)
     ))
 
+    # declare book folder/file names here together so we can catch problems from too long names
     book_folder = os.path.join(
         args.download_dir,
         u'{} - {}'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
+
+    # for merged mp3
+    book_filename = os.path.join(
+        book_folder,
+        u'{} - {}.mp3'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-'))
+    )
+    # for merged m4b
+    book_m4b_filename = os.path.join(
+        book_folder,
+        u'{} - {}.m4b'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-'))
+    )
+
     if not os.path.exists(book_folder):
         try:
             os.makedirs(book_folder)
         except OSError as exc:
-            if exc.errno != 36:
+            if exc.errno not in (36, 63):   # ref http://www.ioplex.com/~miallen/errcmpp.html
                 raise  # re-raise previously caught exception
 
             # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
-            # create book folder with just the title
+            # create book folder, file with just the title
             book_folder = os.path.join(
                 args.download_dir, u'{}'.format(title.replace(os.sep, '-')))
+            os.makedirs(book_folder)
 
+            book_filename = os.path.join(
+                book_folder, u'{}.mp3'.format(title.replace(os.sep, '-')))
+            book_m4b_filename = os.path.join(
+                book_folder, u'{}.m4b'.format(title.replace(os.sep, '-')))
 
     cover_filename = os.path.join(book_folder, 'cover.jpg')
     debug_filename = os.path.join(book_folder, 'debug.json')
@@ -578,14 +596,6 @@ def run():
     debug_meta['file_tracks'] = file_tracks
 
     if args.merge_output:
-        book_filename = os.path.join(
-            book_folder,
-            u'{} - {}.mp3'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
-
-        book_m4b_filename = os.path.join(
-            book_folder,
-            u'{} - {}.m4b'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
-
         if os.path.isfile(book_filename if args.merge_format == 'mp3' else book_m4b_filename):
             logger.warning('Already saved "{}"'.format(
                 colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
