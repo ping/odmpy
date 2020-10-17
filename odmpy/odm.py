@@ -443,6 +443,7 @@ def run():
                 # try to remux file to remove mp3 lame tag errors
                 cmd = [
                     'ffmpeg', '-y',
+                    '-nostdin',
                     '-hide_banner',
                     '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
                     '-i', part_tmp_filename,
@@ -607,6 +608,7 @@ def run():
         # We can't directly generate a m4b here even if specified because eyed3 doesn't support m4b/mp4
         cmd = [
             'ffmpeg', '-y',
+            '-nostdin',
             '-hide_banner',
             '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
             '-i', 'concat:{}'.format('|'.join([ft['file'] for ft in file_tracks])),
@@ -679,6 +681,7 @@ def run():
             temp_book_m4b_filename = '{}.part'.format(book_filename)
             cmd = [
                 'ffmpeg', '-y',
+                '-nostdin',
                 '-hide_banner',
                 '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
                 '-i', book_filename,
