@@ -218,6 +218,10 @@ def run():
         unescape_html(c.text) for c in metadata.find('Creators')
         if 'Author' in c.attrib.get('role', '')]
     if not authors:
+        authors = [
+            unescape_html(c.text) for c in metadata.find('Creators')
+            if 'Editor' in c.attrib.get('role', '')]
+    if not authors:
         authors = [unescape_html(c.text) for c in metadata.find('Creators')]
     publisher = metadata.find('Publisher').text
     description = metadata.find('Description').text if metadata.find('Description') is not None else ''
@@ -274,21 +278,39 @@ def run():
         colored.blue(', '.join(authors)), len(download_parts)
     ))
 
+    # declare book folder/file names here together so we can catch problems from too long names
     book_folder = os.path.join(
         args.download_dir,
         u'{} - {}'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
+
+    # for merged mp3
+    book_filename = os.path.join(
+        book_folder,
+        u'{} - {}.mp3'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-'))
+    )
+    # for merged m4b
+    book_m4b_filename = os.path.join(
+        book_folder,
+        u'{} - {}.m4b'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-'))
+    )
+
     if not os.path.exists(book_folder):
         try:
             os.makedirs(book_folder)
         except OSError as exc:
-            if exc.errno != 36:
+            if exc.errno not in (36, 63):   # ref http://www.ioplex.com/~miallen/errcmpp.html
                 raise  # re-raise previously caught exception
 
             # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
-            # create book folder with just the title
+            # create book folder, file with just the title
             book_folder = os.path.join(
                 args.download_dir, u'{}'.format(title.replace(os.sep, '-')))
+            os.makedirs(book_folder)
 
+            book_filename = os.path.join(
+                book_folder, u'{}.mp3'.format(title.replace(os.sep, '-')))
+            book_m4b_filename = os.path.join(
+                book_folder, u'{}.m4b'.format(title.replace(os.sep, '-')))
 
     cover_filename = os.path.join(book_folder, 'cover.jpg')
     debug_filename = os.path.join(book_folder, 'debug.json')
@@ -421,6 +443,7 @@ def run():
                 # try to remux file to remove mp3 lame tag errors
                 cmd = [
                     'ffmpeg', '-y',
+                    '-nostdin',
                     '-hide_banner',
                     '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
                     '-i', part_tmp_filename,
@@ -574,14 +597,6 @@ def run():
     debug_meta['file_tracks'] = file_tracks
 
     if args.merge_output:
-        book_filename = os.path.join(
-            book_folder,
-            u'{} - {}.mp3'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
-
-        book_m4b_filename = os.path.join(
-            book_folder,
-            u'{} - {}.m4b'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
-
         if os.path.isfile(book_filename if args.merge_format == 'mp3' else book_m4b_filename):
             logger.warning('Already saved "{}"'.format(
                 colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
@@ -591,20 +606,24 @@ def run():
             colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
 
         # We can't directly generate a m4b here even if specified because eyed3 doesn't support m4b/mp4
+        temp_book_filename = '{}.part'.format(book_filename)
         cmd = [
             'ffmpeg', '-y',
+            '-nostdin',
             '-hide_banner',
             '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
             '-i', 'concat:{}'.format('|'.join([ft['file'] for ft in file_tracks])),
             '-acodec', 'copy',
             '-b:a', '64k',       # explicitly set audio bitrate
-            book_filename]
+            '-f', 'mp3',
+            temp_book_filename]
         exit_code = subprocess.call(cmd)
 
         if exit_code:
             logger.error('ffmpeg exited with the code: {0!s}'.format(exit_code))
             logger.error('Command: {0!s}'.format(' '.join(cmd)))
             exit(exit_code)
+        os.rename(temp_book_filename, book_filename)
 
         audiofile = eyed3.load(book_filename)
         audiofile.tag.title = u'{}'.format(title)
@@ -662,9 +681,10 @@ def run():
                 colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
 
         if args.merge_format == 'm4b':
-            temp_book_m4b_filename = '{}.part'.format(book_filename)
+            temp_book_m4b_filename = '{}.part'.format(book_m4b_filename)
             cmd = [
                 'ffmpeg', '-y',
+                '-nostdin',
                 '-hide_banner',
                 '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
                 '-i', book_filename,
@@ -674,11 +694,11 @@ def run():
 
             cmd.extend(['-map', '0:a'])
             if os.path.isfile(cover_filename):
-                cmd.extend(['-map', '1'])
+                cmd.extend(['-map', '1:v'])
 
             if os.path.isfile(cover_filename):
                 cmd.extend([
-                    '-c', 'copy',
+                    '-c:v', 'copy',
                     '-disposition:v:0', 'attached_pic',
                 ])
             cmd.extend([
