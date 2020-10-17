@@ -694,7 +694,7 @@ def run():
 
             cmd.extend(['-map', '0:a'])
             if os.path.isfile(cover_filename):
-                cmd.extend(['-map', '1'])
+                cmd.extend(['-map', '1:v'])
 
             if os.path.isfile(cover_filename):
                 cmd.extend([
