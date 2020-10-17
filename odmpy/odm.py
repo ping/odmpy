@@ -606,6 +606,7 @@ def run():
             colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
 
         # We can't directly generate a m4b here even if specified because eyed3 doesn't support m4b/mp4
+        temp_book_filename = '{}.part'.format(book_filename)
         cmd = [
             'ffmpeg', '-y',
             '-nostdin',
@@ -614,13 +615,15 @@ def run():
             '-i', 'concat:{}'.format('|'.join([ft['file'] for ft in file_tracks])),
             '-acodec', 'copy',
             '-b:a', '64k',       # explicitly set audio bitrate
-            book_filename]
+            '-f', 'mp3',
+            temp_book_filename]
         exit_code = subprocess.call(cmd)
 
         if exit_code:
             logger.error('ffmpeg exited with the code: {0!s}'.format(exit_code))
             logger.error('Command: {0!s}'.format(' '.join(cmd)))
             exit(exit_code)
+        os.rename(temp_book_filename, book_filename)
 
         audiofile = eyed3.load(book_filename)
         audiofile.tag.title = u'{}'.format(title)
@@ -678,7 +681,7 @@ def run():
                 colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
 
         if args.merge_format == 'm4b':
-            temp_book_m4b_filename = '{}.part'.format(book_filename)
+            temp_book_m4b_filename = '{}.part'.format(book_m4b_filename)
             cmd = [
                 'ffmpeg', '-y',
                 '-nostdin',
