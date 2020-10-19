@@ -52,7 +52,7 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
 
-__version__ = '0.3.0'   # also update ../setup.py
+__version__ = '0.4.0'   # also update ../setup.py
 
 OMC = '1.2.0'
 OS = '10.11.6'
@@ -177,6 +177,7 @@ def run():
     xml_doc = xml.etree.ElementTree.parse(args.odm_file)
     root = xml_doc.getroot()
 
+    # Return Book
     if args.subparser_name == 'ret':
         logger.info('Returning {} ...'.format(args.odm_file))
         early_return_url = root.find('EarlyReturnURL').text
@@ -234,6 +235,7 @@ def run():
         'description': description,
     }
 
+    # View Book Info
     if args.subparser_name == 'info':
         logger.info(u'{:10} {}'.format('Title:', colored.blue(title)))
         logger.info(u'{:10} {}'.format('Creators:', colored.blue(u', '.join([
@@ -258,6 +260,7 @@ def run():
                         math.ceil(1.0 * int(p.attrib['filesize']) / 1024)))
         sys.exit()
 
+    # Download Book
     download_baseurl = ''
     download_parts = []
     for formats in root.findall('Formats'):
@@ -299,7 +302,7 @@ def run():
             os.makedirs(book_folder)
         except OSError as exc:
             if exc.errno not in (36, 63):   # ref http://www.ioplex.com/~miallen/errcmpp.html
-                raise  # re-raise previously caught exception
+                raise
 
             # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
             # create book folder, file with just the title
@@ -430,7 +433,7 @@ def run():
 
                 part_download_res.raise_for_status()
 
-                chunk_size = 1024
+                chunk_size = 1024 * 1024
                 expected_chunk_count = math.ceil(1.0 * part_file_size / chunk_size)
                 with open(part_tmp_filename, 'wb') as outfile:
                     for chunk in progress.bar(
@@ -472,6 +475,7 @@ def run():
                 sys.exit(1)
 
         try:
+            # Fill id3 info for mp3 part
             audiofile = eyed3.load(part_filename)
             if not audiofile.tag:
                 audiofile.initTag()
@@ -496,6 +500,7 @@ def run():
 
             audio_lengths_ms.append(mp3_duration_ms(part_filename))
 
+            # Extract OD chapter info from mp3s for use in merged file
             for frame in audiofile.tag.frame_set.get(eyed3.id3.frames.USERTEXT_FID, []):
                 if frame.description != 'OverDrive MediaMarkers':
                     continue
@@ -510,6 +515,7 @@ def run():
                         marker_timestamp = m.find('Time').text
                         timestamp = None
                         ts_mark = 0
+                        # 2 timestamp formats found
                         for r in ('%M:%S.%f', '%H:%M:%S.%f'):
                             try:
                                 timestamp = time.strptime(marker_timestamp, r)
@@ -692,19 +698,17 @@ def run():
             if os.path.isfile(cover_filename):
                 cmd.extend(['-i', cover_filename])
 
-            cmd.extend(['-map', '0:a'])
-            if os.path.isfile(cover_filename):
-                cmd.extend(['-map', '1:v'])
-
+            cmd.extend([
+                '-map', '0:a',
+                '-c:a', 'aac',
+                '-b:a', '64k',  # explicitly set audio bitrate
+            ])
             if os.path.isfile(cover_filename):
                 cmd.extend([
+                    '-map', '1:v',
                     '-c:v', 'copy',
                     '-disposition:v:0', 'attached_pic',
                 ])
-            cmd.extend([
-                '-c:a', 'aac',
-                '-b:a', '64k',          # explicitly set audio bitrate
-            ])
 
             cmd.extend(['-f', 'mp4', temp_book_m4b_filename])
             exit_code = subprocess.call(cmd)
