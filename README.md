@@ -12,7 +12,10 @@ Requires Python >=3.5.
 ## Install
 
 ```bash
-# Install / Update
+# Install / Update to specific version
+pip install git+https://git@github.com/ping/odmpy.git@0.4.0 --upgrade
+
+# Install / Update from latest source
 pip3 install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
 
 # Uninstall
