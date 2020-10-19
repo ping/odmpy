@@ -42,9 +42,8 @@ except ImportError:
 import requests
 from requests.exceptions import HTTPError, ConnectionError
 from clint.textui import colored, progress
-import eyed3
-from eyed3.utils import art
 from mutagen.mp3 import MP3
+from mutagen.id3 import ID3, TIT2, TIT3, TALB, TPE1, TPE2, TRCK, TPUB, COMM, APIC, CHAP, CTOC, CTOCFlags
 
 logger = logging.getLogger(__file__)
 ch = logging.StreamHandler()
@@ -52,7 +51,7 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
 
-__version__ = '0.4.0'   # also update ../setup.py
+__version__ = '0.3.0'   # also update ../setup.py
 
 OMC = '1.2.0'
 OS = '10.11.6'
@@ -61,18 +60,6 @@ UA_LONG = 'OverDrive Media Console/3.7.0.28 iOS/10.3.3'
 
 MARKER_TIMESTAMP_MMSS = r'(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)'
 MARKER_TIMESTAMP_HHMMSS = r'(?P<hr>[0-9]+):(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)'
-
-
-def mp3_duration_ms(filename):
-    # Ref: https://github.com/ping/odmpy/pull/3
-    # returns the length of the mp3 in ms
-
-    # eyeD3's audio length function:
-    # audiofile.info.time_secs
-    # returns incorrect times due to it's header computation
-    # mutagen does not have this issue
-    audio = MP3(filename)
-    return int(round(audio.info.length * 1000))
 
 
 def unescape_html(text):
@@ -476,76 +463,76 @@ def run():
 
         try:
             # Fill id3 info for mp3 part
-            audiofile = eyed3.load(part_filename)
-            if not audiofile.tag:
-                audiofile.initTag()
-            if not audiofile.tag.title:
-                audiofile.tag.title = u'{}'.format(title)
-            if not audiofile.tag.album:
-                audiofile.tag.album = u'{}'.format(title)
-            if not audiofile.tag.artist:
-                audiofile.tag.artist = u'{}'.format(authors[0])
-            if not audiofile.tag.album_artist:
-                audiofile.tag.album_artist = u'{}'.format(authors[0])
-            if not audiofile.tag.track_num:
-                audiofile.tag.track_num = (part_number, len(download_parts))
-            if not audiofile.tag.publisher:
-                audiofile.tag.publisher = u'{}'.format(publisher)
-            if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
-                audiofile.tag.comments.set(u'{}'.format(description), description=u'Description')
+            mutagen_audio = MP3(part_filename, ID3=ID3)
+            if not mutagen_audio.tags:
+                mutagen_audio.tags = ID3()
+            if 'TIT2' not in mutagen_audio.tags:
+                mutagen_audio.tags.add(TIT2(encoding=3, text=u'{}'.format(title)))
+            if 'TIT3' not in mutagen_audio.tags:
+                mutagen_audio.tags.add(TIT3(encoding=3, text=u'{}'.format(description)))
+            if 'TALB' not in mutagen_audio.tags:
+                mutagen_audio.tags.add(TALB(encoding=3, text=u'{}'.format(title)))
+            if 'TPE1' not in mutagen_audio.tags:
+                mutagen_audio.tags.add(TPE1(encoding=3, text=u'{}'.format(authors[0])))
+            if 'TPE2' not in mutagen_audio.tags:
+                mutagen_audio.tags.add(TPE2(encoding=3, text=u'{}'.format(authors[0])))
+            if 'TRCK' not in mutagen_audio.tags:
+                mutagen_audio.tags.add(TRCK(encoding=3, text=u'{}'.format(part_number)))
+            if 'TPUB' not in mutagen_audio.tags:
+                mutagen_audio.tags.add(TPUB(encoding=3, text=u'{}'.format(publisher)))
+            if 'COMM' not in mutagen_audio.tags:
+                mutagen_audio.tags.add(COMM(encoding=3, desc=u'Description', text=u'{}'.format(description)))
             if cover_bytes:
-                audiofile.tag.images.set(
-                    art.TO_ID3_ART_TYPES[art.FRONT_COVER][0], cover_bytes, 'image/jpeg', description=u'Cover')
-            audiofile.tag.save()
+                mutagen_audio.tags.add(
+                    APIC(encoding=3, mime=u'image/jpeg', type=3, desc=u'Cover',data=cover_bytes))
+            mutagen_audio.save()
 
-            audio_lengths_ms.append(mp3_duration_ms(part_filename))
+            audio_lengths_ms.append(int(round(mutagen_audio.info.length * 1000)))
 
             # Extract OD chapter info from mp3s for use in merged file
-            for frame in audiofile.tag.frame_set.get(eyed3.id3.frames.USERTEXT_FID, []):
-                if frame.description != 'OverDrive MediaMarkers':
-                    continue
-                if frame.text:
-                    try:
-                        tree = xml.etree.ElementTree.fromstring(frame.text)
-                    except UnicodeEncodeError:
-                        tree = xml.etree.ElementTree.fromstring(frame.text.encode('ascii', 'ignore').decode('ascii'))
+            if 'TXXX:OverDrive MediaMarkers' in mutagen_audio.tags \
+                    and mutagen_audio.tags['TXXX:OverDrive MediaMarkers'].text:
+                marker_text = mutagen_audio.tags['TXXX:OverDrive MediaMarkers'].text[0]
+                try:
+                    tree = xml.etree.ElementTree.fromstring(marker_text)
+                except UnicodeEncodeError:
+                    tree = xml.etree.ElementTree.fromstring(marker_text.encode('ascii', 'ignore').decode('ascii'))
 
-                    for m in tree.iter('Marker'):
-                        marker_name = m.find('Name').text.strip()
-                        marker_timestamp = m.find('Time').text
-                        timestamp = None
-                        ts_mark = 0
-                        # 2 timestamp formats found
-                        for r in ('%M:%S.%f', '%H:%M:%S.%f'):
-                            try:
-                                timestamp = time.strptime(marker_timestamp, r)
-                                ts = datetime.timedelta(
-                                    hours=timestamp.tm_hour, minutes=timestamp.tm_min, seconds=timestamp.tm_sec)
-                                ts_mark = int(1000 * ts.total_seconds())
-                                break
-                            except ValueError:
-                                pass
+                for m in tree.iter('Marker'):
+                    marker_name = m.find('Name').text.strip()
+                    marker_timestamp = m.find('Time').text
+                    timestamp = None
+                    ts_mark = 0
+                    # 2 timestamp formats found
+                    for r in ('%M:%S.%f', '%H:%M:%S.%f'):
+                        try:
+                            timestamp = time.strptime(marker_timestamp, r)
+                            ts = datetime.timedelta(
+                                hours=timestamp.tm_hour, minutes=timestamp.tm_min, seconds=timestamp.tm_sec)
+                            ts_mark = int(1000 * ts.total_seconds())
+                            break
+                        except ValueError:
+                            pass
 
-                        if not timestamp:
-                            # some invalid timestamp string, e.g. 60:15.00
-                            mobj = re.match(MARKER_TIMESTAMP_HHMMSS, marker_timestamp)
+                    if not timestamp:
+                        # some invalid timestamp string, e.g. 60:15.00
+                        mobj = re.match(MARKER_TIMESTAMP_HHMMSS, marker_timestamp)
+                        if mobj:
+                            ts_mark = int(mobj.group('hr')) * 60 * 60 * 1000 + \
+                                      int(mobj.group('min')) * 60 * 1000 + \
+                                      int(mobj.group('sec')) * 1000 + \
+                                      int(mobj.group('ms'))
+                        else:
+                            mobj = re.match(MARKER_TIMESTAMP_MMSS, marker_timestamp)
                             if mobj:
-                                ts_mark = int(mobj.group('hr')) * 60 * 60 * 1000 + \
-                                            int(mobj.group('min')) * 60 * 1000 + \
-                                            int(mobj.group('sec')) * 1000 + \
-                                            int(mobj.group('ms'))
+                                ts_mark = int(mobj.group('min')) * 60 * 1000 + \
+                                          int(mobj.group('sec')) * 1000 + \
+                                          int(mobj.group('ms'))
                             else:
-                                mobj = re.match(MARKER_TIMESTAMP_MMSS, marker_timestamp)
-                                if mobj:
-                                    ts_mark = int(mobj.group('min')) * 60 * 1000 + \
-                                                int(mobj.group('sec')) * 1000 + \
-                                                int(mobj.group('ms'))
-                                else:
-                                    raise ValueError('Invalid marker timestamp: {}'.format(marker_timestamp))
+                                raise ValueError('Invalid marker timestamp: {}'.format(marker_timestamp))
 
-                        track_count += 1
-                        part_markers.append((u'ch{:02d}'.format(track_count), marker_name, ts_mark))
-                break
+                    track_count += 1
+                    part_markers.append((u'ch{:02d}'.format(track_count), marker_name, ts_mark))
 
             if args.add_chapters and not args.merge_output:
                 # set the chapter marks
@@ -556,22 +543,20 @@ def run():
                         'text': file_marker[1],
                         'start_time': int(file_marker[2]),
                         'end_time': int(
-                            round(audiofile.info.time_secs * 1000)
+                            # round(audiofile.info.time_secs * 1000)
+                            round(mutagen_audio.info.length * 1000)
                             if j == (len(part_markers) - 1)
                             else part_markers[j + 1][2]),
                     })
 
-                toc = audiofile.tag.table_of_contents.set(
-                    'toc'.encode('ascii'), toplevel=True, ordered=True,
-                    child_ids=[], description=u"Table of Contents")
-
+                mutagen_audio.tags.add(
+                    CTOC(element_id=u'toc', flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
+                         child_element_ids=[m['id'].encode('ascii') for m in generated_markers],
+                         sub_frames=[TIT2(text=[u'Table of Contents'])]))
                 for i, m in enumerate(generated_markers):
-                    title_frameset = eyed3.id3.frames.FrameSet()
-                    title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, u'{}'.format(m['text']))
-
-                    chap = audiofile.tag.chapters.set(
-                        m['id'].encode('ascii'), times=(m['start_time'], m['end_time']), sub_frames=title_frameset)
-                    toc.child_ids.append(chap.element_id)
+                    mutagen_audio.tags.add(
+                        CHAP(element_id=m['id'].encode('ascii'), start_time=m['start_time'], end_time=m['end_time'],
+                             sub_frames=[TIT2(text=[u'{}'.format(m['text'])])]))
                     start_time = datetime.timedelta(milliseconds=m['start_time'])
                     end_time = datetime.timedelta(milliseconds=m['end_time'])
                     logger.debug(
@@ -582,10 +567,9 @@ def run():
 
                 if len(generated_markers) == 1:
                     # Weird player problem on voice where title is shown instead of chapter title
-                    audiofile.tag.title = u'{}'.format(generated_markers[0]['text'])
-                    audiofile.tag.frame_set.get(eyed3.id3.frames.TITLE_FID)[0].encoding = eyed3.id3.UTF_8_ENCODING
+                    mutagen_audio.tags.add(TIT2(encoding=3, text=u'{}'.format(title)))
 
-                audiofile.tag.save()
+                mutagen_audio.save()
 
         except Exception as e:
             logger.warning('Error saving ID3: {}'.format(colored.red(str(e), bold=True)))
@@ -631,18 +615,22 @@ def run():
             exit(exit_code)
         os.rename(temp_book_filename, book_filename)
 
-        audiofile = eyed3.load(book_filename)
-        audiofile.tag.title = u'{}'.format(title)
-        if not audiofile.tag.album:
-            audiofile.tag.album = u'{}'.format(title)
-        if not audiofile.tag.artist:
-            audiofile.tag.artist = u'{}'.format(authors[0])
-        if not audiofile.tag.album_artist:
-            audiofile.tag.album_artist = u'{}'.format(authors[0])
-        if not audiofile.tag.publisher:
-            audiofile.tag.publisher = u'{}'.format(publisher)
-        if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
-            audiofile.tag.comments.set(u'{}'.format(description), description=u'Description')
+        mutagen_audio = MP3(book_filename, ID3=ID3)
+        if not mutagen_audio.tags:
+            mutagen_audio.tags = ID3()
+        # Overwrite title since it gets picked up from the first track by default
+        mutagen_audio.tags.add(TIT2(encoding=3, text=u'{}'.format(title)))
+        if 'TALB' not in mutagen_audio.tags:
+            mutagen_audio.tags.add(TALB(encoding=3, text=u'{}'.format(title)))
+        if 'TPE1' not in mutagen_audio.tags:
+            mutagen_audio.tags.add(TPE1(encoding=3, text=u'{}'.format(authors[0])))
+        if 'TPE2' not in mutagen_audio.tags:
+            mutagen_audio.tags.add(TPE2(encoding=3, text=u'{}'.format(authors[0])))
+        if 'TPUB' not in mutagen_audio.tags:
+            mutagen_audio.tags.add(TPUB(encoding=3, text=u'{}'.format(publisher)))
+        if 'COMM' not in mutagen_audio.tags:
+            mutagen_audio.tags.add(COMM(encoding=3, desc=u'Description', text=u'{}'.format(description)))
+        mutagen_audio.save()
 
         if args.add_chapters:
             merged_markers = []
@@ -662,25 +650,23 @@ def run():
                     })
             debug_meta['merged_markers'] = merged_markers
 
-            toc = audiofile.tag.table_of_contents.set(
-                'toc'.encode('ascii'), toplevel=True, ordered=True,
-                child_ids=[], description=u'Table of Contents')
-
+            mutagen_audio.tags.add(
+                CTOC(element_id=u'toc', flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
+                     child_element_ids=[m['id'].encode('ascii') for m in merged_markers],
+                     sub_frames=[TIT2(text=[u"Table of Contents"])]))
             for i, m in enumerate(merged_markers):
-                title_frameset = eyed3.id3.frames.FrameSet()
-                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, u'{}'.format(m['text']))
-                chap = audiofile.tag.chapters.set(
-                    m['id'].encode('ascii'), times=(m['start_time'], m['end_time']), sub_frames=title_frameset)
-                toc.child_ids.append(chap.element_id)
+                mutagen_audio.tags.add(
+                    CHAP(element_id=m['id'].encode('ascii'), start_time=m['start_time'], end_time=m['end_time'],
+                         sub_frames=[TIT2(text=[u'{}'.format(m['text'])])]))
                 start_time = datetime.timedelta(milliseconds=m['start_time'])
                 end_time = datetime.timedelta(milliseconds=m['end_time'])
                 logger.debug(
                     u'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
                         colored.cyan(m['id']), start_time, end_time,
                         colored.cyan(m['text']),
-                        colored.blue(book_filename)))
+                        colored.blue(part_filename)))
 
-        audiofile.tag.save()
+        mutagen_audio.save()
 
         if args.merge_format == 'mp3':
             logger.info('Merged files into "{}"'.format(
