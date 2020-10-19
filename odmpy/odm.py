@@ -484,7 +484,7 @@ def run():
                 mutagen_audio.tags.add(COMM(encoding=3, desc=u'Description', text=u'{}'.format(description)))
             if cover_bytes:
                 mutagen_audio.tags.add(
-                    APIC(encoding=3, mime=u'image/jpeg', type=3, desc=u'Cover',data=cover_bytes))
+                    APIC(encoding=3, mime=u'image/jpeg', type=3, desc=u'Cover', data=cover_bytes))
             mutagen_audio.save()
 
             audio_lengths_ms.append(int(round(mutagen_audio.info.length * 1000)))
@@ -543,7 +543,6 @@ def run():
                         'text': file_marker[1],
                         'start_time': int(file_marker[2]),
                         'end_time': int(
-                            # round(audiofile.info.time_secs * 1000)
                             round(mutagen_audio.info.length * 1000)
                             if j == (len(part_markers) - 1)
                             else part_markers[j + 1][2]),
