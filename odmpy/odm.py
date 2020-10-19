@@ -664,7 +664,7 @@ def run():
                     u'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
                         colored.cyan(m['id']), start_time, end_time,
                         colored.cyan(m['text']),
-                        colored.blue(part_filename)))
+                        colored.blue(book_filename)))
 
         mutagen_audio.save()
 
