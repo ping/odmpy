@@ -46,7 +46,7 @@ setup(
             'odmpy = odmpy.__main__:main',
         ]
     },
-    install_requires=['requests', 'clint', 'eyed3', 'mutagen'],
+    install_requires=['requests', 'clint', 'eyed3', 'mutagen','pillow'],
     include_package_data=True,
     platforms='any',
     long_description=__long_description__,

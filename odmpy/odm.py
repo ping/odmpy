@@ -45,6 +45,8 @@ from clint.textui import colored, progress
 import eyed3
 from eyed3.utils import art
 from mutagen.mp3 import MP3
+from PIL import Image
+import io
 
 logger = logging.getLogger(__file__)
 ch = logging.StreamHandler()
@@ -102,6 +104,18 @@ def slugify(value, allow_unicode=False):
     value = re.sub(r'[^\w\s-]', '', value).strip().lower()
     return re.sub(r'[-\s]+', '-', value)
 
+def resize(cover):
+    '''
+    Change the aspect ratio of the cover image to 1:1 using the
+    image width as the default size and preserving the quality
+    as close to the original as possible.
+    Do it in memory so the image is only writen to disk once.
+    '''
+    img = Image.open(io.BytesIO(cover))
+    img = img.resize(((img.size[0]),(img.size[0])), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format='JPEG', quality=95, subsampling=0)
+    return (buf.getvalue())
 
 def run():
     parser = argparse.ArgumentParser(
@@ -321,7 +335,7 @@ def run():
         cover_res = requests.get(cover_url, headers={'User-Agent': UA})
         cover_res.raise_for_status()
         with open(cover_filename, 'wb') as outfile:
-            outfile.write(cover_res.content)
+            outfile.write(resize(cover_res.content))
 
     acquisition_url = root.find('License').find('AcquisitionUrl').text
     media_id = root.attrib['id']
