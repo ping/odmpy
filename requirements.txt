@@ -1,3 +1,4 @@
 requests
 clint
 mutagen
+pillow
