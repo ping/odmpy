@@ -41,6 +41,7 @@ except ImportError:
     pass
 
 import requests
+from requests.adapters import HTTPAdapter
 from requests.exceptions import HTTPError, ConnectionError
 from clint.textui import colored, progress
 import eyed3
@@ -171,12 +172,14 @@ def run():
     parser_dl.add_argument(
         '-j', '--writejson', dest='write_json', action='store_true',
         help='Generate a meta json file (for debugging)')
+    parser_dl.add_argument(
+        '-r', '--retry', dest='retries', type=int, default=1,
+        help='Number of retries if download fails. Default 1.')
     parser_dl.add_argument('odm_file', type=str, help='ODM file path')
 
     parser_ret = subparsers.add_parser(
         'ret', description='Return a loan file.',
         help='Return a loan file.')
-
     parser_ret.add_argument('odm_file', type=str, help='ODM file path')
 
     args = parser.parse_args()
@@ -190,6 +193,11 @@ def run():
         parser.print_help()
         exit(0)
 
+    session = requests.Session()
+    custom_adapter = HTTPAdapter(max_retries=args.retries)
+    session.mount('http://', custom_adapter)
+    session.mount('https://', custom_adapter)
+
     xml_doc = xml.etree.ElementTree.parse(args.odm_file)
     root = xml_doc.getroot()
 
@@ -198,7 +206,7 @@ def run():
         logger.info('Returning {} ...'.format(args.odm_file))
         early_return_url = root.find('EarlyReturnURL').text
         try:
-            early_return_res = requests.get(
+            early_return_res = session.get(
                 early_return_url, headers={'User-Agent': UA_LONG}, timeout=10)
             early_return_res.raise_for_status()
             logger.info('Loan returned successfully: {}'.format(args.odm_file))
@@ -334,10 +342,16 @@ def run():
     cover_filename = os.path.join(book_folder, 'cover.jpg')
     debug_filename = os.path.join(book_folder, 'debug.json')
     if not os.path.isfile(cover_filename) and cover_url:
-        cover_res = requests.get(cover_url, headers={'User-Agent': UA})
+        cover_res = session.get(cover_url, headers={'User-Agent': UA})
         cover_res.raise_for_status()
         with open(cover_filename, 'wb') as outfile:
             outfile.write(resize(cover_res.content))
+
+    # check early if a merged file is already saved
+    if args.merge_output and os.path.isfile(book_filename if args.merge_format == 'mp3' else book_m4b_filename):
+        logger.warning('Already saved "{}"'.format(
+            colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
+        sys.exit(0)
 
     acquisition_url = root.find('License').find('AcquisitionUrl').text
     media_id = root.attrib['id']
@@ -366,7 +380,7 @@ def run():
             ('MediaID', media_id), ('ClientID', client_id),
             ('OMC', OMC), ('OS', OS), ('Hash', license_hash)])
 
-        license_res = requests.get(
+        license_res = session.get(
             acquisition_url,
             params=params,
             headers={'User-Agent': UA},
@@ -438,7 +452,7 @@ def run():
                 colored.magenta(part_filename)))
         else:
             try:
-                part_download_res = requests.get(
+                part_download_res = session.get(
                     part_download_url,
                     headers={
                         'User-Agent': UA,
@@ -563,7 +577,7 @@ def run():
                         part_markers.append((u'ch{:02d}'.format(track_count), marker_name, ts_mark))
                 break
 
-            if args.add_chapters and not args.merge_output:
+            if args.add_chapters and not args.merge_output and not audiofile.tag.table_of_contents:
                 # set the chapter marks
                 generated_markers = []
                 for j, file_marker in enumerate(part_markers):
@@ -596,11 +610,6 @@ def run():
                             colored.cyan(m['text']),
                             colored.blue(part_filename)))
 
-                if len(generated_markers) == 1:
-                    # Weird player problem on voice where title is shown instead of chapter title
-                    audiofile.tag.title = u'{}'.format(generated_markers[0]['text'])
-                    audiofile.tag.frame_set.get(eyed3.id3.frames.TITLE_FID)[0].encoding = eyed3.id3.UTF_8_ENCODING
-
                 audiofile.tag.save()
 
         except Exception as e:
@@ -619,11 +628,6 @@ def run():
     debug_meta['file_tracks'] = file_tracks
 
     if args.merge_output:
-        if os.path.isfile(book_filename if args.merge_format == 'mp3' else book_m4b_filename):
-            logger.warning('Already saved "{}"'.format(
-                colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
-            sys.exit(0)
-
         logger.info('Generating "{}"...'.format(
             colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
 
@@ -660,7 +664,7 @@ def run():
         if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
             audiofile.tag.comments.set(u'{}'.format(description), description=u'Description')
 
-        if args.add_chapters:
+        if args.add_chapters and not audiofile.tag.table_of_contents:
             merged_markers = []
             for i, f in enumerate(file_tracks):
                 prev_tracks_len_ms = 0 if i == 0 else reduce(lambda x, y: x + y, audio_lengths_ms[0:i])
