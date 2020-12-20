@@ -13,7 +13,7 @@ Requires Python >=3.5.
 
 ```bash
 # Install / Update to specific version
-pip install git+https://git@github.com/ping/odmpy.git@0.4.0 --upgrade
+pip install git+https://git@github.com/ping/odmpy.git@0.4.1 --upgrade
 
 # Install / Update from latest source
 pip3 install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -41,7 +41,7 @@ Available commands:
     dl                  Download from a loan file
     ret                 Return a loan file.
 
-Version 0.3.0. [Python 3.7.4-darwin] Source at https://github.com/ping/odmpy/
+Version 0.4.1. [Python 3.7.4-darwin] Source at https://github.com/ping/odmpy/
 ```
 
 ```
@@ -66,6 +66,8 @@ optional arguments:
   -k, --keepcover       Always generate the cover image file (cover.jpg)
   -f, --keepmp3         Keep downloaded mp3 files (after merging)
   -j, --writejson       Generate a meta json file (for debugging)
+  -r RETRIES, --retry RETRIES
+                        Number of retries if download fails. Default 1.
 ```
 
 ```
