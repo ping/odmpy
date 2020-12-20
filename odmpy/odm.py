@@ -50,7 +50,7 @@ from mutagen.mp3 import MP3
 from PIL import Image
 
 logger = logging.getLogger(__file__)
-ch = logging.StreamHandler()
+ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
@@ -107,12 +107,12 @@ def slugify(value, allow_unicode=False):
 
 
 def resize(cover):
-    '''
+    """
     Change the aspect ratio of the cover image to 1:1 using the
     image width as the default size and preserving the quality
     as close to the original as possible.
     Do it in memory so the image is only writen to disk once.
-    '''
+    """
     img = Image.open(io.BytesIO(cover))
     img = img.resize(((img.size[0]),(img.size[0])), Image.LANCZOS)
     buf = io.BytesIO()
@@ -192,11 +192,6 @@ def run():
     except AttributeError:
         parser.print_help()
         exit(0)
-
-    session = requests.Session()
-    custom_adapter = HTTPAdapter(max_retries=args.retries)
-    session.mount('http://', custom_adapter)
-    session.mount('https://', custom_adapter)
 
     xml_doc = xml.etree.ElementTree.parse(args.odm_file)
     root = xml_doc.getroot()
@@ -283,6 +278,11 @@ def run():
                         p.attrib['name'], p.attrib['duration'],
                         math.ceil(1.0 * int(p.attrib['filesize']) / 1024)))
         sys.exit()
+
+    session = requests.Session()
+    custom_adapter = HTTPAdapter(max_retries=args.retries)
+    session.mount('http://', custom_adapter)
+    session.mount('https://', custom_adapter)
 
     # Download Book
     download_baseurl = ''
