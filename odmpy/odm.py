@@ -175,6 +175,9 @@ def run():
     parser_dl.add_argument(
         '-r', '--retry', dest='retries', type=int, default=1,
         help='Number of retries if download fails. Default 1.')
+    parser_dl.add_argument(
+        '--hideprogress', dest='hide_progress', action='store_true',
+        help='Hide the download progress bar (e.g. during testing)')
     parser_dl.add_argument('odm_file', type=str, help='ODM file path')
 
     parser_ret = subparsers.add_parser(
@@ -469,7 +472,8 @@ def run():
                     for chunk in progress.bar(
                             part_download_res.iter_content(chunk_size=chunk_size),
                             label='Part {}'.format(part_number),
-                            expected_size=expected_chunk_count):
+                            expected_size=expected_chunk_count,
+                            hide=args.hide_progress):
                         if chunk:
                             outfile.write(chunk)
 
@@ -637,12 +641,17 @@ def run():
             'ffmpeg', '-y',
             '-nostdin',
             '-hide_banner',
-            '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
+            '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
+        ]
+        if not args.hide_progress:
+            cmd.append('-stats')
+        cmd.extend([
             '-i', 'concat:{}'.format('|'.join([ft['file'] for ft in file_tracks])),
             '-acodec', 'copy',
             '-b:a', '64k',       # explicitly set audio bitrate
             '-f', 'mp3',
-            temp_book_filename]
+            temp_book_filename
+        ])
         exit_code = subprocess.call(cmd)
 
         if exit_code:
@@ -712,9 +721,13 @@ def run():
                 'ffmpeg', '-y',
                 '-nostdin',
                 '-hide_banner',
-                '-loglevel', 'info' if logger.level == logging.DEBUG else 'error', '-stats',
-                '-i', book_filename,
+                '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
             ]
+            if not args.hide_progress:
+                cmd.append('-stats')
+            cmd.extend([
+                '-i', book_filename,
+            ])
             if os.path.isfile(cover_filename):
                 cmd.extend(['-i', cover_filename])
 

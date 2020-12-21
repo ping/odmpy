@@ -68,6 +68,7 @@ optional arguments:
   -j, --writejson       Generate a meta json file (for debugging)
   -r RETRIES, --retry RETRIES
                         Number of retries if download fails. Default 1.
+  --hideprogress        Hide the download progress bar (e.g. during testing)
 ```
 
 ```
