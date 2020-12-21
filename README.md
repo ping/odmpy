@@ -41,7 +41,7 @@ Available commands:
     dl                  Download from a loan file
     ret                 Return a loan file.
 
-Version 0.4.1. [Python 3.7.4-darwin] Source at https://github.com/ping/odmpy/
+Version 0.4.2. [Python 3.7.4-darwin] Source at https://github.com/ping/odmpy/
 ```
 
 ```
