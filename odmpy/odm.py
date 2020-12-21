@@ -114,10 +114,10 @@ def resize(cover):
     Do it in memory so the image is only writen to disk once.
     """
     img = Image.open(io.BytesIO(cover))
-    img = img.resize(((img.size[0]),(img.size[0])), Image.LANCZOS)
+    img = img.resize(((img.size[0]), (img.size[0])), Image.LANCZOS)
     buf = io.BytesIO()
     img.save(buf, format='JPEG', quality=95, subsampling=0)
-    return (buf.getvalue())
+    return buf.getvalue()
 
 
 def run():
@@ -236,7 +236,7 @@ def run():
     debug_meta = {}
 
     title = metadata.find('Title').text
-    cover_url = metadata.find('CoverUrl').text if metadata.find('CoverUrl') != None else ''
+    cover_url = metadata.find('CoverUrl').text if metadata.find('CoverUrl') is not None else ''
     authors = [
         unescape_html(c.text) for c in metadata.find('Creators')
         if 'Author' in c.attrib.get('role', '')]
@@ -420,7 +420,6 @@ def run():
         '{}SignedInfo'.format(ns)).find('{}ClientID'.format(ns))
     license_client_id = license_client.text
 
-    lic_file_contents = ''
     with open(license_file, 'r') as lic_file:
         lic_file_contents = lic_file.read()
 
