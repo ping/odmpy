@@ -204,7 +204,7 @@ def run():
         logger.info('Returning {} ...'.format(args.odm_file))
         early_return_url = root.find('EarlyReturnURL').text
         try:
-            early_return_res = session.get(
+            early_return_res = requests.get(
                 early_return_url, headers={'User-Agent': UA_LONG}, timeout=10)
             early_return_res.raise_for_status()
             logger.info('Loan returned successfully: {}'.format(args.odm_file))
