@@ -494,7 +494,7 @@ def run():
                         os.rename(part_tmp_filename, part_filename)
                     else:
                         os.remove(part_tmp_filename)
-                except Exception as ffmpeg_ex:
+                except Exception as ffmpeg_ex:  # pylint: disable=broad-except
                     logger.warning('Error executing ffmpeg: {}'.format(str(ffmpeg_ex)))
                     os.rename(part_tmp_filename, part_filename)
 
@@ -615,7 +615,7 @@ def run():
 
                 audiofile.tag.save()
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logger.warning('Error saving ID3: {}'.format(colored.red(str(e), bold=True)))
             keep_cover = True
 
@@ -754,20 +754,20 @@ def run():
             logger.info('Merged files into "{}"'.format(colored.magenta(book_m4b_filename)))
             try:
                 os.remove(book_filename)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 logger.warning('Error deleting "{}": {}'.format(book_filename, str(e)))
 
         if not args.keep_mp3:
             for f in file_tracks:
                 try:
                     os.remove(f['file'])
-                except Exception as e:
+                except Exception as e:      # pylint: disable=broad-except
                     logger.warning('Error deleting "{}": {}'.format(f['file'], str(e)))
 
     if not keep_cover:
         try:
             os.remove(cover_filename)
-        except Exception as e:
+        except Exception as e:      # pylint: disable=broad-except
             logger.warning('Error deleting "{}": {}'.format(cover_filename, str(e)))
 
     if args.write_json:
