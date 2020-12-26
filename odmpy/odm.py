@@ -189,6 +189,11 @@ def run():
     if args.verbose:
         logger.setLevel(logging.DEBUG)
 
+    # suppress warnings
+    logging.getLogger('eyed3').setLevel(
+        logging.WARNING if logger.level == logging.DEBUG else logging.ERROR)
+    ffmpeg_loglevel = 'info' if logger.level == logging.DEBUG else 'error'
+
     try:
         # test for odm file
         args.odm_file
@@ -481,7 +486,7 @@ def run():
                     'ffmpeg', '-y',
                     '-nostdin',
                     '-hide_banner',
-                    '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
+                    '-loglevel', ffmpeg_loglevel,
                     '-i', part_tmp_filename,
                     '-c:a', 'copy', '-c:v', 'copy',
                     part_filename
@@ -640,7 +645,7 @@ def run():
             'ffmpeg', '-y',
             '-nostdin',
             '-hide_banner',
-            '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
+            '-loglevel', ffmpeg_loglevel,
         ]
         if not args.hide_progress:
             cmd.append('-stats')
@@ -720,7 +725,7 @@ def run():
                 'ffmpeg', '-y',
                 '-nostdin',
                 '-hide_banner',
-                '-loglevel', 'info' if logger.level == logging.DEBUG else 'error',
+                '-loglevel', ffmpeg_loglevel,
             ]
             if not args.hide_progress:
                 cmd.append('-stats')
