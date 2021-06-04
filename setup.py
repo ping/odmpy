@@ -27,7 +27,7 @@ if sys.platform == 'win32':
 
 __author__ = 'ping'
 __url__ = 'https://github.com/ping/odmpy/'
-__version__ = '0.4.3'   # also update odmpy/odm.py
+__version__ = '0.4.4'   # also update odmpy/odm.py
 
 
 __long_description__ = '''
