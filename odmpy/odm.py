@@ -30,11 +30,9 @@ import hashlib
 import base64
 from collections import OrderedDict
 import re
-import unicodedata
 import logging
 import math
 import json
-import io
 try:
     from functools import reduce
 except ImportError:
@@ -46,8 +44,13 @@ from requests.exceptions import HTTPError, ConnectionError
 from clint.textui import colored, progress
 import eyed3
 from eyed3.utils import art
-from mutagen.mp3 import MP3
-from PIL import Image
+from .utils import (
+    unescape_html, slugify, mp3_duration_ms, resize,
+)
+from .constants import (
+    OMC, OS, UA, UA_LONG,
+    UNSUPPORTED_PARSER_ENTITIES
+)
 
 logger = logging.getLogger(__file__)
 ch = logging.StreamHandler(sys.stdout)
@@ -57,67 +60,8 @@ logger.setLevel(logging.INFO)
 
 __version__ = '0.4.3'   # also update ../setup.py
 
-OMC = '1.2.0'
-OS = '10.11.6'
-UA = 'OverDrive Media Console'
-UA_LONG = 'OverDrive Media Console/3.7.0.28 iOS/10.3.3'
-
 MARKER_TIMESTAMP_MMSS = r'(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)'
 MARKER_TIMESTAMP_HHMMSS = r'(?P<hr>[0-9]+):(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)'
-
-
-def mp3_duration_ms(filename):
-    # Ref: https://github.com/ping/odmpy/pull/3
-    # returns the length of the mp3 in ms
-
-    # eyeD3's audio length function:
-    # audiofile.info.time_secs
-    # returns incorrect times due to it's header computation
-    # mutagen does not have this issue
-    audio = MP3(filename)
-    return int(round(audio.info.length * 1000))
-
-
-def unescape_html(text):
-    """py2/py3 compatible html unescaping"""
-    try:
-        import html
-        return html.unescape(text)
-    except ImportError:
-        import HTMLParser
-        parser = HTMLParser.HTMLParser()
-        return parser.unescape(text)
-
-
-# From django
-def slugify(value, allow_unicode=False):
-    """
-    Convert to ASCII if 'allow_unicode' is False. Convert spaces to hyphens.
-    Remove characters that aren't alphanumerics, underscores, or hyphens.
-    Convert to lowercase. Also strip leading and trailing whitespace.
-    """
-    if allow_unicode:
-        value = unicodedata.normalize('NFKC', value)
-        value = re.sub(r'[^\w\s-]', '', value, flags=re.U).strip().lower()
-        return re.sub(r'[-\s]+', '-', value, flags=re.U)
-    value = unicodedata.normalize(
-        'NFKD', value).encode('ascii', 'ignore').decode('ascii')
-    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
-    return re.sub(r'[-\s]+', '-', value)
-
-
-def resize(cover):
-    """
-    Change the aspect ratio of the cover image to 1:1 using the
-    image width as the default size and preserving the quality
-    as close to the original as possible.
-    Do it in memory so the image is only writen to disk once.
-    """
-    img = Image.open(io.BytesIO(cover))
-    img = img.resize(((img.size[0]), (img.size[0])), Image.LANCZOS)
-    buf = io.BytesIO()
-    img.save(buf, format='JPEG', quality=95, subsampling=0)
-    return buf.getvalue()
 
 
 def run():
@@ -233,9 +177,21 @@ def run():
     for t in root.itertext():
         if not t.startswith('<Metadata>'):
             continue
-        metadata = xml.etree.ElementTree.fromstring(
-            # remove invalid & char
-            re.sub(r'\s&\s', ' &amp; ', t))
+        # remove invalid '&' char
+        text = re.sub(r'\s&\s', ' &amp; ', t)
+        try:
+            metadata = xml.etree.ElementTree.fromstring(text)
+        except xml.etree.ElementTree.ParseError:
+            # [TODO]: Find a more generic solution instead of patching entities, maybe lxml?
+            # Ref: https://github.com/ping/odmpy/issues/19
+            patched_text = u'<!DOCTYPE xml [{patch}]>{text}'.format(
+                patch=''.join([
+                    '<!ENTITY {} "{}">'.format(entity, replacement)
+                    for entity, replacement in UNSUPPORTED_PARSER_ENTITIES.items()
+                ]),
+                text=text,
+            )
+            metadata = xml.etree.ElementTree.fromstring(patched_text)
         break
 
     debug_meta = {}
@@ -546,7 +502,8 @@ def run():
                     try:
                         tree = xml.etree.ElementTree.fromstring(frame.text)
                     except UnicodeEncodeError:
-                        tree = xml.etree.ElementTree.fromstring(frame.text.encode('ascii', 'ignore').decode('ascii'))
+                        tree = xml.etree.ElementTree.fromstring(
+                            frame.text.encode('ascii', 'ignore').decode('ascii'))
 
                     for m in tree.iter('Marker'):
                         marker_name = m.find('Name').text.strip()
