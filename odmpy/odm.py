@@ -90,6 +90,9 @@ def run():
     parser_info = subparsers.add_parser(
         'info', description='Get information about a loan file.',
         help='Get information about a loan file')
+    parser_info.add_argument(
+        "-f", "--format", dest="format", choices=["text", "json"],
+        default="text", help="Format for output", )
     parser_info.add_argument('odm_file', type=str, help='ODM file path')
 
     parser_dl = subparsers.add_parser(
@@ -220,27 +223,71 @@ def run():
 
     # View Book Info
     if args.subparser_name == 'info':
-        logger.info(u'{:10} {}'.format('Title:', colored.blue(title)))
-        logger.info(u'{:10} {}'.format('Creators:', colored.blue(u', '.join([
-            u'{} ({})'.format(c.text, c.attrib['role'])
-            for c in metadata.find('Creators')]))))
-        logger.info(u'{:10} {}'.format(
-            'Publisher:', metadata.find('Publisher').text))
-        logger.info(u'{:10} {}'.format('Subjects:', u', '.join([
-            c.text for c in metadata.find('Subjects')])))
-        logger.info(u'{:10} {}'.format('Languages:', u', '.join([
-            c.text for c in metadata.find('Languages')])))
-        logger.info(u'{:10} \n{}'.format(
-            'Description:', metadata.find('Description').text))
+        if args.format == 'text':
+            logger.info(u'{:10} {}'.format('Title:', colored.blue(title)))
+            logger.info(u'{:10} {}'.format('Creators:', colored.blue(u', '.join([
+                u'{} ({})'.format(c.text, c.attrib['role'])
+                for c in metadata.find('Creators')]))))
+            logger.info(u'{:10} {}'.format(
+                'Publisher:', metadata.find('Publisher').text))
+            logger.info(u'{:10} {}'.format('Subjects:', u', '.join([
+                c.text for c in metadata.find('Subjects')])))
+            logger.info(u'{:10} {}'.format('Languages:', u', '.join([
+                c.text for c in metadata.find('Languages')])))
+            logger.info(u'{:10} \n{}'.format(
+                'Description:', metadata.find('Description').text))
 
-        for formats in root.findall('Formats'):
-            for f in formats:
-                logger.info(u'\n{:10} {}'.format('Format:', f.attrib['name']))
-                parts = f.find('Parts')
-                for p in parts:
-                    logger.info('* {} - {} ({:,.0f}kB)'.format(
-                        p.attrib['name'], p.attrib['duration'],
-                        math.ceil(1.0 * int(p.attrib['filesize']) / 1024)))
+            for formats in root.findall('Formats'):
+                for f in formats:
+                    logger.info(u'\n{:10} {}'.format('Format:', f.attrib['name']))
+                    parts = f.find('Parts')
+                    for p in parts:
+                        logger.info('* {} - {} ({:,.0f}kB)'.format(
+                            p.attrib['name'], p.attrib['duration'],
+                            math.ceil(1.0 * int(p.attrib['filesize']) / 1024)))
+
+        elif args.format == "json":
+            result = {
+                "title": title,
+                "creators": [
+                    u"{} ({})".format(c.text, c.attrib["role"])
+                    for c in metadata.find("Creators")
+                ],
+                "publisher": metadata.find("Publisher").text,
+                "subjects": [c.text for c in metadata.find("Subjects")],
+                "languages": [c.text for c in metadata.find("Languages")],
+                "description": metadata.find("Description").text,
+                "formats": [],
+            }
+
+            for formats in root.findall("Formats"):
+                for f in formats:
+                    parts = []
+                    total_secs = 0
+                    for p in f.find("Parts"):
+                        mins, secs = map(int, p.attrib["duration"].split(":"))
+                        total_secs += secs + mins * 60
+                        parts.append(
+                            {
+                                "name": p.attrib["name"],
+                                "duration": p.attrib["duration"],
+                                "filesize": "{:,.0f}kB".format(
+                                    math.ceil(1.0 * int(p.attrib["filesize"]) / 1024)
+                                ),
+                            }
+                        )
+                    result["formats"].append(
+                        {"format": f.attrib["name"], "parts": parts}
+                    )
+                    # in case there are multiple formats, only need to store it once
+                    if "total_duration" not in result:
+                        result["total_durations"] = {
+                            "total_minutes": round(total_secs / 60),
+                            "total_seconds": total_secs,
+                        }
+
+            logger.info(json.dumps(result))
+
         sys.exit()
 
     session = requests.Session()
