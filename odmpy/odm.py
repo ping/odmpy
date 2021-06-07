@@ -269,12 +269,18 @@ def run():
                     parts = []
                     total_secs = 0
                     for p in f.find("Parts"):
-                        mins, secs = map(int, p.attrib["duration"].split(":"))
-                        total_secs += secs + mins * 60
+                        part_duration = p.attrib["duration"]
+                        # part duration can look like '%M:%S.%f' or '%H:%M:%S.%f'
+                        try:
+                            mins, secs = map(float, part_duration.split(":"))
+                            hrs = 0
+                        except ValueError:  # ValueError: too many values to unpack
+                            hrs, mins, secs = map(float, part_duration.split(":"))
+                        total_secs += hrs * 60 * 60 + secs + mins * 60
                         parts.append(
                             {
                                 "name": p.attrib["name"],
-                                "duration": p.attrib["duration"],
+                                "duration": part_duration,
                                 "filesize": "{:,.0f}kB".format(
                                     math.ceil(1.0 * int(p.attrib["filesize"]) / 1024)
                                 ),
@@ -287,7 +293,7 @@ def run():
                     if "total_duration" not in result:
                         result["total_duration"] = {
                             "total_minutes": round(total_secs / 60),
-                            "total_seconds": total_secs,
+                            "total_seconds": round(total_secs),
                         }
 
             logger.info(json.dumps(result))
