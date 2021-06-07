@@ -285,7 +285,7 @@ def run():
                     )
                     # in case there are multiple formats, only need to store it once
                     if "total_duration" not in result:
-                        result["total_durations"] = {
+                        result["total_duration"] = {
                             "total_minutes": round(total_secs / 60),
                             "total_seconds": total_secs,
                         }
