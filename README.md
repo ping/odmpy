@@ -84,15 +84,17 @@ optional arguments:
 ```
 
 ```
-usage: odmpy info [-h] odm_file
+usage: odmpy info [-h] [-f {text,json}] odm_file
 
 Get information about a loan file.
 
 positional arguments:
-  odm_file    ODM file path
+  odm_file              ODM file path
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help            show this help message and exit
+  -f {text,json}, --format {text,json}
+                        Format for output
 ```
 
 ### Examples
