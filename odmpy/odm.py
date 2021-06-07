@@ -49,7 +49,8 @@ from .utils import (
 )
 from .constants import (
     OMC, OS, UA, UA_LONG,
-    UNSUPPORTED_PARSER_ENTITIES
+    UNSUPPORTED_PARSER_ENTITIES,
+    PERFORMER_FID,
 )
 
 logger = logging.getLogger(__file__)
@@ -210,6 +211,9 @@ def run():
             if 'Editor' in c.attrib.get('role', '')]
     if not authors:
         authors = [unescape_html(c.text) for c in metadata.find('Creators')]
+    narrators = [
+        unescape_html(c.text) for c in metadata.find('Creators')
+        if 'Narrator' in c.attrib.get('role', '')]
     publisher = metadata.find('Publisher').text
     description = metadata.find('Description').text if metadata.find('Description') is not None else ''
 
@@ -530,6 +534,8 @@ def run():
                 audiofile.tag.album_artist = u'{}'.format(authors[0])
             if not audiofile.tag.track_num:
                 audiofile.tag.track_num = (part_number, len(download_parts))
+            if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
+                audiofile.tag.setTextFrame(PERFORMER_FID, u'{}'.format(narrators[0]))
             if not audiofile.tag.publisher:
                 audiofile.tag.publisher = u'{}'.format(publisher)
             if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
@@ -676,6 +682,8 @@ def run():
             audiofile.tag.artist = u'{}'.format(authors[0])
         if not audiofile.tag.album_artist:
             audiofile.tag.album_artist = u'{}'.format(authors[0])
+        if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
+            audiofile.tag.setTextFrame(PERFORMER_FID, u'{}'.format(narrators[0]))
         if not audiofile.tag.publisher:
             audiofile.tag.publisher = u'{}'.format(publisher)
         if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
