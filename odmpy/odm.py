@@ -118,6 +118,9 @@ def run():
         '-f', '--keepmp3', dest='keep_mp3', action='store_true',
         help='Keep downloaded mp3 files (after merging)')
     parser_dl.add_argument(
+        '--nobookfolder', dest='no_book_folder', action='store_true',
+        help="Don't create a book subfolder")
+    parser_dl.add_argument(
         '-j', '--writejson', dest='write_json', action='store_true',
         help='Generate a meta json file (for debugging)')
     parser_dl.add_argument(
@@ -147,7 +150,7 @@ def run():
         args.odm_file
     except AttributeError:
         parser.print_help()
-        exit(0)
+        sys.exit()
 
     xml_doc = xml.etree.ElementTree.parse(args.odm_file)
     root = xml_doc.getroot()
@@ -330,6 +333,8 @@ def run():
     book_folder = os.path.join(
         args.download_dir,
         u'{} - {}'.format(title.replace(os.sep, '-'), u', '.join(authors).replace(os.sep, '-')))
+    if args.no_book_folder:
+        book_folder = args.download_dir
 
     # for merged mp3
     book_filename = os.path.join(
@@ -346,19 +351,27 @@ def run():
         try:
             os.makedirs(book_folder)
         except OSError as exc:
-            if exc.errno not in (36, 63):   # ref http://www.ioplex.com/~miallen/errcmpp.html
+            # ref http://www.ioplex.com/~miallen/errcmpp.html
+            if exc.errno not in (36, 63) or args.no_book_folder:
                 raise
 
             # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
             # create book folder, file with just the title
             book_folder = os.path.join(
-                args.download_dir, u'{}'.format(title.replace(os.sep, '-')))
+                args.download_dir, u'{}'.format(title.replace(os.sep, '-'))
+            )
             os.makedirs(book_folder)
 
             book_filename = os.path.join(
                 book_folder, u'{}.mp3'.format(title.replace(os.sep, '-')))
             book_m4b_filename = os.path.join(
                 book_folder, u'{}.m4b'.format(title.replace(os.sep, '-')))
+
+    # check early if a merged file is already saved
+    if args.merge_output and os.path.isfile(book_filename if args.merge_format == 'mp3' else book_m4b_filename):
+        logger.warning('Already saved "{}"'.format(
+            colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
+        sys.exit()
 
     cover_filename = os.path.join(book_folder, 'cover.jpg')
     debug_filename = os.path.join(book_folder, 'debug.json')
@@ -367,12 +380,6 @@ def run():
         cover_res.raise_for_status()
         with open(cover_filename, 'wb') as outfile:
             outfile.write(resize(cover_res.content))
-
-    # check early if a merged file is already saved
-    if args.merge_output and os.path.isfile(book_filename if args.merge_format == 'mp3' else book_m4b_filename):
-        logger.warning('Already saved "{}"'.format(
-            colored.magenta(book_filename if args.merge_format == 'mp3' else book_m4b_filename)))
-        sys.exit(0)
 
     acquisition_url = root.find('License').find('AcquisitionUrl').text
     media_id = root.attrib['id']
@@ -677,7 +684,7 @@ def run():
         if exit_code:
             logger.error('ffmpeg exited with the code: {0!s}'.format(exit_code))
             logger.error('Command: {0!s}'.format(' '.join(cmd)))
-            exit(exit_code)
+            sys.exit(exit_code)
         os.rename(temp_book_filename, book_filename)
 
         audiofile = eyed3.load(book_filename)
@@ -771,7 +778,7 @@ def run():
             if exit_code:
                 logger.error('ffmpeg exited with the code: {0!s}'.format(exit_code))
                 logger.error('Command: {0!s}'.format(' '.join(cmd)))
-                exit(exit_code)
+                sys.exit(exit_code)
 
             os.rename(temp_book_m4b_filename, book_m4b_filename)
             logger.info('Merged files into "{}"'.format(colored.magenta(book_m4b_filename)))
