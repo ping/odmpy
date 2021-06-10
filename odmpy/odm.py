@@ -59,7 +59,7 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
 
-__version__ = '0.4.4'   # also update ../setup.py
+__version__ = '0.4.5'   # also update ../setup.py
 
 MARKER_TIMESTAMP_MMSS = r'(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)'
 MARKER_TIMESTAMP_HHMMSS = r'(?P<hr>[0-9]+):(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)'
