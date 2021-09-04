@@ -91,6 +91,7 @@ UNSUPPORTED_PARSER_ENTITIES = {
     'thorn': 'þ',
     'yuml': 'ÿ',
     # https://www.freeformatter.com/html-entities.html#iso88591-symbols
+    'nbsp': ' ',
     'iexcl': '¡',
     'cent': '¢',
     'pound': '£',
