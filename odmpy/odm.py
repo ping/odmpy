@@ -577,7 +577,7 @@ def run():
     )
     license_client_id = license_client.text
 
-    with open(license_file, "r") as lic_file:
+    with open(license_file, "r", encoding="utf-8") as lic_file:
         lic_file_contents = lic_file.read()
 
     cover_bytes = None
@@ -1045,5 +1045,5 @@ def run():
             logger.warning('Error deleting "{}": {}'.format(cover_filename, str(e)))
 
     if args.write_json:
-        with open(debug_filename, "w") as outfile:
+        with open(debug_filename, "w", encoding="utf-8") as outfile:
             json.dump(debug_meta, outfile, indent=2)
