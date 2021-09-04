@@ -241,7 +241,7 @@ def run():
                 c.text for c in metadata.find('Subjects')])))
             logger.info(u'{:10} {}'.format('Languages:', u', '.join([
                 c.text for c in metadata.find('Languages')])))
-            logger.info(u'{:10} \n{}'.format(
+            logger.info(u'{:10}\n{}'.format(
                 'Description:', metadata.find('Description').text))
 
             for formats in root.findall('Formats'):
