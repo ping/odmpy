@@ -40,9 +40,11 @@ def unescape_html(text):
     """py2/py3 compatible html unescaping"""
     try:
         import html
+
         return html.unescape(text)
     except ImportError:
         import HTMLParser
+
         parser = HTMLParser.HTMLParser()
         return parser.unescape(text)
 
@@ -55,13 +57,14 @@ def slugify(value, allow_unicode=False):
     Convert to lowercase. Also strip leading and trailing whitespace.
     """
     if allow_unicode:
-        value = unicodedata.normalize('NFKC', value)
-        value = re.sub(r'[^\w\s-]', '', value, flags=re.U).strip().lower()
-        return re.sub(r'[-\s]+', '-', value, flags=re.U)
-    value = unicodedata.normalize(
-        'NFKD', value).encode('ascii', 'ignore').decode('ascii')
-    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
-    return re.sub(r'[-\s]+', '-', value)
+        value = unicodedata.normalize("NFKC", value)
+        value = re.sub(r"[^\w\s-]", "", value, flags=re.U).strip().lower()
+        return re.sub(r"[-\s]+", "-", value, flags=re.U)
+    value = (
+        unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    )
+    value = re.sub(r"[^\w\s-]", "", value).strip().lower()
+    return re.sub(r"[-\s]+", "-", value)
 
 
 def resize(cover):
@@ -74,5 +77,5 @@ def resize(cover):
     img = Image.open(io.BytesIO(cover))
     img = img.resize(((img.size[0]), (img.size[0])), Image.LANCZOS)
     buf = io.BytesIO()
-    img.save(buf, format='JPEG', quality=95, subsampling=0)
+    img.save(buf, format="JPEG", quality=95, subsampling=0)
     return buf.getvalue()

@@ -16,48 +16,41 @@
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys
 from setuptools import setup
-if sys.platform == 'win32':
-    try:
-        import py2ex
-    except ImportError:
-        pass
+
+__author__ = "ping"
+__url__ = "https://github.com/ping/odmpy/"
+__version__ = "0.4.5"  # also update odmpy/odm.py
 
 
-__author__ = 'ping'
-__url__ = 'https://github.com/ping/odmpy/'
-__version__ = '0.4.5'   # also update odmpy/odm.py
-
-
-__long_description__ = '''
+__long_description__ = """
 ``odmpy`` is a console manager for OverDrive audiobook loan files (.odm).
-'''
+"""
 
 setup(
-    name='odmpy',
+    name="odmpy",
     version=__version__,
     author=__author__,
-    license='GPL',
+    license="GPL",
     url=__url__,
-    packages=['odmpy'],
+    packages=["odmpy"],
     entry_points={
-        'console_scripts': [
-            'odmpy = odmpy.__main__:main',
+        "console_scripts": [
+            "odmpy = odmpy.__main__:main",
         ]
     },
-    install_requires=['requests', 'clint', 'eyed3', 'mutagen', 'pillow'],
+    install_requires=["requests", "clint", "eyed3", "mutagen", "pillow"],
     include_package_data=True,
-    platforms='any',
+    platforms="any",
     long_description=__long_description__,
-    keywords='overdrive audiobook',
-    description='A console downloader for an OverDrive audiobook loan.',
+    keywords="overdrive audiobook",
+    description="A console downloader for an OverDrive audiobook loan.",
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        'Environment :: Console',
-        'Intended Audience :: End Users/Desktop',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-    ]
+        "Development Status :: 4 - Beta",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Environment :: Console",
+        "Intended Audience :: End Users/Desktop",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+    ],
 )

@@ -21,12 +21,12 @@ import sys
 from .odm import run
 
 
-def main():     # pragma: no cover
+def main():  # pragma: no cover
     try:
         run()
     except KeyboardInterrupt:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
