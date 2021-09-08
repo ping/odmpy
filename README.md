@@ -13,7 +13,7 @@ Requires Python >=3.5.
 
 ```bash
 # Install / Update to specific version
-pip install git+https://git@github.com/ping/odmpy.git@0.4.6 --upgrade
+pip3 install git+https://git@github.com/ping/odmpy.git@0.4.6 --upgrade
 
 # Install / Update from latest source
 pip3 install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -112,3 +112,11 @@ odmpy ret "MyLoans/Book1.odm"
 odmpy info "MyLoans/Book1.odm"
 
 ```
+
+`odmpy` also supports the reading of command options from a file. For example:
+
+```bash
+odmpy dl @example.dl.conf MyLoans/MyBook.odm
+```
+where [`example.dl.conf`](example.dl.conf) contains the command arguments for the `dl` command.
+

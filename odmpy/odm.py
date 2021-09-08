@@ -86,6 +86,7 @@ def run():
             py_micro=sys.version_info.micro,
             platform=sys.platform,
         ),
+        fromfile_prefix_chars="@",
     )
     parser.add_argument(
         "-v",
@@ -105,8 +106,9 @@ def run():
 
     subparsers = parser.add_subparsers(
         title="Available commands",
-        dest="subparser_name",
+        dest="command_name",
         help="To get more help, use the -h option with the command.",
+        required=True,
     )
     parser_info = subparsers.add_parser(
         "info",
@@ -212,18 +214,11 @@ def run():
     )
     ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "error"
 
-    try:
-        # test for odm file
-        args.odm_file
-    except AttributeError:
-        parser.print_help()
-        sys.exit()
-
     xml_doc = xml.etree.ElementTree.parse(args.odm_file)
     root = xml_doc.getroot()
 
     # Return Book
-    if args.subparser_name == "ret":
+    if args.command_name == "ret":
         logger.info("Returning {} ...".format(args.odm_file))
         early_return_url = root.find("EarlyReturnURL").text
         try:
@@ -313,7 +308,7 @@ def run():
     }
 
     # View Book Info
-    if args.subparser_name == "info":
+    if args.command_name == "info":
         if args.format == "text":
             logger.info(u"{:10} {}".format("Title:", colored.blue(title)))
             logger.info(
