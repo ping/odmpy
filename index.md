@@ -10,7 +10,7 @@ Requires Python >=3.5.
    - merge files into a single `mp3` or `m4b` file
    - add chapters information into the audio file(s)
 2. Return a loan
-3. Display information about an `odm` load file
+3. Display information about an `odm` loan file
 
 ### Install
 
