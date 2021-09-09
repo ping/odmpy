@@ -108,7 +108,6 @@ def run():
         title="Available commands",
         dest="command_name",
         help="To get more help, use the -h option with the command.",
-        required=True,
     )
     parser_info = subparsers.add_parser(
         "info",
@@ -213,6 +212,14 @@ def run():
         logging.WARNING if logger.level == logging.DEBUG else logging.ERROR
     )
     ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "error"
+
+    # because py<=3.6 does not support `add_subparsers(required=True)`
+    try:
+        # test for odm file
+        args.odm_file
+    except AttributeError:
+        parser.print_help()
+        sys.exit()
 
     xml_doc = xml.etree.ElementTree.parse(args.odm_file)
     root = xml_doc.getroot()
