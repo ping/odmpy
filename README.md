@@ -6,8 +6,11 @@ Requires Python >=3.5.
 
 ## Features
 
-1. Downloads the cover and audio files for an audiobook loan
-1. Supports the return of a loan
+1. Downloads the cover and audio files for an audiobook loan, with additional options to:
+   - merge files into a single `mp3` or `m4b` file
+   - add chapters information into the audio file(s)
+2. Return a loan
+3. Display information about an `odm` load file
 
 ## Install
 
