@@ -1,6 +1,6 @@
-## odmpy
+## About
 
-A simple console manager for OverDrive audiobook loans. A python port of [overdrive](https://github.com/chbrown/overdrive).
+`odmpy` is a simple console manager for OverDrive audiobook loans. A python port of [overdrive](https://github.com/chbrown/overdrive) with additional functionality.
 
 Requires Python >=3.5.
 
