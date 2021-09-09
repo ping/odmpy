@@ -16,7 +16,7 @@ Requires Python >=3.5.
 
 ```bash
 # Install / Update to specific version
-pip3 install git+https://git@github.com/ping/odmpy.git@0.4.7 --upgrade
+pip3 install git+https://git@github.com/ping/odmpy.git@0.4.8 --upgrade
 
 # Install / Update from latest source
 pip3 install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -44,7 +44,7 @@ Available commands:
     dl                  Download from a loan file
     ret                 Return a loan file.
 
-Version 0.4.7. [Python 3.7.4-darwin] Source at https://github.com/ping/odmpy/
+Version 0.4.8. [Python 3.7.4-darwin] Source at https://github.com/ping/odmpy/
 ```
 
 ```
