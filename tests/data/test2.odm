@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<OverDriveMedia id="0fef5121-bb1f-42a5-b62a-d9fded939d50-425" ODMVersion="3.0.0.0" OMCVersion="3.0.0.0">
+	<License>
+		<AcquisitionUrl>https://ping.github.io/odmpy/test_data/test.license</AcquisitionUrl>
+	</License><![CDATA[<Metadata>
+	<ContentType>MP3 Audio Book</ContentType>
+	<Title>크리스마스를 위한 의식</Title>
+	<SortTitle>크리스마스를 위한 의식</SortTitle>
+	<Series></Series>
+	<Publisher>Librivox</Publisher>
+	<ThumbnailUrl>https://ping.github.io/odmpy/test_data/cover.jpg</ThumbnailUrl>
+	<CoverUrl>https://ping.github.io/odmpy/test_data/cover.jpg</CoverUrl>
+	<Creators>
+		<Creator role="Author" file-as="herrick, robert">로버트 Herrick</Creator>
+		<Creator role="Narrator" file-as="LibriVox, Volunteers">LibriVox Volunteers</Creator>
+	</Creators>
+	<Subjects>
+		<Subject id="26">Fiction</Subject>
+	</Subjects>
+	<Languages>
+		<Language code="en">English</Language>
+	</Languages>
+<Description>로버트 허릭 was a 17th-century English lyric poet and cleric. He is best known for Hesperides, a book of poems. This includes the carpe diem poem "To the Virgins, to Make Much of Time", with the first line "Gather ye rosebuds while ye may"</Description>
+</Metadata>]]><DrmInfo>
+	<PlayOnPC>1</PlayOnPC>
+	<PlayOnPCCount>-1</PlayOnPCCount>
+	<BurnToCD>1</BurnToCD>
+	<BurnToCDCount>-1</BurnToCDCount>
+	<PlayOnPM>1</PlayOnPM>
+	<TransferToSDMI>1</TransferToSDMI>
+	<TransferToNonSDMI>1</TransferToNonSDMI>
+	<TransferCount>-1</TransferCount>
+	<CollaborativePlay>0</CollaborativePlay>
+	<PublicPerformance>0</PublicPerformance>
+	<TranscodeToAAC>1</TranscodeToAAC>
+<ExpirationDate>2099-01-01T00:00:00Z</ExpirationDate><Hash></Hash><Hash2></Hash2></DrmInfo><Formats><Format name="Medium Quality"><Quality level="Medium" /><Protocols><Protocol method="download" baseurl="https://ping.github.io/odmpy/test_data" /></Protocols><Parts count="1"><Part number="1" filesize="534710" name="Part 1" filename="book2/ceremonies_herrick_bk_64kb.mp3" duration="01:07" /><Part number="2" filesize="493921" name="Part 2" filename="book2/ceremonies_herrick_cjph_64kb.mp3" duration="01:01" /><Part number="3" filesize="533247" name="Part 3" filename="book2/ceremonies_herrick_gg_64kb.mp3" duration="01:06" /><Part number="4" filesize="512538" name="Part 4" filename="book2/ceremonies_herrick_gln_64kb.mp3" duration="01:04" /><Part number="5" filesize="532619" name="Part 5" filename="book2/ceremonies_herrick_grs_64kb.mp3" duration="01:06" /><Part number="6" filesize="369662" name="Part 6" filename="book2/ceremonies_herrick_ks_64kb.mp3" duration="00:46" /><Part number="7" filesize="450409" name="Part 7" filename="book2/ceremonies_herrick_lah_64kb.mp3" duration="00:56" /><Part number="8" filesize="452500" name="Part 8" filename="book2/ceremonies_herrick_ps_64kb.mp3" duration="00:56" /><Part number="9" filesize="480532" name="Part 9" filename="book2/ceremonies_herrick_psh_64kb.mp3" duration="01:00" /><Part number="10" filesize="420286" name="Part 10" filename="book2/ceremonies_herrick_tc_64kb.mp3" duration="00:52" /><Part number="11" filesize="378657" name="Part 11" filename="book2/ceremonies_herrick_tp_64kb.mp3" duration="00:47" /></Parts></Format></Formats><Source id="X"><Name>Library X</Name><WebsiteUrl>http://overdrive.com</WebsiteUrl><BannerUrl>http://overdrive.com/odmbanner.gif</BannerUrl><AccentColor>#eeeeee</AccentColor></Source><TransactionID>000-0000000-00000</TransactionID><EarlyReturnURL>https://ping.github.io/odmpy/test_data</EarlyReturnURL><DownloadSuccessURL>https://ping.github.io/odmpy/test_data</DownloadSuccessURL></OverDriveMedia>
