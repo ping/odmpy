@@ -504,10 +504,17 @@ def run():
     cover_filename = os.path.join(book_folder, "cover.jpg")
     debug_filename = os.path.join(book_folder, "debug.json")
     if not os.path.isfile(cover_filename) and cover_url:
-        cover_res = session.get(cover_url, headers={"User-Agent": UA})
-        cover_res.raise_for_status()
-        with open(cover_filename, "wb") as outfile:
-            outfile.write(resize(cover_res.content))
+        try:
+            cover_res = session.get(
+                cover_url, headers={"User-Agent": UA}, timeout=args.timeout
+            )
+            cover_res.raise_for_status()
+            with open(cover_filename, "wb") as outfile:
+                outfile.write(resize(cover_res.content))
+        except requests.exceptions.HTTPError as he:
+            logger.warning(
+                "Error downloading cover: {}".format(colored.red(str(he), bold=True))
+            )
 
     acquisition_url = root.find("License").find("AcquisitionUrl").text
     media_id = root.attrib["id"]
@@ -1040,7 +1047,7 @@ def run():
                 except Exception as e:  # pylint: disable=broad-except
                     logger.warning('Error deleting "{}": {}'.format(f["file"], str(e)))
 
-    if not keep_cover:
+    if not keep_cover and os.path.isfile(cover_filename):
         try:
             os.remove(cover_filename)
         except Exception as e:  # pylint: disable=broad-except
