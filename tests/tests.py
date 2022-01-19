@@ -32,24 +32,30 @@ class OdmpyTests(unittest.TestCase):
         "test4.odm": os.path.join(
             "downloads", "Ceremonies For Christmas - Robert Herrick"
         ),
+        "test_ref24.odm": os.path.join(
+            "downloads", "Ceremonies For Christmas - Robert Herrick"
+        ),
     }
     merged_book_basenames = {
         "test1.odm": "Ceremonies For Christmas - Robert Herrick",
         "test2.odm": "크리스마스를 위한 의식 - 로버트 Herrick",
         "test3.odm": "Ceremonies For Christmas - Robert Herrick",
         "test4.odm": "Ceremonies For Christmas - Robert Herrick",
+        "test_ref24.odm": "Ceremonies For Christmas - Robert Herrick",
     }
     mp3_name_formats = {
         "test1.odm": "ceremonies-for-christmas-part-{:02}.mp3",
         "test2.odm": "크리스마스를-위한-의식-part-{:02}.mp3",
         "test3.odm": "ceremonies-for-christmas-part-{:02}.mp3",
         "test4.odm": "ceremonies-for-christmas-part-{:02}.mp3",
+        "test_ref24.odm": "ceremonies-for-christmas-part-{:02}.mp3",
     }
     part_title_formats = {
         "test1.odm": "{:02d} - Ceremonies For Christmas",
         "test2.odm": "{:02d} - 크리스마스를 위한 의식",
         "test3.odm": "{:02d} Issue 17",
         "test4.odm": "{:02d} Issue 17",
+        "test_ref24.odm": "{:02d} Issue 17",
     }
     markers = {
         "test1.odm": [
@@ -92,30 +98,41 @@ class OdmpyTests(unittest.TestCase):
             "Part 1 - Strange Phenomena 1",
             "Part 1 - Ball Lightning",
         ],
+        "test_ref24.odm": [
+            "Ball Lightning",
+            "Prelude",
+            "Part 1 - College",
+            "Part 1 - Strange Phenomena 1",
+            "Part 1 - Ball Lightning",
+        ],
     }
     album_artists = {
         "test1.odm": "Robert Herrick",
         "test2.odm": "로버트 Herrick",
         "test3.odm": "Robert Herrick",
         "test4.odm": "Robert Herrick",
+        "test_ref24.odm": "Robert Herrick",
     }
     book_parts = {
         "test1.odm": 11,
         "test2.odm": 11,
         "test3.odm": 1,
         "test4.odm": 1,
+        "test_ref24.odm": 1,
     }
     book_chapters = {
         "test1.odm": 11,
         "test2.odm": 11,
         "test3.odm": 5,
         "test4.odm": 5,
+        "test_ref24.odm": 5,
     }
     book_chapter_durations = {
         "test1.odm": [67, 61, 66, 64, 66, 46, 56, 56, 60, 52, 47],
         "test2.odm": [67, 61, 66, 64, 66, 46, 56, 56, 60, 52, 47],
         "test3.odm": [15, 15, 10, 15, 6],
         "test4.odm": [15, 15, 10, 15, 6],
+        "test_ref24.odm": [15, 15, 10, 15, 6],
     }
 
     def setUp(self):
@@ -328,6 +345,19 @@ class OdmpyTests(unittest.TestCase):
             self.test_data_dir, "downloads", "{}.mp3".format(self.merged_book_basename)
         )
         self.assertTrue(os.path.isfile(mp3_file))
+
+    def test_cover_fail_ref24(self):
+        """
+        Test with error downloading cover
+        ```
+        python -m odmpy dl test_data/test.odm -d test_data/downloads/ -k
+        ```
+        """
+        self.assertTrue(os.path.isdir(self.book_folder))
+        for i in range(1, self.total_parts + 1):
+            book_file = os.path.join(self.book_folder, self.mp3_name_format.format(i))
+            self.assertTrue(os.path.isfile(book_file))
+        self.assertFalse(os.path.isfile(os.path.join(self.book_folder, "cover.jpg")))
 
 
 if __name__ == "__main__":

@@ -8,16 +8,20 @@ set -e
 export TEST_DATA_DIR='tests/data'
 export TEST_DOWNLOAD_DIR="$TEST_DATA_DIR/downloads/"
 
+clear_test_data () {
+    # clean up
+    rm -rf "$TEST_DOWNLOAD_DIR"
+    rm -rf "$TEST_DATA_DIR"/*.json
+    rm -rf "$TEST_DATA_DIR"/test*.odm.info.txt
+    rm -rf "$TEST_DATA_DIR"/output.mp3*
+    rm -ff "$TEST_DATA_DIR"/output.m4b*
+}
+
 for test_index in '1' '2' '3' '4'
 do
   export TEST_ODM="test${test_index}.odm"
 
-  # clean up
-  rm -rf "$TEST_DOWNLOAD_DIR"
-  rm -rf "$TEST_DATA_DIR"/*.json
-  rm -rf "$TEST_DATA_DIR"/test*.odm.info.txt
-  rm -rf "$TEST_DATA_DIR"/output.mp3*
-  rm -ff "$TEST_DATA_DIR"/output.m4b*
+  clear_test_data
 
   echo "-=-=-=-=-=-=-=-=-=- RUNNING TESTS FOR $TEST_ODM ... -=-=-=-=-=-=-=-=-=-"
 
@@ -73,10 +77,16 @@ do
   python -m unittest -v tests.OdmpyTests.test_download_7
 
   # clean up
-  rm -rf "$TEST_DOWNLOAD_DIR"
-  rm -rf "$TEST_DATA_DIR"/*.json
-  rm -rf "$TEST_DATA_DIR"/test*.odm.info.txt
-  rm -rf "$TEST_DATA_DIR"/output.mp3*
-  rm -ff "$TEST_DATA_DIR"/output.m4b*
+  clear_test_data
 
 done
+
+# test fix for #24 cover download fail
+export TEST_ODM="test_ref24.odm"
+echo "-=-=-=-=-=-=-=-=-=- RUNNING TESTS FOR $TEST_ODM ... -=-=-=-=-=-=-=-=-=-"
+rm -rf "$TEST_DOWNLOAD_DIR" && mkdir -p "$TEST_DOWNLOAD_DIR"
+python -m odmpy dl "$TEST_DATA_DIR/test_ref24.odm" -d "$TEST_DOWNLOAD_DIR" -k --hideprogress > /dev/null
+python -m unittest -v tests.OdmpyTests.test_cover_fail_ref24
+
+# clean up
+clear_test_data
