@@ -16,7 +16,7 @@ Requires Python >=3.5.
 
 ```bash
 # Install / Update to specific version
-pip3 install git+https://git@github.com/ping/odmpy.git@0.4.8 --upgrade
+pip3 install git+https://git@github.com/ping/odmpy.git@0.4.9 --upgrade
 
 # Install / Update from latest source
 pip3 install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -44,7 +44,7 @@ Available commands:
     dl                  Download from a loan file
     ret                 Return a loan file.
 
-Version 0.4.8. [Python 3.7.4-darwin] Source at https://github.com/ping/odmpy/
+Version 0.4.9. [Python 3.7.4-darwin] Source at https://github.com/ping/odmpy/
 ```
 
 ```
@@ -122,3 +122,7 @@ odmpy info "MyLoans/Book1.odm"
 odmpy dl @example.dl.conf MyLoans/MyBook.odm
 ```
 where [`example.dl.conf`](https://github.com/ping/odmpy/blob/master/example.dl.conf) contains the command arguments for the `dl` command.
+
+### Unable to download odm files?
+
+Overdrive no longer shows the odm download links for MacOS 10.15 (Catalina) and newer. There are many ways to get around this but the easiest for me was to use a [bookmarklet](https://support.mozilla.org/en-US/kb/bookmarklets-perform-common-web-page-tasks). Follow the instructions in this [gist](https://gist.github.com/ping/b58ae66359691db1d08f929a9e57a03d) to get started.
