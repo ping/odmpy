@@ -123,3 +123,10 @@ odmpy dl @example.dl.conf MyLoans/MyBook.odm
 ```
 where [`example.dl.conf`](example.dl.conf) contains the command arguments for the `dl` command.
 
+### Unable to download odm files?
+
+Overdrive no longer shows the odm download links for MacOS 10.15 (Catalina) and newer.
+There are many ways to get around this but the easiest for me was to use a 
+[bookmarklet](https://support.mozilla.org/en-US/kb/bookmarklets-perform-common-web-page-tasks).
+Follow the instructions in this [gist](https://gist.github.com/ping/b58ae66359691db1d08f929a9e57a03d)
+to get started.
