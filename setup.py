@@ -44,7 +44,6 @@ setup(
         "clint",
         "eyed3",
         "mutagen",
-        "pillow",
     ],
     include_package_data=True,
     platforms="any",

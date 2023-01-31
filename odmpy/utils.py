@@ -17,11 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
-import io
 import re
 import unicodedata
 from mutagen.mp3 import MP3
-from PIL import Image
 
 
 def mp3_duration_ms(filename):
@@ -65,17 +63,3 @@ def slugify(value, allow_unicode=False):
     )
     value = re.sub(r"[^\w\s-]", "", value).strip().lower()
     return re.sub(r"[-\s]+", "-", value)
-
-
-def resize(cover):
-    """
-    Change the aspect ratio of the cover image to 1:1 using the
-    image width as the default size and preserving the quality
-    as close to the original as possible.
-    Do it in memory so the image is only written to disk once.
-    """
-    img = Image.open(io.BytesIO(cover))
-    img = img.resize(((img.size[0]), (img.size[0])), Image.LANCZOS)
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=95, subsampling=0)
-    return buf.getvalue()

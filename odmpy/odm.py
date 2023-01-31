@@ -46,12 +46,7 @@ from requests.exceptions import HTTPError, ConnectionError
 from clint.textui import colored, progress
 import eyed3
 from eyed3.utils import art
-from .utils import (
-    unescape_html,
-    slugify,
-    mp3_duration_ms,
-    resize,
-)
+from .utils import unescape_html, slugify, mp3_duration_ms
 from .constants import (
     OMC,
     OS,
@@ -506,12 +501,25 @@ def run():
     debug_filename = os.path.join(book_folder, "debug.json")
     if not os.path.isfile(cover_filename) and cover_url:
         try:
+            square_cover_url_params = {
+                "type": "auto",
+                "width": 510,
+                "height": 510,
+                "force": "true",
+                "quality": 80,
+                "url": urlparse(cover_url).path,
+            }
+            # credit: https://github.com/lullius/pylibby/pull/18
+            # this endpoint produces a resized version of the cover
             cover_res = session.get(
-                cover_url, headers={"User-Agent": UA}, timeout=args.timeout
+                "https://ic.od-cdn.com/resize",
+                params=square_cover_url_params,
+                headers={"User-Agent": UA},
+                timeout=args.timeout,
             )
             cover_res.raise_for_status()
             with open(cover_filename, "wb") as outfile:
-                outfile.write(resize(cover_res.content))
+                outfile.write(cover_res.content)
         except requests.exceptions.HTTPError as he:
             logger.warning(
                 "Error downloading cover: {}".format(colored.red(str(he), bold=True))
