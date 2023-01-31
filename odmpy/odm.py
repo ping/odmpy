@@ -33,6 +33,7 @@ import re
 import logging
 import math
 import json
+from urllib.parse import urlparse
 
 try:
     from functools import reduce
@@ -263,7 +264,7 @@ def run():
         except xml.etree.ElementTree.ParseError:
             # [TODO]: Find a more generic solution instead of patching entities, maybe lxml?
             # Ref: https://github.com/ping/odmpy/issues/19
-            patched_text = u"<!DOCTYPE xml [{patch}]>{text}".format(
+            patched_text = "<!DOCTYPE xml [{patch}]>{text}".format(
                 patch="".join(
                     [
                         '<!ENTITY {} "{}">'.format(entity, replacement)
@@ -317,14 +318,14 @@ def run():
     # View Book Info
     if args.command_name == "info":
         if args.format == "text":
-            logger.info(u"{:10} {}".format("Title:", colored.blue(title)))
+            logger.info("{:10} {}".format("Title:", colored.blue(title)))
             logger.info(
-                u"{:10} {}".format(
+                "{:10} {}".format(
                     "Creators:",
                     colored.blue(
-                        u", ".join(
+                        ", ".join(
                             [
-                                u"{} ({})".format(c.text, c.attrib["role"])
+                                "{} ({})".format(c.text, c.attrib["role"])
                                 for c in metadata.find("Creators")
                             ]
                         )
@@ -332,26 +333,26 @@ def run():
                 )
             )
             logger.info(
-                u"{:10} {}".format("Publisher:", metadata.find("Publisher").text)
+                "{:10} {}".format("Publisher:", metadata.find("Publisher").text)
             )
             logger.info(
-                u"{:10} {}".format(
-                    "Subjects:", u", ".join([c.text for c in metadata.find("Subjects")])
+                "{:10} {}".format(
+                    "Subjects:", ", ".join([c.text for c in metadata.find("Subjects")])
                 )
             )
             logger.info(
-                u"{:10} {}".format(
+                "{:10} {}".format(
                     "Languages:",
-                    u", ".join([c.text for c in metadata.find("Languages")]),
+                    ", ".join([c.text for c in metadata.find("Languages")]),
                 )
             )
             logger.info(
-                u"{:10}\n{}".format("Description:", metadata.find("Description").text)
+                "{:10}\n{}".format("Description:", metadata.find("Description").text)
             )
 
             for formats in root.findall("Formats"):
                 for f in formats:
-                    logger.info(u"\n{:10} {}".format("Format:", f.attrib["name"]))
+                    logger.info("\n{:10} {}".format("Format:", f.attrib["name"]))
                     parts = f.find("Parts")
                     for p in parts:
                         logger.info(
@@ -366,7 +367,7 @@ def run():
             result = {
                 "title": title,
                 "creators": [
-                    u"{} ({})".format(c.text, c.attrib["role"])
+                    "{} ({})".format(c.text, c.attrib["role"])
                     for c in metadata.find("Creators")
                 ],
                 "publisher": metadata.find("Publisher").text,
@@ -444,8 +445,8 @@ def run():
     # declare book folder/file names here together so we can catch problems from too long names
     book_folder = os.path.join(
         args.download_dir,
-        u"{} - {}".format(
-            title.replace(os.sep, "-"), u", ".join(authors).replace(os.sep, "-")
+        "{} - {}".format(
+            title.replace(os.sep, "-"), ", ".join(authors).replace(os.sep, "-")
         ),
     )
     if args.no_book_folder:
@@ -454,15 +455,15 @@ def run():
     # for merged mp3
     book_filename = os.path.join(
         book_folder,
-        u"{} - {}.mp3".format(
-            title.replace(os.sep, "-"), u", ".join(authors).replace(os.sep, "-")
+        "{} - {}.mp3".format(
+            title.replace(os.sep, "-"), ", ".join(authors).replace(os.sep, "-")
         ),
     )
     # for merged m4b
     book_m4b_filename = os.path.join(
         book_folder,
-        u"{} - {}.m4b".format(
-            title.replace(os.sep, "-"), u", ".join(authors).replace(os.sep, "-")
+        "{} - {}.m4b".format(
+            title.replace(os.sep, "-"), ", ".join(authors).replace(os.sep, "-")
         ),
     )
 
@@ -477,15 +478,15 @@ def run():
             # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
             # create book folder, file with just the title
             book_folder = os.path.join(
-                args.download_dir, u"{}".format(title.replace(os.sep, "-"))
+                args.download_dir, "{}".format(title.replace(os.sep, "-"))
             )
             os.makedirs(book_folder)
 
             book_filename = os.path.join(
-                book_folder, u"{}.mp3".format(title.replace(os.sep, "-"))
+                book_folder, "{}.mp3".format(title.replace(os.sep, "-"))
             )
             book_m4b_filename = os.path.join(
-                book_folder, u"{}.m4b".format(title.replace(os.sep, "-"))
+                book_folder, "{}.m4b".format(title.replace(os.sep, "-"))
             )
 
     # check early if a merged file is already saved
@@ -602,13 +603,13 @@ def run():
         part_number = int(p["number"])
         part_filename = os.path.join(
             book_folder,
-            u"{}.mp3".format(
+            "{}.mp3".format(
                 slugify(
-                    u"{} - Part {:02d}".format(title, part_number), allow_unicode=True
+                    "{} - Part {:02d}".format(title, part_number), allow_unicode=True
                 )
             ),
         )
-        part_tmp_filename = u"{}.part".format(part_filename)
+        part_tmp_filename = "{}.part".format(part_filename)
         part_file_size = int(p["filesize"])
         part_url_filename = p["filename"]
         part_download_url = "{}/{}".format(download_baseurl, part_url_filename)
@@ -688,29 +689,29 @@ def run():
             if not audiofile.tag:
                 audiofile.initTag()
             if not audiofile.tag.title:
-                audiofile.tag.title = u"{}".format(title)
+                audiofile.tag.title = "{}".format(title)
             if not audiofile.tag.album:
-                audiofile.tag.album = u"{}".format(title)
+                audiofile.tag.album = "{}".format(title)
             if not audiofile.tag.artist:
-                audiofile.tag.artist = u"{}".format(authors[0])
+                audiofile.tag.artist = "{}".format(authors[0])
             if not audiofile.tag.album_artist:
-                audiofile.tag.album_artist = u"{}".format(authors[0])
+                audiofile.tag.album_artist = "{}".format(authors[0])
             if not audiofile.tag.track_num:
                 audiofile.tag.track_num = (part_number, len(download_parts))
             if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
-                audiofile.tag.setTextFrame(PERFORMER_FID, u"{}".format(narrators[0]))
+                audiofile.tag.setTextFrame(PERFORMER_FID, "{}".format(narrators[0]))
             if not audiofile.tag.publisher:
-                audiofile.tag.publisher = u"{}".format(publisher)
+                audiofile.tag.publisher = "{}".format(publisher)
             if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
                 audiofile.tag.comments.set(
-                    u"{}".format(description), description=u"Description"
+                    "{}".format(description), description="Description"
                 )
             if cover_bytes:
                 audiofile.tag.images.set(
                     art.TO_ID3_ART_TYPES[art.FRONT_COVER][0],
                     cover_bytes,
                     "image/jpeg",
-                    description=u"Cover",
+                    description="Cover",
                 )
             audiofile.tag.save()
 
@@ -774,7 +775,7 @@ def run():
 
                         track_count += 1
                         part_markers.append(
-                            (u"ch{:02d}".format(track_count), marker_name, ts_mark)
+                            ("ch{:02d}".format(track_count), marker_name, ts_mark)
                         )
                 break
 
@@ -804,13 +805,13 @@ def run():
                     toplevel=True,
                     ordered=True,
                     child_ids=[],
-                    description=u"Table of Contents",
+                    description="Table of Contents",
                 )
 
                 for i, m in enumerate(generated_markers):
                     title_frameset = eyed3.id3.frames.FrameSet()
                     title_frameset.setTextFrame(
-                        eyed3.id3.frames.TITLE_FID, u"{}".format(m["text"])
+                        eyed3.id3.frames.TITLE_FID, "{}".format(m["text"])
                     )
 
                     chap = audiofile.tag.chapters.set(
@@ -822,7 +823,7 @@ def run():
                     start_time = datetime.timedelta(milliseconds=m["start_time"])
                     end_time = datetime.timedelta(milliseconds=m["end_time"])
                     logger.debug(
-                        u'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
+                        'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
                             colored.cyan(m["id"]),
                             start_time,
                             end_time,
@@ -895,20 +896,20 @@ def run():
         os.rename(temp_book_filename, book_filename)
 
         audiofile = eyed3.load(book_filename)
-        audiofile.tag.title = u"{}".format(title)
+        audiofile.tag.title = "{}".format(title)
         if not audiofile.tag.album:
-            audiofile.tag.album = u"{}".format(title)
+            audiofile.tag.album = "{}".format(title)
         if not audiofile.tag.artist:
-            audiofile.tag.artist = u"{}".format(authors[0])
+            audiofile.tag.artist = "{}".format(authors[0])
         if not audiofile.tag.album_artist:
-            audiofile.tag.album_artist = u"{}".format(authors[0])
+            audiofile.tag.album_artist = "{}".format(authors[0])
         if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
-            audiofile.tag.setTextFrame(PERFORMER_FID, u"{}".format(narrators[0]))
+            audiofile.tag.setTextFrame(PERFORMER_FID, "{}".format(narrators[0]))
         if not audiofile.tag.publisher:
-            audiofile.tag.publisher = u"{}".format(publisher)
+            audiofile.tag.publisher = "{}".format(publisher)
         if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
             audiofile.tag.comments.set(
-                u"{}".format(description), description=u"Description"
+                "{}".format(description), description="Description"
             )
 
         if args.add_chapters and not audiofile.tag.table_of_contents:
@@ -925,7 +926,7 @@ def run():
                     merged_markers.append(
                         {
                             "id": file_marker[0],
-                            "text": u"{}".format(file_marker[1]),
+                            "text": "{}".format(file_marker[1]),
                             "start_time": int(file_marker[2]) + prev_tracks_len_ms,
                             "end_time": int(
                                 this_track_endtime_ms
@@ -941,13 +942,13 @@ def run():
                 toplevel=True,
                 ordered=True,
                 child_ids=[],
-                description=u"Table of Contents",
+                description="Table of Contents",
             )
 
             for i, m in enumerate(merged_markers):
                 title_frameset = eyed3.id3.frames.FrameSet()
                 title_frameset.setTextFrame(
-                    eyed3.id3.frames.TITLE_FID, u"{}".format(m["text"])
+                    eyed3.id3.frames.TITLE_FID, "{}".format(m["text"])
                 )
                 chap = audiofile.tag.chapters.set(
                     m["id"].encode("ascii"),
@@ -958,7 +959,7 @@ def run():
                 start_time = datetime.timedelta(milliseconds=m["start_time"])
                 end_time = datetime.timedelta(milliseconds=m["end_time"])
                 logger.debug(
-                    u'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
+                    'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
                         colored.cyan(m["id"]),
                         start_time,
                         end_time,
