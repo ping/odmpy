@@ -491,8 +491,22 @@ def run():
                 outfile.write(cover_res.content)
         except requests.exceptions.HTTPError as he:
             logger.warning(
-                f"Error downloading cover: {colored.red(str(he), bold=True)}"
+                f"Error downloading square cover: {colored.red(str(he), bold=True)}"
             )
+            # fallback to original cover url
+            try:
+                cover_res = session.get(
+                    cover_url,
+                    headers={"User-Agent": UA},
+                    timeout=args.timeout,
+                )
+                cover_res.raise_for_status()
+                with open(cover_filename, "wb") as outfile:
+                    outfile.write(cover_res.content)
+            except requests.exceptions.HTTPError as he:
+                logger.warning(
+                    f"Error downloading cover: {colored.red(str(he), bold=True)}"
+                )
 
     acquisition_url = root.find("License").find("AcquisitionUrl").text
     media_id = root.attrib["id"]
