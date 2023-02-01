@@ -231,7 +231,7 @@ UNSUPPORTED_PARSER_ENTITIES = {
     "zwnj": "‌",
     "zwj": "‍",
     "lrm": "‎",
-    "rlm": "‏",
+    "rlm": "‏",  # pylint: disable=(bidirectional-unicode
     "ndash": "–",
     "mdash": "—",
     "lsquo": "‘",

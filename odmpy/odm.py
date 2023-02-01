@@ -503,9 +503,9 @@ def run():
                 cover_res.raise_for_status()
                 with open(cover_filename, "wb") as outfile:
                     outfile.write(cover_res.content)
-            except requests.exceptions.HTTPError as he:
+            except requests.exceptions.HTTPError as he2:
                 logger.warning(
-                    f"Error downloading cover: {colored.red(str(he), bold=True)}"
+                    f"Error downloading cover: {colored.red(str(he2), bold=True)}"
                 )
 
     acquisition_url = root.find("License").find("AcquisitionUrl").text
