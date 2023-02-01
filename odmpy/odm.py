@@ -74,13 +74,10 @@ def run():
     parser = argparse.ArgumentParser(
         prog="odmpy",
         description="Download/return an Overdrive loan audiobook",
-        epilog="Version {version}. [Python {py_major}.{py_minor}.{py_micro}-{platform}] "
-        "Source at https://github.com/ping/odmpy/".format(
-            version=__version__,
-            py_major=sys.version_info.major,
-            py_minor=sys.version_info.minor,
-            py_micro=sys.version_info.micro,
-            platform=sys.platform,
+        epilog=(
+            f"Version {__version__}. "
+            f"[Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}-{sys.platform}] "
+            "Source at https://github.com/ping/odmpy/"
         ),
         fromfile_prefix_chars="@",
     )
@@ -222,28 +219,26 @@ def run():
 
     # Return Book
     if args.command_name == "ret":
-        logger.info("Returning {} ...".format(args.odm_file))
+        logger.info(f"Returning {args.odm_file} ...")
         early_return_url = root.find("EarlyReturnURL").text
         try:
             early_return_res = requests.get(
                 early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
             )
             early_return_res.raise_for_status()
-            logger.info("Loan returned successfully: {}".format(args.odm_file))
+            logger.info(f"Loan returned successfully: {args.odm_file}")
         except HTTPError as he:
             if he.response.status_code == 403:
                 logger.warning("Loan is probably already returned.")
                 sys.exit()
             logger.error(
-                "Unexpected HTTPError while trying to return loan {}".format(
-                    args.odm_file
-                )
+                f"Unexpected HTTPError while trying to return loan {args.odm_file}"
             )
-            logger.error("HTTPError: {}".format(str(he)))
+            logger.error(f"HTTPError: {str(he)}")
             logger.debug(he.response.content)
             sys.exit(1)
         except ConnectionError as ce:
-            logger.error("ConnectionError: {}".format(str(ce)))
+            logger.error(f"ConnectionError: {str(ce)}")
             sys.exit(1)
 
         sys.exit()
@@ -262,7 +257,7 @@ def run():
             patched_text = "<!DOCTYPE xml [{patch}]>{text}".format(
                 patch="".join(
                     [
-                        '<!ENTITY {} "{}">'.format(entity, replacement)
+                        f'<!ENTITY {entity} "{replacement}">'
                         for entity, replacement in UNSUPPORTED_PARSER_ENTITIES.items()
                     ]
                 ),
@@ -313,57 +308,43 @@ def run():
     # View Book Info
     if args.command_name == "info":
         if args.format == "text":
-            logger.info("{:10} {}".format("Title:", colored.blue(title)))
+            logger.info(f"{'Title:':10} {colored.blue(title)}")
             logger.info(
                 "{:10} {}".format(
                     "Creators:",
                     colored.blue(
                         ", ".join(
                             [
-                                "{} ({})".format(c.text, c.attrib["role"])
+                                f"{c.text} ({c.attrib['role']})"
                                 for c in metadata.find("Creators")
                             ]
                         )
                     ),
                 )
             )
+            logger.info(f"{'Publisher:':10} {metadata.find('Publisher').text}")
             logger.info(
-                "{:10} {}".format("Publisher:", metadata.find("Publisher").text)
+                f"{'Subjects:':10} {', '.join([c.text for c in metadata.find('Subjects')])}"
             )
             logger.info(
-                "{:10} {}".format(
-                    "Subjects:", ", ".join([c.text for c in metadata.find("Subjects")])
-                )
+                f"{'Languages:':10} {', '.join([c.text for c in metadata.find('Languages')])}"
             )
-            logger.info(
-                "{:10} {}".format(
-                    "Languages:",
-                    ", ".join([c.text for c in metadata.find("Languages")]),
-                )
-            )
-            logger.info(
-                "{:10}\n{}".format("Description:", metadata.find("Description").text)
-            )
+            logger.info(f"{'Description:':10}\n{metadata.find('Description').text}")
 
             for formats in root.findall("Formats"):
                 for f in formats:
-                    logger.info("\n{:10} {}".format("Format:", f.attrib["name"]))
+                    logger.info(f"\n{'Format:':10} {f.attrib['name']}")
                     parts = f.find("Parts")
                     for p in parts:
                         logger.info(
-                            "* {} - {} ({:,.0f}kB)".format(
-                                p.attrib["name"],
-                                p.attrib["duration"],
-                                math.ceil(1.0 * int(p.attrib["filesize"]) / 1024),
-                            )
+                            f"* {p.attrib['name']} - {p.attrib['duration']} ({math.ceil(1.0 * int(p.attrib['filesize']) / 1024):,.0f}kB)"
                         )
 
         elif args.format == "json":
             result = {
                 "title": title,
                 "creators": [
-                    "{} ({})".format(c.text, c.attrib["role"])
-                    for c in metadata.find("Creators")
+                    f"{c.text} ({c.attrib['role']})" for c in metadata.find("Creators")
                 ],
                 "publisher": metadata.find("Publisher").text,
                 "subjects": [c.text for c in metadata.find("Subjects")],
@@ -389,9 +370,7 @@ def run():
                             {
                                 "name": p.attrib["name"],
                                 "duration": part_duration,
-                                "filesize": "{:,.0f}kB".format(
-                                    math.ceil(1.0 * int(p.attrib["filesize"]) / 1024)
-                                ),
+                                "filesize": f"{math.ceil(1.0 * int(p.attrib['filesize']) / 1024):,.0f}kB",
                             }
                         )
                     result["formats"].append(
@@ -430,19 +409,13 @@ def run():
     debug_meta["download_parts"] = download_parts
 
     logger.info(
-        'Downloading "{}" by "{}" in {} parts...'.format(
-            colored.blue(title, bold=True),
-            colored.blue(", ".join(authors)),
-            len(download_parts),
-        )
+        f'Downloading "{colored.blue(title, bold=True)}" by "{colored.blue(", ".join(authors))}" in {len(download_parts)} parts...'
     )
 
     # declare book folder/file names here together so we can catch problems from too long names
     book_folder = os.path.join(
         args.download_dir,
-        "{} - {}".format(
-            title.replace(os.sep, "-"), ", ".join(authors).replace(os.sep, "-")
-        ),
+        f"{title.replace(os.sep, '-')} - {', '.join(authors).replace(os.sep, '-')}",
     )
     if args.no_book_folder:
         book_folder = args.download_dir
@@ -450,16 +423,12 @@ def run():
     # for merged mp3
     book_filename = os.path.join(
         book_folder,
-        "{} - {}.mp3".format(
-            title.replace(os.sep, "-"), ", ".join(authors).replace(os.sep, "-")
-        ),
+        f"{title.replace(os.sep, '-')} - {', '.join(authors).replace(os.sep, '-')}.mp3",
     )
     # for merged m4b
     book_m4b_filename = os.path.join(
         book_folder,
-        "{} - {}.m4b".format(
-            title.replace(os.sep, "-"), ", ".join(authors).replace(os.sep, "-")
-        ),
+        f"{title.replace(os.sep, '-')} - {', '.join(authors).replace(os.sep, '-')}.m4b",
     )
 
     if not os.path.exists(book_folder):
@@ -473,15 +442,15 @@ def run():
             # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
             # create book folder, file with just the title
             book_folder = os.path.join(
-                args.download_dir, "{}".format(title.replace(os.sep, "-"))
+                args.download_dir, f"{title.replace(os.sep, '-')}"
             )
             os.makedirs(book_folder)
 
             book_filename = os.path.join(
-                book_folder, "{}.mp3".format(title.replace(os.sep, "-"))
+                book_folder, f"{title.replace(os.sep, '-')}.mp3"
             )
             book_m4b_filename = os.path.join(
-                book_folder, "{}.m4b".format(title.replace(os.sep, "-"))
+                book_folder, f"{title.replace(os.sep, '-')}.m4b"
             )
 
     # check early if a merged file is already saved
@@ -522,16 +491,14 @@ def run():
                 outfile.write(cover_res.content)
         except requests.exceptions.HTTPError as he:
             logger.warning(
-                "Error downloading cover: {}".format(colored.red(str(he), bold=True))
+                f"Error downloading cover: {colored.red(str(he), bold=True)}"
             )
 
     acquisition_url = root.find("License").find("AcquisitionUrl").text
     media_id = root.attrib["id"]
 
     client_id = str(uuid.uuid1()).upper()
-    raw_hash = "{client_id}|{omc}|{os}|ELOSNOC*AIDEM*EVIRDREVO".format(
-        client_id=client_id, omc=OMC, os=OS
-    )
+    raw_hash = f"{client_id}|{OMC}|{OS}|ELOSNOC*AIDEM*EVIRDREVO"
     m = hashlib.sha1(raw_hash.encode("utf-16-le"))
     license_hash = base64.b64encode(m.digest())
 
@@ -544,7 +511,7 @@ def run():
     )
 
     if os.path.isfile(license_file):
-        logger.warning("Already downloaded license file: {}".format(license_file))
+        logger.warning(f"Already downloaded license file: {license_file}")
     else:
         # download license file
         params = OrderedDict(
@@ -569,20 +536,19 @@ def run():
             with open(license_file, "wb") as outfile:
                 for chunk in license_res.iter_content(1024):
                     outfile.write(chunk)
-            logger.debug("Saved license file {}".format(license_file))
+            logger.debug(f"Saved license file {license_file}")
 
         except HTTPError as he:
             if he.response.status_code == 404:
                 # odm file has expired
                 logger.error(
-                    'The loan file "{}" has expired.'
-                    "Please download again.".format(args.odm_file)
+                    f'The loan file "{args.odm_file}" has expired. Please download again.'
                 )
             else:
                 logger.error(he.response.content)
             sys.exit(1)
         except ConnectionError as ce:
-            logger.error("ConnectionError: {}".format(str(ce)))
+            logger.error(f"ConnectionError: {str(ce)}")
             sys.exit(1)
 
     license_xml_doc = xml.etree.ElementTree.parse(license_file)
@@ -590,9 +556,7 @@ def run():
 
     ns = "{http://license.overdrive.com/2008/03/License.xsd}"
 
-    license_client = license_root.find("{}SignedInfo".format(ns)).find(
-        "{}ClientID".format(ns)
-    )
+    license_client = license_root.find(f"{ns}SignedInfo").find(f"{ns}ClientID")
     license_client_id = license_client.text
 
     with open(license_file, "r", encoding="utf-8") as lic_file:
@@ -611,20 +575,16 @@ def run():
         part_number = int(p["number"])
         part_filename = os.path.join(
             book_folder,
-            "{}.mp3".format(
-                slugify(
-                    "{} - Part {:02d}".format(title, part_number), allow_unicode=True
-                )
-            ),
+            f"{slugify(f'{title} - Part {part_number:02d}', allow_unicode=True)}.mp3",
         )
-        part_tmp_filename = "{}.part".format(part_filename)
+        part_tmp_filename = f"{part_filename}.part"
         part_file_size = int(p["filesize"])
         part_url_filename = p["filename"]
-        part_download_url = "{}/{}".format(download_baseurl, part_url_filename)
+        part_download_url = f"{download_baseurl}/{part_url_filename}"
         part_markers = []
 
         if os.path.isfile(part_filename):
-            logger.warning("Already saved {}".format(colored.magenta(part_filename)))
+            logger.warning(f"Already saved {colored.magenta(part_filename)}")
         else:
             try:
                 part_download_res = session.get(
@@ -645,7 +605,7 @@ def run():
                 with open(part_tmp_filename, "wb") as outfile:
                     for chunk in progress.bar(
                         part_download_res.iter_content(chunk_size=chunk_size),
-                        label="Part {}".format(part_number),
+                        label=f"Part {part_number}",
                         expected_size=expected_chunk_count,
                         hide=args.hide_progress,
                     ):
@@ -671,24 +631,22 @@ def run():
                 try:
                     exit_code = subprocess.call(cmd)
                     if exit_code:
-                        logger.warning(
-                            "ffmpeg exited with the code: {0!s}".format(exit_code)
-                        )
-                        logger.warning("Command: {0!s}".format(" ".join(cmd)))
+                        logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
+                        logger.warning(f"Command: {' '.join(cmd)!s}")
                         os.rename(part_tmp_filename, part_filename)
                     else:
                         os.remove(part_tmp_filename)
                 except Exception as ffmpeg_ex:  # pylint: disable=broad-except
-                    logger.warning("Error executing ffmpeg: {}".format(str(ffmpeg_ex)))
+                    logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
                     os.rename(part_tmp_filename, part_filename)
 
             except HTTPError as he:
-                logger.error("HTTPError: {}".format(str(he)))
+                logger.error(f"HTTPError: {str(he)}")
                 logger.debug(he.response.content)
                 sys.exit(1)
 
             except ConnectionError as ce:
-                logger.error("ConnectionError: {}".format(str(ce)))
+                logger.error(f"ConnectionError: {str(ce)}")
                 sys.exit(1)
 
         try:
@@ -697,23 +655,21 @@ def run():
             if not audiofile.tag:
                 audiofile.initTag()
             if not audiofile.tag.title:
-                audiofile.tag.title = "{}".format(title)
+                audiofile.tag.title = f"{title}"
             if not audiofile.tag.album:
-                audiofile.tag.album = "{}".format(title)
+                audiofile.tag.album = f"{title}"
             if not audiofile.tag.artist:
-                audiofile.tag.artist = "{}".format(authors[0])
+                audiofile.tag.artist = f"{authors[0]}"
             if not audiofile.tag.album_artist:
-                audiofile.tag.album_artist = "{}".format(authors[0])
+                audiofile.tag.album_artist = f"{authors[0]}"
             if not audiofile.tag.track_num:
                 audiofile.tag.track_num = (part_number, len(download_parts))
             if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
-                audiofile.tag.setTextFrame(PERFORMER_FID, "{}".format(narrators[0]))
+                audiofile.tag.setTextFrame(PERFORMER_FID, f"{narrators[0]}")
             if not audiofile.tag.publisher:
-                audiofile.tag.publisher = "{}".format(publisher)
+                audiofile.tag.publisher = f"{publisher}"
             if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
-                audiofile.tag.comments.set(
-                    "{}".format(description), description="Description"
-                )
+                audiofile.tag.comments.set(f"{description}", description="Description")
             if cover_bytes:
                 audiofile.tag.images.set(
                     art.TO_ID3_ART_TYPES[art.FRONT_COVER][0],
@@ -776,14 +732,12 @@ def run():
                                     )
                                 else:
                                     raise ValueError(
-                                        "Invalid marker timestamp: {}".format(
-                                            marker_timestamp
-                                        )
+                                        f"Invalid marker timestamp: {marker_timestamp}"
                                     )
 
                         track_count += 1
                         part_markers.append(
-                            ("ch{:02d}".format(track_count), marker_name, ts_mark)
+                            (f"ch{track_count:02d}", marker_name, ts_mark)
                         )
                 break
 
@@ -819,7 +773,7 @@ def run():
                 for i, m in enumerate(generated_markers):
                     title_frameset = eyed3.id3.frames.FrameSet()
                     title_frameset.setTextFrame(
-                        eyed3.id3.frames.TITLE_FID, "{}".format(m["text"])
+                        eyed3.id3.frames.TITLE_FID, f"{m['text']}"
                     )
 
                     chap = audiofile.tag.chapters.set(
@@ -831,24 +785,17 @@ def run():
                     start_time = datetime.timedelta(milliseconds=m["start_time"])
                     end_time = datetime.timedelta(milliseconds=m["end_time"])
                     logger.debug(
-                        'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
-                            colored.cyan(m["id"]),
-                            start_time,
-                            end_time,
-                            colored.cyan(m["text"]),
-                            colored.blue(part_filename),
-                        )
+                        f'Added chap tag => {colored.cyan(m["id"])}: {start_time}-{end_time} '
+                        f'"{colored.cyan(m["text"])}" to "{colored.blue(part_filename)}"'
                     )
 
                 audiofile.tag.save()
 
         except Exception as e:  # pylint: disable=broad-except
-            logger.warning(
-                "Error saving ID3: {}".format(colored.red(str(e), bold=True))
-            )
+            logger.warning(f"Error saving ID3: {colored.red(str(e), bold=True)}")
             keep_cover = True
 
-        logger.info('Saved "{}"'.format(colored.magenta(part_filename)))
+        logger.info(f'Saved "{colored.magenta(part_filename)}"')
 
         file_tracks.append(
             {
@@ -871,7 +818,7 @@ def run():
         )
 
         # We can't directly generate a m4b here even if specified because eyed3 doesn't support m4b/mp4
-        temp_book_filename = "{}.part".format(book_filename)
+        temp_book_filename = f"{book_filename}.part"
         cmd = [
             "ffmpeg",
             "-y",
@@ -885,7 +832,7 @@ def run():
         cmd.extend(
             [
                 "-i",
-                "concat:{}".format("|".join([ft["file"] for ft in file_tracks])),
+                f"concat:{'|'.join([ft['file'] for ft in file_tracks])}",
                 "-acodec",
                 "copy",
                 "-b:a",
@@ -898,27 +845,25 @@ def run():
         exit_code = subprocess.call(cmd)
 
         if exit_code:
-            logger.error("ffmpeg exited with the code: {0!s}".format(exit_code))
-            logger.error("Command: {0!s}".format(" ".join(cmd)))
+            logger.error(f"ffmpeg exited with the code: {exit_code!s}")
+            logger.error(f"Command: {' '.join(cmd)!s}")
             sys.exit(exit_code)
         os.rename(temp_book_filename, book_filename)
 
         audiofile = eyed3.load(book_filename)
-        audiofile.tag.title = "{}".format(title)
+        audiofile.tag.title = f"{title}"
         if not audiofile.tag.album:
-            audiofile.tag.album = "{}".format(title)
+            audiofile.tag.album = f"{title}"
         if not audiofile.tag.artist:
-            audiofile.tag.artist = "{}".format(authors[0])
+            audiofile.tag.artist = f"{authors[0]}"
         if not audiofile.tag.album_artist:
-            audiofile.tag.album_artist = "{}".format(authors[0])
+            audiofile.tag.album_artist = f"{authors[0]}"
         if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
-            audiofile.tag.setTextFrame(PERFORMER_FID, "{}".format(narrators[0]))
+            audiofile.tag.setTextFrame(PERFORMER_FID, f"{narrators[0]}")
         if not audiofile.tag.publisher:
-            audiofile.tag.publisher = "{}".format(publisher)
+            audiofile.tag.publisher = f"{publisher}"
         if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
-            audiofile.tag.comments.set(
-                "{}".format(description), description="Description"
-            )
+            audiofile.tag.comments.set(f"{description}", description="Description")
 
         if args.add_chapters and not audiofile.tag.table_of_contents:
             merged_markers = []
@@ -934,7 +879,7 @@ def run():
                     merged_markers.append(
                         {
                             "id": file_marker[0],
-                            "text": "{}".format(file_marker[1]),
+                            "text": f"{file_marker[1]}",
                             "start_time": int(file_marker[2]) + prev_tracks_len_ms,
                             "end_time": int(
                                 this_track_endtime_ms
@@ -955,9 +900,7 @@ def run():
 
             for i, m in enumerate(merged_markers):
                 title_frameset = eyed3.id3.frames.FrameSet()
-                title_frameset.setTextFrame(
-                    eyed3.id3.frames.TITLE_FID, "{}".format(m["text"])
-                )
+                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, f"{m['text']}")
                 chap = audiofile.tag.chapters.set(
                     m["id"].encode("ascii"),
                     times=(m["start_time"], m["end_time"]),
@@ -967,13 +910,8 @@ def run():
                 start_time = datetime.timedelta(milliseconds=m["start_time"])
                 end_time = datetime.timedelta(milliseconds=m["end_time"])
                 logger.debug(
-                    'Added chap tag => {}: {}-{} "{}" to "{}"'.format(
-                        colored.cyan(m["id"]),
-                        start_time,
-                        end_time,
-                        colored.cyan(m["text"]),
-                        colored.blue(book_filename),
-                    )
+                    f'Added chap tag => {colored.cyan(m["id"])}: {start_time}-{end_time} '
+                    f'"{colored.cyan(m["text"])}" to "{colored.blue(book_filename)}"'
                 )
 
         audiofile.tag.save()
@@ -990,7 +928,7 @@ def run():
             )
 
         if args.merge_format == "m4b":
-            temp_book_m4b_filename = "{}.part".format(book_m4b_filename)
+            temp_book_m4b_filename = f"{book_m4b_filename}.part"
             cmd = [
                 "ffmpeg",
                 "-y",
@@ -1036,31 +974,29 @@ def run():
             exit_code = subprocess.call(cmd)
 
             if exit_code:
-                logger.error("ffmpeg exited with the code: {0!s}".format(exit_code))
-                logger.error("Command: {0!s}".format(" ".join(cmd)))
+                logger.error(f"ffmpeg exited with the code: {exit_code!s}")
+                logger.error(f"Command: {' '.join(cmd)!s}")
                 sys.exit(exit_code)
 
             os.rename(temp_book_m4b_filename, book_m4b_filename)
-            logger.info(
-                'Merged files into "{}"'.format(colored.magenta(book_m4b_filename))
-            )
+            logger.info(f'Merged files into "{colored.magenta(book_m4b_filename)}"')
             try:
                 os.remove(book_filename)
             except Exception as e:  # pylint: disable=broad-except
-                logger.warning('Error deleting "{}": {}'.format(book_filename, str(e)))
+                logger.warning(f'Error deleting "{book_filename}": {str(e)}')
 
         if not args.keep_mp3:
             for f in file_tracks:
                 try:
                     os.remove(f["file"])
                 except Exception as e:  # pylint: disable=broad-except
-                    logger.warning('Error deleting "{}": {}'.format(f["file"], str(e)))
+                    logger.warning(f'Error deleting "{f["file"]}": {str(e)}')
 
     if not keep_cover and os.path.isfile(cover_filename):
         try:
             os.remove(cover_filename)
         except Exception as e:  # pylint: disable=broad-except
-            logger.warning('Error deleting "{}": {}'.format(cover_filename, str(e)))
+            logger.warning(f'Error deleting "{cover_filename}": {str(e)}')
 
     if args.write_json:
         with open(debug_filename, "w", encoding="utf-8") as outfile:
