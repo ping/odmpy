@@ -37,18 +37,35 @@ class LibbyClient(object):
         self.thunder_session = thunder_session
 
     def save_settings(self, updates):
+        """
+        Persist identity settings
+        :param updates:
+        :return:
+        """
         self.identity.update(updates)
         with open(self.identity_settings_file, "w", encoding="utf-8") as f:
             json.dump(self.identity, f)
 
     def clear_settings(self):
+        """
+        Wipe previously saved settings
+        :return:
+        """
         if os.path.exists(self.identity_settings_file):
             os.remove(self.identity_settings_file)
 
     def has_chip(self):
+        """
+        Check if client has identity token
+        :return:
+        """
         return self.identity.get("identity")
 
     def has_sync_code(self):
+        """
+        Check if client has linked account
+        :return:
+        """
         return self.identity.get("__odmpy_sync_code")
 
     @staticmethod
@@ -105,6 +122,12 @@ class LibbyClient(object):
         return res.json()
 
     def get_chip(self, auto_save=True, authenticated=False):
+        """
+        Get an identity chip (contains auth token)
+        :param auto_save:
+        :param authenticated:
+        :return:
+        """
         res = self.make_request(
             "https://sentry-read.svc.overdrive.com/chip",
             params={"client": "dewey"},
@@ -112,27 +135,49 @@ class LibbyClient(object):
             authenticated=authenticated,
         )
         if auto_save:
+            # persist to settings
             self.save_settings(res)
         return res
 
-    def sync(self):
-        return self.make_request("https://sentry-read.svc.overdrive.com/chip/sync")
-
     def clone_by_code(self, code, auto_save=True):
+        """
+        Link account to identy token retrieved in `get_chip()`
+        :param code:
+        :param auto_save:
+        :return:
+        """
         res = self.make_request(
             "https://sentry-read.svc.overdrive.com/chip/clone/code", data={"code": code}
         )
         if auto_save:
+            # persist to settings
             self.save_settings({"__odmpy_sync_code": code})
         return res
 
+    def sync(self):
+        """
+        Get the user account state, which includes loans, holds, etc
+        :return:
+        """
+        return self.make_request("https://sentry-read.svc.overdrive.com/chip/sync")
+
     def is_logged_in(self):
+        """
+        Check if successfully logged in
+        :return:
+        """
         synced_state = self.sync()
         return synced_state.get("result", "") == "synchronized" and synced_state.get(
             "cards"
         )
 
     def media_info(self, media_id, refresh=False):
+        """
+        Get media info. For a loan, `media_id` is the `loan["id"]`.
+        :param media_id:
+        :param refresh:
+        :return:
+        """
         # [!] not used, not tested
         cached_media_info_file = os.path.join(
             self.temp_folder, f"{media_id}.media.json"
@@ -160,17 +205,33 @@ class LibbyClient(object):
 
     @staticmethod
     def is_audiobook_loan(book):
+        """
+        Verify if book is a downloadable audiobook
+        :param book:
+        :return:
+        """
         return [f for f in book.get("formats", []) if f["id"] == "audiobook-mp3"]
 
     def get_audiobook_loans(self):
-        synced_state = self.sync()
+        """
+        Get audiobook loans
+        :return:
+        """
         return [
             book
-            for book in synced_state.get("loans", [])
+            for book in self.sync().get("loans", [])
             if self.is_audiobook_loan(book)
         ]
 
     def fulfill(self, loan_id, card_id, format_id):
+        """
+        Get the fulfillment details for a loan
+
+        :param loan_id:
+        :param card_id:
+        :param format_id:
+        :return:
+        """
         endpoint_url = f"https://sentry-read.svc.overdrive.com/card/{card_id}/loan/{loan_id}/fulfill/{format_id}"
         return self.make_request(endpoint_url, return_res=True)
 
