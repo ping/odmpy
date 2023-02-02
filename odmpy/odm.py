@@ -41,7 +41,7 @@ except ImportError:
     pass
 
 import requests
-from requests.adapters import HTTPAdapter
+from requests.adapters import HTTPAdapter, Retry
 from requests.exceptions import HTTPError, ConnectionError
 from clint.textui import colored, progress
 import eyed3
@@ -55,6 +55,7 @@ from .constants import (
     UNSUPPORTED_PARSER_ENTITIES,
     PERFORMER_FID,
 )
+from .libby import LibbyClient
 
 logger = logging.getLogger(__file__)
 ch = logging.StreamHandler(sys.stdout)
@@ -70,179 +71,17 @@ MARKER_TIMESTAMP_HHMMSS = (
 )
 
 
-def run():
-    parser = argparse.ArgumentParser(
-        prog="odmpy",
-        description="Download/return an Overdrive loan audiobook",
-        epilog=(
-            f"Version {__version__}. "
-            f"[Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}-{sys.platform}] "
-            "Source at https://github.com/ping/odmpy/"
-        ),
-        fromfile_prefix_chars="@",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="verbose",
-        action="store_true",
-        help="Enable more verbose messages for debugging",
-    )
-    parser.add_argument(
-        "-t",
-        "--timeout",
-        dest="timeout",
-        type=int,
-        default=10,
-        help="Timeout (seconds) for network requests. Default 10.",
-    )
-
-    subparsers = parser.add_subparsers(
-        title="Available commands",
-        dest="command_name",
-        help="To get more help, use the -h option with the command.",
-    )
-    parser_info = subparsers.add_parser(
-        "info",
-        description="Get information about a loan file.",
-        help="Get information about a loan file",
-    )
-    parser_info.add_argument(
-        "-f",
-        "--format",
-        dest="format",
-        choices=["text", "json"],
-        default="text",
-        help="Format for output",
-    )
-    parser_info.add_argument("odm_file", type=str, help="ODM file path")
-
-    parser_dl = subparsers.add_parser(
-        "dl", description="Download from a loan file.", help="Download from a loan file"
-    )
-    parser_dl.add_argument(
-        "-d",
-        "--downloaddir",
-        dest="download_dir",
-        default=".",
-        help="Download folder path",
-    )
-    parser_dl.add_argument(
-        "-c",
-        "--chapters",
-        dest="add_chapters",
-        action="store_true",
-        help="Add chapter marks (experimental)",
-    )
-    parser_dl.add_argument(
-        "-m",
-        "--merge",
-        dest="merge_output",
-        action="store_true",
-        help="Merge into 1 file (experimental, requires ffmpeg)",
-    )
-    parser_dl.add_argument(
-        "--mergeformat",
-        dest="merge_format",
-        choices=["mp3", "m4b"],
-        default="mp3",
-        help="Merged file format (m4b is slow, experimental, requires ffmpeg)",
-    )
-    parser_dl.add_argument(
-        "-k",
-        "--keepcover",
-        dest="always_keep_cover",
-        action="store_true",
-        help="Always generate the cover image file (cover.jpg)",
-    )
-    parser_dl.add_argument(
-        "-f",
-        "--keepmp3",
-        dest="keep_mp3",
-        action="store_true",
-        help="Keep downloaded mp3 files (after merging)",
-    )
-    parser_dl.add_argument(
-        "--nobookfolder",
-        dest="no_book_folder",
-        action="store_true",
-        help="Don't create a book subfolder",
-    )
-    parser_dl.add_argument(
-        "-j",
-        "--writejson",
-        dest="write_json",
-        action="store_true",
-        help="Generate a meta json file (for debugging)",
-    )
-    parser_dl.add_argument(
-        "-r",
-        "--retry",
-        dest="retries",
-        type=int,
-        default=1,
-        help="Number of retries if download fails. Default 1.",
-    )
-    parser_dl.add_argument(
-        "--hideprogress",
-        dest="hide_progress",
-        action="store_true",
-        help="Hide the download progress bar (e.g. during testing)",
-    )
-    parser_dl.add_argument("odm_file", type=str, help="ODM file path")
-
-    parser_ret = subparsers.add_parser(
-        "ret", description="Return a loan file.", help="Return a loan file."
-    )
-    parser_ret.add_argument("odm_file", type=str, help="ODM file path")
-
-    args = parser.parse_args()
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
-
-    # suppress warnings
-    logging.getLogger("eyed3").setLevel(
-        logging.WARNING if logger.level == logging.DEBUG else logging.ERROR
-    )
+def process_odm(odm_file, args, cleanup_odm_license=False):
+    """
+    Main working method to process an odm file.
+    :param odm_file:
+    :param args:
+    :param cleanup_odm_license:
+    :return:
+    """
     ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "error"
-
-    # because py<=3.6 does not support `add_subparsers(required=True)`
-    try:
-        # test for odm file
-        args.odm_file
-    except AttributeError:
-        parser.print_help()
-        sys.exit()
-
-    xml_doc = xml.etree.ElementTree.parse(args.odm_file)
+    xml_doc = xml.etree.ElementTree.parse(odm_file)
     root = xml_doc.getroot()
-
-    # Return Book
-    if args.command_name == "ret":
-        logger.info(f"Returning {args.odm_file} ...")
-        early_return_url = root.find("EarlyReturnURL").text
-        try:
-            early_return_res = requests.get(
-                early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
-            )
-            early_return_res.raise_for_status()
-            logger.info(f"Loan returned successfully: {args.odm_file}")
-        except HTTPError as he:
-            if he.response.status_code == 403:
-                logger.warning("Loan is probably already returned.")
-                sys.exit()
-            logger.error(
-                f"Unexpected HTTPError while trying to return loan {args.odm_file}"
-            )
-            logger.error(f"HTTPError: {str(he)}")
-            logger.debug(he.response.content)
-            sys.exit(1)
-        except ConnectionError as ce:
-            logger.error(f"ConnectionError: {str(ce)}")
-            sys.exit(1)
-
-        sys.exit()
-
     metadata = None
     for t in root.itertext():
         if not t.startswith("<Metadata>"):
@@ -388,9 +227,11 @@ def run():
         sys.exit()
 
     session = requests.Session()
-    custom_adapter = HTTPAdapter(max_retries=args.retries)
-    session.mount("http://", custom_adapter)
-    session.mount("https://", custom_adapter)
+    custom_adapter = HTTPAdapter(
+        max_retries=Retry(total=args.retries, backoff_factor=0.1)
+    )
+    for prefix in ("http://", "https://"):
+        session.mount(prefix, custom_adapter)
 
     # Download Book
     download_baseurl = ""
@@ -409,7 +250,7 @@ def run():
     debug_meta["download_parts"] = download_parts
 
     logger.info(
-        f'Downloading "{colored.blue(title, bold=True)}" by "{colored.blue(", ".join(authors))}" in {len(download_parts)} parts...'
+        f'Downloading "{colored.blue(title, bold=True)}" by "{colored.blue(", ".join(authors))}" in {len(download_parts)} part(s)...'
     )
 
     # declare book folder/file names here together so we can catch problems from too long names
@@ -464,6 +305,11 @@ def run():
                 )
             )
         )
+        if cleanup_odm_license and os.path.isfile(odm_file):
+            try:
+                os.remove(odm_file)
+            except Exception as e:  # pylint: disable=broad-except
+                logger.warning(f'Error deleting "{odm_file}": {str(e)}')
         sys.exit()
 
     cover_filename = os.path.join(book_folder, "cover.jpg")
@@ -519,7 +365,7 @@ def run():
     # Extract license
     # License file is downloadable only once per odm
     # so we keep it in case downloads fail
-    _, odm_filename = os.path.split(args.odm_file)
+    _, odm_filename = os.path.split(odm_file)
     license_file = os.path.join(
         args.download_dir, odm_filename.replace(".odm", ".license")
     )
@@ -1006,6 +852,14 @@ def run():
                 except Exception as e:  # pylint: disable=broad-except
                     logger.warning(f'Error deleting "{f["file"]}": {str(e)}')
 
+    if cleanup_odm_license:
+        for target_file in [odm_file, license_file]:
+            if os.path.isfile(target_file):
+                try:
+                    os.remove(target_file)
+                except Exception as e:  # pylint: disable=broad-except
+                    logger.warning(f'Error deleting "{target_file}": {str(e)}')
+
     if not keep_cover and os.path.isfile(cover_filename):
         try:
             os.remove(cover_filename)
@@ -1015,3 +869,284 @@ def run():
     if args.write_json:
         with open(debug_filename, "w", encoding="utf-8") as outfile:
             json.dump(debug_meta, outfile, indent=2)
+
+
+def add_common_download_arguments(parser_dl):
+    """
+    Add common arguments needed for downloading
+
+    :param parser_dl:
+    :return:
+    """
+    parser_dl.add_argument(
+        "-d",
+        "--downloaddir",
+        dest="download_dir",
+        default=".",
+        help="Download folder path",
+    )
+    parser_dl.add_argument(
+        "-c",
+        "--chapters",
+        dest="add_chapters",
+        action="store_true",
+        help="Add chapter marks (experimental)",
+    )
+    parser_dl.add_argument(
+        "-m",
+        "--merge",
+        dest="merge_output",
+        action="store_true",
+        help="Merge into 1 file (experimental, requires ffmpeg)",
+    )
+    parser_dl.add_argument(
+        "--mergeformat",
+        dest="merge_format",
+        choices=["mp3", "m4b"],
+        default="mp3",
+        help="Merged file format (m4b is slow, experimental, requires ffmpeg)",
+    )
+    parser_dl.add_argument(
+        "-k",
+        "--keepcover",
+        dest="always_keep_cover",
+        action="store_true",
+        help="Always generate the cover image file (cover.jpg)",
+    )
+    parser_dl.add_argument(
+        "-f",
+        "--keepmp3",
+        dest="keep_mp3",
+        action="store_true",
+        help="Keep downloaded mp3 files (after merging)",
+    )
+    parser_dl.add_argument(
+        "--nobookfolder",
+        dest="no_book_folder",
+        action="store_true",
+        help="Don't create a book subfolder",
+    )
+    parser_dl.add_argument(
+        "-j",
+        "--writejson",
+        dest="write_json",
+        action="store_true",
+        help="Generate a meta json file (for debugging)",
+    )
+    parser_dl.add_argument(
+        "-r",
+        "--retry",
+        dest="retries",
+        type=int,
+        default=1,
+        help="Number of retries if download fails. Default 1.",
+    )
+    parser_dl.add_argument(
+        "--hideprogress",
+        dest="hide_progress",
+        action="store_true",
+        help="Hide the download progress bar (e.g. during testing)",
+    )
+
+
+def run():
+    parser = argparse.ArgumentParser(
+        prog="odmpy",
+        description="Download/return an Overdrive loan audiobook",
+        epilog=(
+            f"Version {__version__}. "
+            f"[Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}-{sys.platform}] "
+            "Source at https://github.com/ping/odmpy/"
+        ),
+        fromfile_prefix_chars="@",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="Enable more verbose messages for debugging",
+    )
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        dest="timeout",
+        type=int,
+        default=10,
+        help="Timeout (seconds) for network requests. Default 10.",
+    )
+
+    subparsers = parser.add_subparsers(
+        title="Available commands",
+        dest="command_name",
+        help="To get more help, use the -h option with the command.",
+    )
+    parser_info = subparsers.add_parser(
+        "info",
+        description="Get information about a loan file.",
+        help="Get information about a loan file",
+    )
+    parser_info.add_argument(
+        "-f",
+        "--format",
+        dest="format",
+        choices=["text", "json"],
+        default="text",
+        help="Format for output",
+    )
+    parser_info.add_argument("odm_file", type=str, help="ODM file path")
+
+    parser_dl = subparsers.add_parser(
+        "dl", description="Download from a loan file.", help="Download from a loan file"
+    )
+    add_common_download_arguments(parser_dl)
+    parser_dl.add_argument("odm_file", type=str, help="ODM file path")
+
+    parser_ret = subparsers.add_parser(
+        "ret", description="Return a loan file.", help="Return a loan file."
+    )
+    parser_ret.add_argument("odm_file", type=str, help="ODM file path")
+
+    parser_libby = subparsers.add_parser(
+        "libby",
+        description="Interactive Libby Interface",
+        help="Interact directly with Libby to download audiobooks",
+    )
+    parser_libby.add_argument(
+        "--settings",
+        dest="settings_folder",
+        type=str,
+        default="./odmpy_settings",
+        metavar="SETTINGS_FOLDER",
+        help="Settings folder to store odmpy required settings, e.g. Libby authentication.",
+    )
+    parser_libby.add_argument(
+        "--keepodm",
+        action="store_true",
+        help="Keep the downloaded odm and license files.",
+    )
+    add_common_download_arguments(parser_libby)
+
+    args = parser.parse_args()
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+
+    # suppress warnings
+    logging.getLogger("eyed3").setLevel(
+        logging.WARNING if logger.level == logging.DEBUG else logging.ERROR
+    )
+
+    if args.command_name == "libby":
+        client_title = "Libby Interactive Client"
+        logger.info(client_title)
+        logger.info("-" * 70)
+        libby_client = LibbyClient(
+            args.settings_folder, timeout=args.timeout, logger=logger
+        )
+        if not libby_client.has_sync_code():
+            instructions = (
+                "A Libby setup code is needed to allow odmpy to interact with Libby."
+                "\nTo get a Libby code, see https://help.libbyapp.com/en-us/6070.htm"
+            )
+            sync_code = input(f"{instructions}\n\nLibby code (8-digit): ").strip()
+            if not sync_code:
+                return
+            if not sync_code.isdigit() and len(sync_code) != 8:
+                logger.warning(f"Invalid code: {sync_code}")
+                return
+            libby_client.get_chip()
+            libby_client.clone_by_code(sync_code)
+            if not libby_client.is_logged_in():
+                libby_client.clear_settings()
+                raise RuntimeError(
+                    "Could not log in with code.\n"
+                    "Make sure that you have entered the right code and within the time limit.\n"
+                    "You also need to have at least 1 registered library card."
+                )
+        audiobook_loans = libby_client.get_audiobook_loans()
+        if not audiobook_loans:
+            logger.info("No audiobook loans")
+            return
+        logger.info("Found %s downloadable loans.", colored.blue(len(audiobook_loans)))
+        for index, loan in enumerate(audiobook_loans, start=1):
+            expiry_date = datetime.datetime.strptime(
+                loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
+            )
+            logger.info(
+                "%s: %-50s  %-30s  %s",
+                colored.magenta(f"{index:2d}", bold=True),
+                loan["title"],
+                f'By: {loan["firstCreatorSortName"]}',
+                f"Exp: {expiry_date:%Y-%m-%d}",
+            )
+        while True:
+            loan_index_selected = input(
+                f"\nChoose [{colored.magenta(f'1-{len(audiobook_loans)}', bold=True)}, leave blank to quit]: "
+            ).strip()
+            if not loan_index_selected:
+                break
+            if (
+                (not loan_index_selected.isdigit())
+                or int(loan_index_selected) < 1
+                or int(loan_index_selected) > len(audiobook_loans)
+            ):
+                logger.warning(f"Invalid choice: {loan_index_selected}")
+                continue
+            break
+
+        if loan_index_selected:
+            loan_index_selected = int(loan_index_selected)
+            selected_loan = audiobook_loans[loan_index_selected - 1]
+            file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
+            odm_file_path = os.path.join(
+                args.download_dir,
+                f"{slugify(file_name, allow_unicode=True)}.odm",
+            )
+            odm_res_content = libby_client.fulfill_odm(
+                selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
+            )
+            with open(odm_file_path, "wb") as f:
+                f.write(odm_res_content)
+                logger.info("Downloaded odm to %s", colored.magenta(odm_file_path))
+            process_odm(odm_file_path, args, cleanup_odm_license=not args.keepodm)
+
+        return  # end libby command
+
+    # because py<=3.6 does not support `add_subparsers(required=True)`
+    try:
+        # test for odm file
+        args.odm_file
+    except AttributeError:
+        parser.print_help()
+        sys.exit()
+
+    xml_doc = xml.etree.ElementTree.parse(args.odm_file)
+    root = xml_doc.getroot()
+
+    # Return Book
+    if args.command_name == "ret":
+        logger.info(f"Returning {args.odm_file} ...")
+        early_return_url = root.find("EarlyReturnURL").text
+        try:
+            early_return_res = requests.get(
+                early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
+            )
+            early_return_res.raise_for_status()
+            logger.info(f"Loan returned successfully: {args.odm_file}")
+        except HTTPError as he:
+            if he.response.status_code == 403:
+                logger.warning("Loan is probably already returned.")
+                sys.exit()
+            logger.error(
+                f"Unexpected HTTPError while trying to return loan {args.odm_file}"
+            )
+            logger.error(f"HTTPError: {str(he)}")
+            logger.debug(he.response.content)
+            sys.exit(1)
+        except ConnectionError as ce:
+            logger.error(f"ConnectionError: {str(ce)}")
+            sys.exit(1)
+
+        sys.exit()
+
+    process_odm(args.odm_file, args)
