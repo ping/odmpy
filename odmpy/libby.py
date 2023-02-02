@@ -109,7 +109,7 @@ class LibbyClient(object):
             session = self.libby_session
 
         self.logger.debug("REQUEST URL: %s", req.url)
-        self.logger.debug(req.headers)
+        self.logger.debug("REQUEST HEADERS: %s", req.headers)
 
         res = session.send(session.prepare_request(req), timeout=self.timeout)
         self.logger.debug("RESPONSE URL: %s", res.url)
