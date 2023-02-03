@@ -534,21 +534,21 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
             if not audiofile.tag:
                 audiofile.initTag()
             if not audiofile.tag.title:
-                audiofile.tag.title = f"{title}"
+                audiofile.tag.title = str(title)
             if not audiofile.tag.album:
-                audiofile.tag.album = f"{title}"
+                audiofile.tag.album = str(title)
             if not audiofile.tag.artist:
-                audiofile.tag.artist = f"{authors[0]}"
+                audiofile.tag.artist = str(authors[0])
             if not audiofile.tag.album_artist:
-                audiofile.tag.album_artist = f"{authors[0]}"
+                audiofile.tag.album_artist = str(authors[0])
             if not audiofile.tag.track_num:
                 audiofile.tag.track_num = (part_number, len(download_parts))
             if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
-                audiofile.tag.setTextFrame(PERFORMER_FID, f"{narrators[0]}")
+                audiofile.tag.setTextFrame(PERFORMER_FID, str(narrators[0]))
             if not audiofile.tag.publisher:
-                audiofile.tag.publisher = f"{publisher}"
+                audiofile.tag.publisher = str(publisher)
             if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
-                audiofile.tag.comments.set(f"{description}", description="Description")
+                audiofile.tag.comments.set(str(description), description="Description")
             if cover_bytes:
                 audiofile.tag.images.set(
                     art.TO_ID3_ART_TYPES[art.FRONT_COVER][0],
@@ -652,7 +652,7 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
                 for i, m in enumerate(generated_markers):
                     title_frameset = eyed3.id3.frames.FrameSet()
                     title_frameset.setTextFrame(
-                        eyed3.id3.frames.TITLE_FID, f"{m['text']}"
+                        eyed3.id3.frames.TITLE_FID, str(m["text"])
                     )
 
                     chap = audiofile.tag.chapters.set(
@@ -736,19 +736,19 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
         os.rename(temp_book_filename, book_filename)
 
         audiofile = eyed3.load(book_filename)
-        audiofile.tag.title = f"{title}"
+        audiofile.tag.title = str(title)
         if not audiofile.tag.album:
-            audiofile.tag.album = f"{title}"
+            audiofile.tag.album = str(title)
         if not audiofile.tag.artist:
-            audiofile.tag.artist = f"{authors[0]}"
+            audiofile.tag.artist = str(authors[0])
         if not audiofile.tag.album_artist:
-            audiofile.tag.album_artist = f"{authors[0]}"
+            audiofile.tag.album_artist = str(authors[0])
         if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
-            audiofile.tag.setTextFrame(PERFORMER_FID, f"{narrators[0]}")
+            audiofile.tag.setTextFrame(PERFORMER_FID, str(narrators[0]))
         if not audiofile.tag.publisher:
-            audiofile.tag.publisher = f"{publisher}"
+            audiofile.tag.publisher = str(publisher)
         if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
-            audiofile.tag.comments.set(f"{description}", description="Description")
+            audiofile.tag.comments.set(str(description), description="Description")
 
         if args.add_chapters and not audiofile.tag.table_of_contents:
             merged_markers = []
@@ -764,7 +764,7 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
                     merged_markers.append(
                         {
                             "id": file_marker[0],
-                            "text": f"{file_marker[1]}",
+                            "text": str(file_marker[1]),
                             "start_time": int(file_marker[2]) + prev_tracks_len_ms,
                             "end_time": int(
                                 this_track_endtime_ms
@@ -785,7 +785,7 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
 
             for i, m in enumerate(merged_markers):
                 title_frameset = eyed3.id3.frames.FrameSet()
-                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, f"{m['text']}")
+                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, str(m["text"]))
                 chap = audiofile.tag.chapters.set(
                     m["id"].encode("ascii"),
                     times=(m["start_time"], m["end_time"]),
@@ -1184,7 +1184,7 @@ def run():
 
         except RuntimeError as run_err:
             logger.error(colored(str(run_err), "red"))
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa, pylint: disable=broad-except
             logger.exception(colored("An unexpected error has occured", "red"))
 
         return  # end libby command
