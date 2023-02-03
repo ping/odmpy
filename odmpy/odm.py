@@ -1085,7 +1085,13 @@ def run():
                         "Could not log in with code.\n"
                         "Make sure that you have entered the right code and within the time limit."
                     ) from he
-            audiobook_loans = libby_client.get_audiobook_loans()
+            synced_state = libby_client.sync()
+            audiobook_loans = [
+                book
+                for book in synced_state.get("loans", [])
+                if libby_client.is_audiobook_loan(book)
+            ]
+            cards = synced_state.get("cards", [])
             if not audiobook_loans:
                 logger.info("No downloadable audiobook loans found.")
                 return
@@ -1097,11 +1103,20 @@ def run():
                     loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
                 )
                 logger.info(
-                    "%s: %-50s  %-30s  %s",
+                    "%s: %-50s  %-25s  \n    * %s  %s",
                     colored.magenta(f"{index:2d}", bold=True),
                     loan["title"],
                     f'By: {loan["firstCreatorSortName"]}',
-                    f"Exp: {expiry_date:%Y-%m-%d}",
+                    f"Expires: {expiry_date:%Y-%m-%d}",
+                    next(
+                        iter(
+                            [
+                                c["library"]["name"]
+                                for c in cards
+                                if c["cardId"] == loan["cardId"]
+                            ]
+                        )
+                    ),
                 )
             while True:
                 loan_index_selected = input(
