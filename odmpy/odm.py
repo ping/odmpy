@@ -1060,6 +1060,11 @@ def run():
         requests_logger.setLevel(logging.DEBUG)
         HTTPConnection.debuglevel = 1
 
+    if hasattr(args, "download_dir") and args.download_dir:
+        args.download_dir = os.path.expanduser(args.download_dir)
+    if hasattr(args, "settings_folder") and args.settings_folder:
+        args.settings_folder = os.path.expanduser(args.settings_folder)
+
     # suppress warnings
     logging.getLogger("eyed3").setLevel(
         logging.WARNING if logger.level == logging.DEBUG else logging.ERROR
