@@ -1157,6 +1157,8 @@ def run():
                 args.download_dir,
                 f"{slugify(file_name, allow_unicode=True)}.odm",
             )
+            # don't re-download odm if it already exists so that we don't
+            # needlessly use up the fulfillment limits
             if not os.path.exists(odm_file_path):
                 odm_res_content = libby_client.fulfill_odm(
                     selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
