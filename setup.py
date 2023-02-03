@@ -41,9 +41,10 @@ setup(
     },
     install_requires=[
         "requests",
-        "clint",
         "eyed3",
         "mutagen",
+        "termcolor",
+        "tqdm",
     ],
     include_package_data=True,
     platforms="any",

@@ -19,20 +19,21 @@
 #
 
 import argparse
-import os
-import subprocess
-import sys
-import datetime
-import time
-import xml.etree.ElementTree
-import uuid
-import hashlib
 import base64
-from collections import OrderedDict
-import re
+import datetime
+import hashlib
+import json
 import logging
 import math
-import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+import uuid
+import xml.etree.ElementTree
+from collections import OrderedDict
 from http.client import HTTPConnection
 from urllib.parse import urlparse
 
@@ -44,7 +45,8 @@ except ImportError:
 import requests
 from requests.adapters import HTTPAdapter, Retry
 from requests.exceptions import HTTPError, ConnectionError
-from clint.textui import colored, progress
+from termcolor import colored
+from tqdm import tqdm
 import eyed3
 from eyed3.utils import art
 from .utils import unescape_html, slugify, mp3_duration_ms
@@ -152,17 +154,18 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
     # View Book Info
     if args.command_name == "info":
         if args.format == "text":
-            logger.info(f"{'Title:':10} {colored.blue(title)}")
+            logger.info(f'{"Title:":10} {colored(title, "blue")}')
             logger.info(
                 "{:10} {}".format(
                     "Creators:",
-                    colored.blue(
+                    colored(
                         ", ".join(
                             [
                                 f"{c.text} ({c.attrib['role']})"
                                 for c in metadata.find("Creators")
                             ]
-                        )
+                        ),
+                        "blue",
                     ),
                 )
             )
@@ -255,7 +258,9 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
     debug_meta["download_parts"] = download_parts
 
     logger.info(
-        f'Downloading "{colored.blue(title, bold=True)}" by "{colored.blue(", ".join(authors))}" in {len(download_parts)} part(s)...'
+        f'Downloading "{colored(title, "blue", attrs=["bold"])}" '
+        f'by "{colored(", ".join(authors), "blue", attrs=["bold"])}" '
+        f"in {len(download_parts)} part(s)..."
     )
 
     # declare book folder/file names here together so we can catch problems from too long names
@@ -304,11 +309,11 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
         book_filename if args.merge_format == "mp3" else book_m4b_filename
     ):
         logger.warning(
-            'Already saved "{}"'.format(
-                colored.magenta(
-                    book_filename if args.merge_format == "mp3" else book_m4b_filename
-                )
-            )
+            'Already saved "%s"',
+            colored(
+                book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                "magenta",
+            ),
         )
         if cleanup_odm_license and os.path.isfile(odm_file):
             try:
@@ -342,7 +347,8 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
                 outfile.write(cover_res.content)
         except requests.exceptions.HTTPError as he:
             logger.warning(
-                f"Error downloading square cover: {colored.red(str(he), bold=True)}"
+                "Error downloading square cover: %s",
+                colored(str(he), "red", attrs=["bold"]),
             )
             # fallback to original cover url
             try:
@@ -356,7 +362,8 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
                     outfile.write(cover_res.content)
             except requests.exceptions.HTTPError as he2:
                 logger.warning(
-                    f"Error downloading cover: {colored.red(str(he2), bold=True)}"
+                    "Error downloading cover: %s",
+                    colored(str(he2), "red", attrs=["bold"]),
                 )
 
     acquisition_url = root.find("License").find("AcquisitionUrl").text
@@ -449,7 +456,7 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
         part_markers = []
 
         if os.path.isfile(part_filename):
-            logger.warning(f"Already saved {colored.magenta(part_filename)}")
+            logger.warning("Already saved %s", colored(part_filename, "magenta"))
         else:
             try:
                 part_download_res = session.get(
@@ -462,20 +469,17 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
                     timeout=args.timeout,
                     stream=True,
                 )
-
                 part_download_res.raise_for_status()
 
-                chunk_size = 1024 * 1024
-                expected_chunk_count = math.ceil(1.0 * part_file_size / chunk_size)
-                with open(part_tmp_filename, "wb") as outfile:
-                    for chunk in progress.bar(
-                        part_download_res.iter_content(chunk_size=chunk_size),
-                        label=f"Part {part_number}",
-                        expected_size=expected_chunk_count,
-                        hide=args.hide_progress,
-                    ):
-                        if chunk:
-                            outfile.write(chunk)
+                with tqdm.wrapattr(
+                    part_download_res.raw,
+                    "read",
+                    total=part_file_size,
+                    desc=f"Part {part_number:2d}",
+                    disable=args.hide_progress,
+                ) as res_raw:
+                    with open(part_tmp_filename, "wb") as outfile:
+                        shutil.copyfileobj(res_raw, outfile)
 
                 # try to remux file to remove mp3 lame tag errors
                 cmd = [
@@ -650,17 +654,23 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
                     start_time = datetime.timedelta(milliseconds=m["start_time"])
                     end_time = datetime.timedelta(milliseconds=m["end_time"])
                     logger.debug(
-                        f'Added chap tag => {colored.cyan(m["id"])}: {start_time}-{end_time} '
-                        f'"{colored.cyan(m["text"])}" to "{colored.blue(part_filename)}"'
+                        'Added chap tag => %s: %s-%s "%s" to "%s"',
+                        colored(m["id"], "cyan"),
+                        start_time,
+                        end_time,
+                        colored(m["text"], "cyan"),
+                        colored(part_filename, "blue"),
                     )
 
                 audiofile.tag.save()
 
         except Exception as e:  # pylint: disable=broad-except
-            logger.warning(f"Error saving ID3: {colored.red(str(e), bold=True)}")
+            logger.warning(
+                "Error saving ID3: %s", colored(str(e), "red", attrs=["bold"])
+            )
             keep_cover = True
 
-        logger.info(f'Saved "{colored.magenta(part_filename)}"')
+        logger.info('Saved "%s"', colored(part_filename, "magenta"))
 
         file_tracks.append(
             {
@@ -675,11 +685,11 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
 
     if args.merge_output:
         logger.info(
-            'Generating "{}"...'.format(
-                colored.magenta(
-                    book_filename if args.merge_format == "mp3" else book_m4b_filename
-                )
-            )
+            'Generating "%s"...',
+            colored(
+                book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                "magenta",
+            ),
         )
 
         # We can't directly generate a m4b here even if specified because eyed3 doesn't support m4b/mp4
@@ -775,21 +785,23 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
                 start_time = datetime.timedelta(milliseconds=m["start_time"])
                 end_time = datetime.timedelta(milliseconds=m["end_time"])
                 logger.debug(
-                    f'Added chap tag => {colored.cyan(m["id"])}: {start_time}-{end_time} '
-                    f'"{colored.cyan(m["text"])}" to "{colored.blue(book_filename)}"'
+                    'Added chap tag => %s: %s-%s "%s" to "%s"',
+                    colored(m["id"], "cyan"),
+                    start_time,
+                    end_time,
+                    colored(m["text"], "cyan"),
+                    colored(book_filename, "blue"),
                 )
 
         audiofile.tag.save()
 
         if args.merge_format == "mp3":
             logger.info(
-                'Merged files into "{}"'.format(
-                    colored.magenta(
-                        book_filename
-                        if args.merge_format == "mp3"
-                        else book_m4b_filename
-                    )
-                )
+                'Merged files into "%s"',
+                colored(
+                    book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                    "magenta",
+                ),
             )
 
         if args.merge_format == "m4b":
@@ -844,7 +856,7 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
                 sys.exit(exit_code)
 
             os.rename(temp_book_m4b_filename, book_m4b_filename)
-            logger.info(f'Merged files into "{colored.magenta(book_m4b_filename)}"')
+            logger.info('Merged files into "%s"', colored(book_m4b_filename, "magenta"))
             try:
                 os.remove(book_filename)
             except Exception as e:  # pylint: disable=broad-except
@@ -1064,7 +1076,7 @@ def run():
                     if not sync_code:
                         return
                     if not LibbyClient.is_valid_sync_code(sync_code):
-                        logger.warning(f"Invalid code: {colored.red(sync_code)}")
+                        logger.warning("Invalid code: %s", colored(sync_code, "red"))
                         continue
                     break
 
@@ -1096,7 +1108,8 @@ def run():
                 logger.info("No downloadable audiobook loans found.")
                 return
             logger.info(
-                "Found %s downloadable loans.", colored.blue(len(audiobook_loans))
+                "Found %s downloadable loans.",
+                colored(str(len(audiobook_loans)), "blue"),
             )
             for index, loan in enumerate(audiobook_loans, start=1):
                 expiry_date = datetime.datetime.strptime(
@@ -1104,7 +1117,7 @@ def run():
                 )
                 logger.info(
                     "%s: %-50s  %-25s  \n    * %s  %s",
-                    colored.magenta(f"{index:2d}", bold=True),
+                    colored(f"{index:2d}", "magenta", attrs=["bold"]),
                     loan["title"],
                     f'By: {loan["firstCreatorSortName"]}',
                     f"Expires: {expiry_date:%Y-%m-%d}",
@@ -1120,7 +1133,7 @@ def run():
                 )
             while True:
                 loan_index_selected = input(
-                    f"\nChoose from {colored.magenta(f'1-{len(audiobook_loans)}', bold=True)}, "
+                    f'\nChoose from {colored(f"1-{len(audiobook_loans)}", "magenta", attrs=["bold"])}, '
                     "or leave blank to quit, then press enter: "
                 ).strip()
                 if not loan_index_selected:
@@ -1153,9 +1166,9 @@ def run():
             process_odm(odm_file_path, args, cleanup_odm_license=not args.keepodm)
 
         except RuntimeError as run_err:
-            logger.error(colored.red(str(run_err)))
+            logger.error(colored(str(run_err), "red"))
         except Exception:  # pylint: disable=broad-except
-            logger.exception(colored.red("An unexpected error has occured"))
+            logger.exception(colored("An unexpected error has occured", "red"))
 
         return  # end libby command
 
