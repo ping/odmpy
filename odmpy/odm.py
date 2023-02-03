@@ -1063,9 +1063,10 @@ def run():
                     "Make sure that you have entered the right code and within the time limit.\n"
                     "You also need to have at least 1 registered library card."
                 )
+            logger.info("Login successful.\n")
         audiobook_loans = libby_client.get_audiobook_loans()
         if not audiobook_loans:
-            logger.info("No audiobook loans")
+            logger.info("No downloadable audiobook loans found.")
             return
         logger.info("Found %s downloadable loans.", colored.blue(len(audiobook_loans)))
         for index, loan in enumerate(audiobook_loans, start=1):
@@ -1081,7 +1082,8 @@ def run():
             )
         while True:
             loan_index_selected = input(
-                f"\nChoose [{colored.magenta(f'1-{len(audiobook_loans)}', bold=True)}, leave blank to quit]: "
+                f"\nChoose from {colored.magenta(f'1-{len(audiobook_loans)}', bold=True)}, "
+                "or leave blank to quit, then press enter: "
             ).strip()
             if not loan_index_selected:
                 break
