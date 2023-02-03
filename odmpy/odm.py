@@ -33,6 +33,7 @@ import re
 import logging
 import math
 import json
+from http.client import HTTPConnection
 from urllib.parse import urlparse
 
 try:
@@ -58,10 +59,14 @@ from .constants import (
 from .libby import LibbyClient
 
 logger = logging.getLogger(__file__)
+requests_logger = logging.getLogger("urllib3")
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
+requests_logger.addHandler(ch)
+requests_logger.setLevel(logging.WARNING)
+requests_logger.propagate = True
 
 __version__ = "0.5.0"  # also update ../setup.py
 
@@ -1030,6 +1035,8 @@ def run():
     args = parser.parse_args()
     if args.verbose:
         logger.setLevel(logging.DEBUG)
+        requests_logger.setLevel(logging.DEBUG)
+        HTTPConnection.debuglevel = 1
 
     # suppress warnings
     logging.getLogger("eyed3").setLevel(
@@ -1096,21 +1103,23 @@ def run():
                 continue
             break
 
-        if loan_index_selected:
-            loan_index_selected = int(loan_index_selected)
-            selected_loan = audiobook_loans[loan_index_selected - 1]
-            file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
-            odm_file_path = os.path.join(
-                args.download_dir,
-                f"{slugify(file_name, allow_unicode=True)}.odm",
-            )
-            odm_res_content = libby_client.fulfill_odm(
-                selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
-            )
-            with open(odm_file_path, "wb") as f:
-                f.write(odm_res_content)
-                logger.info("Downloaded odm to %s", colored.magenta(odm_file_path))
-            process_odm(odm_file_path, args, cleanup_odm_license=not args.keepodm)
+        if not loan_index_selected:
+            return
+
+        loan_index_selected = int(loan_index_selected)
+        selected_loan = audiobook_loans[loan_index_selected - 1]
+        file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
+        odm_file_path = os.path.join(
+            args.download_dir,
+            f"{slugify(file_name, allow_unicode=True)}.odm",
+        )
+        odm_res_content = libby_client.fulfill_odm(
+            selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
+        )
+        with open(odm_file_path, "wb") as f:
+            f.write(odm_res_content)
+            logger.info("Downloaded odm to %s", colored.magenta(odm_file_path))
+        process_odm(odm_file_path, args, cleanup_odm_license=not args.keepodm)
 
         return  # end libby command
 

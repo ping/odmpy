@@ -69,15 +69,11 @@ class LibbyClient(object):
         return self.identity.get("__odmpy_sync_code")
 
     @staticmethod
-    def default_headers(accept_json=True):
-        headers = {
+    def default_headers():
+        return {
             "User-Agent": "Mozilla/5.0",
-            "Accept-Encoding": "gzip, deflate",
-            "Connection": "keep-alive",
+            "Accept": "application/json",
         }
-        if accept_json:
-            headers["Accept"] = "application/json"
-        return headers
 
     def make_request(
         self,
@@ -108,13 +104,8 @@ class LibbyClient(object):
             # default session
             session = self.libby_session
 
-        self.logger.debug("REQUEST URL: %s", req.url)
-        self.logger.debug("REQUEST HEADERS: %s", req.headers)
-
         res = session.send(session.prepare_request(req), timeout=self.timeout)
-        self.logger.debug("RESPONSE URL: %s", res.url)
-        self.logger.debug("RESPONSE HEADERS: %s", res.headers)
-        self.logger.debug("RESPONSE BODY: %s", res.text)
+        self.logger.debug("body: %s", res.text)
 
         res.raise_for_status()
         if return_res:
@@ -232,8 +223,10 @@ class LibbyClient(object):
         :param format_id:
         :return:
         """
-        endpoint_url = f"https://sentry-read.svc.overdrive.com/card/{card_id}/loan/{loan_id}/fulfill/{format_id}"
-        return self.make_request(endpoint_url, return_res=True)
+        return self.make_request(
+            f"https://sentry-read.svc.overdrive.com/card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
+            return_res=True,
+        )
 
     def fulfill_odm(self, loan_id, card_id, format_id):
         """
@@ -244,9 +237,10 @@ class LibbyClient(object):
         :param format_id:
         :return:
         """
-        endpoint_url = f"https://sentry-read.svc.overdrive.com/card/{card_id}/loan/{loan_id}/fulfill/{format_id}"
+        headers = self.default_headers()
+        headers["Accept"] = "*/*"
         return self.make_request(
-            endpoint_url,
-            headers=self.default_headers(accept_json=False),
+            f"https://sentry-read.svc.overdrive.com/card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
+            headers=headers,
             return_res=True,
         ).content
