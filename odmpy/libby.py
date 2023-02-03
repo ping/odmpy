@@ -36,6 +36,10 @@ class LibbyClient(object):
         self.libby_session = libby_session
         self.thunder_session = thunder_session
 
+    @staticmethod
+    def is_valid_sync_code(code):
+        return code.isdigit() and len(code) == 8
+
     def save_settings(self, updates):
         """
         Persist identity settings
@@ -137,6 +141,9 @@ class LibbyClient(object):
         :param auto_save:
         :return:
         """
+        if not self.is_valid_sync_code(code):
+            raise ValueError(f"Invalid code: {code}")
+
         res = self.make_request(
             "https://sentry-read.svc.overdrive.com/chip/clone/code", data={"code": code}
         )

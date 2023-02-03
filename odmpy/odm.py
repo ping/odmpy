@@ -1047,79 +1047,100 @@ def run():
         client_title = "Libby Interactive Client"
         logger.info(client_title)
         logger.info("-" * 70)
-        libby_client = LibbyClient(
-            args.settings_folder, timeout=args.timeout, logger=logger
-        )
-        if not libby_client.has_sync_code():
-            instructions = (
-                "A Libby setup code is needed to allow odmpy to interact with Libby."
-                "\nTo get a Libby code, see https://help.libbyapp.com/en-us/6070.htm"
+        try:
+            libby_client = LibbyClient(
+                args.settings_folder, timeout=args.timeout, logger=logger
             )
-            sync_code = input(f"{instructions}\n\nLibby code (8-digit): ").strip()
-            if not sync_code:
-                return
-            if not sync_code.isdigit() and len(sync_code) != 8:
-                logger.warning(f"Invalid code: {sync_code}")
-                return
-            libby_client.get_chip()
-            libby_client.clone_by_code(sync_code)
-            if not libby_client.is_logged_in():
-                libby_client.clear_settings()
-                raise RuntimeError(
-                    "Could not log in with code.\n"
-                    "Make sure that you have entered the right code and within the time limit.\n"
-                    "You also need to have at least 1 registered library card."
+            if not libby_client.has_sync_code():
+                instructions = (
+                    "A Libby setup code is needed to allow odmpy to interact with Libby.\n"
+                    "To get a Libby code, see https://help.libbyapp.com/en-us/6070.htm\n"
                 )
-            logger.info("Login successful.\n")
-        audiobook_loans = libby_client.get_audiobook_loans()
-        if not audiobook_loans:
-            logger.info("No downloadable audiobook loans found.")
-            return
-        logger.info("Found %s downloadable loans.", colored.blue(len(audiobook_loans)))
-        for index, loan in enumerate(audiobook_loans, start=1):
-            expiry_date = datetime.datetime.strptime(
-                loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
-            )
+                logger.info(instructions)
+                while True:
+                    sync_code = input(
+                        "Enter the 8-digit Libby code and press enter: "
+                    ).strip()
+                    if not sync_code:
+                        return
+                    if not LibbyClient.is_valid_sync_code(sync_code):
+                        logger.warning(f"Invalid code: {colored.red(sync_code)}")
+                        continue
+                    break
+
+                try:
+                    libby_client.get_chip()
+                    libby_client.clone_by_code(sync_code)
+                    if not libby_client.is_logged_in():
+                        libby_client.clear_settings()
+                        raise RuntimeError(
+                            "Could not log in with code.\n"
+                            "Make sure that you have entered the right code and within the time limit.\n"
+                            "You also need to have at least 1 registered library card."
+                        )
+                    logger.info("Login successful.\n")
+                except requests.exceptions.HTTPError as he:
+                    libby_client.clear_settings()
+                    raise RuntimeError(
+                        "Could not log in with code.\n"
+                        "Make sure that you have entered the right code and within the time limit."
+                    ) from he
+            audiobook_loans = libby_client.get_audiobook_loans()
+            if not audiobook_loans:
+                logger.info("No downloadable audiobook loans found.")
+                return
             logger.info(
-                "%s: %-50s  %-30s  %s",
-                colored.magenta(f"{index:2d}", bold=True),
-                loan["title"],
-                f'By: {loan["firstCreatorSortName"]}',
-                f"Exp: {expiry_date:%Y-%m-%d}",
+                "Found %s downloadable loans.", colored.blue(len(audiobook_loans))
             )
-        while True:
-            loan_index_selected = input(
-                f"\nChoose from {colored.magenta(f'1-{len(audiobook_loans)}', bold=True)}, "
-                "or leave blank to quit, then press enter: "
-            ).strip()
-            if not loan_index_selected:
+            for index, loan in enumerate(audiobook_loans, start=1):
+                expiry_date = datetime.datetime.strptime(
+                    loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
+                )
+                logger.info(
+                    "%s: %-50s  %-30s  %s",
+                    colored.magenta(f"{index:2d}", bold=True),
+                    loan["title"],
+                    f'By: {loan["firstCreatorSortName"]}',
+                    f"Exp: {expiry_date:%Y-%m-%d}",
+                )
+            while True:
+                loan_index_selected = input(
+                    f"\nChoose from {colored.magenta(f'1-{len(audiobook_loans)}', bold=True)}, "
+                    "or leave blank to quit, then press enter: "
+                ).strip()
+                if not loan_index_selected:
+                    break
+                if (
+                    (not loan_index_selected.isdigit())
+                    or int(loan_index_selected) < 1
+                    or int(loan_index_selected) > len(audiobook_loans)
+                ):
+                    logger.warning(f"Invalid choice: {loan_index_selected}")
+                    continue
                 break
-            if (
-                (not loan_index_selected.isdigit())
-                or int(loan_index_selected) < 1
-                or int(loan_index_selected) > len(audiobook_loans)
-            ):
-                logger.warning(f"Invalid choice: {loan_index_selected}")
-                continue
-            break
 
-        if not loan_index_selected:
-            return
+            if not loan_index_selected:
+                return
 
-        loan_index_selected = int(loan_index_selected)
-        selected_loan = audiobook_loans[loan_index_selected - 1]
-        file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
-        odm_file_path = os.path.join(
-            args.download_dir,
-            f"{slugify(file_name, allow_unicode=True)}.odm",
-        )
-        odm_res_content = libby_client.fulfill_odm(
-            selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
-        )
-        with open(odm_file_path, "wb") as f:
-            f.write(odm_res_content)
-            logger.info("Downloaded odm to %s", colored.magenta(odm_file_path))
-        process_odm(odm_file_path, args, cleanup_odm_license=not args.keepodm)
+            loan_index_selected = int(loan_index_selected)
+            selected_loan = audiobook_loans[loan_index_selected - 1]
+            file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
+            odm_file_path = os.path.join(
+                args.download_dir,
+                f"{slugify(file_name, allow_unicode=True)}.odm",
+            )
+            odm_res_content = libby_client.fulfill_odm(
+                selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
+            )
+            with open(odm_file_path, "wb") as f:
+                f.write(odm_res_content)
+                logger.info("Downloaded odm to %s", colored.magenta(odm_file_path))
+            process_odm(odm_file_path, args, cleanup_odm_license=not args.keepodm)
+
+        except RuntimeError as run_err:
+            logger.error(colored.red(str(run_err)))
+        except Exception as err:  # noqa
+            logger.exception(colored.red("An unexpected error has occured"))
 
         return  # end libby command
 
