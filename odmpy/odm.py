@@ -1116,9 +1116,9 @@ def run():
                     loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
                 )
                 logger.info(
-                    "%s: %-50s  %-25s  \n    * %s  %s",
-                    colored(f"{index:2d}", "magenta", attrs=["bold"]),
-                    loan["title"],
+                    "%s: %-55s  %-25s  \n    * %s  %s",
+                    colored(f"{index:2d}", attrs=["bold"]),
+                    colored(loan["title"], attrs=["bold"]),
                     f'By: {loan["firstCreatorSortName"]}',
                     f"Expires: {expiry_date:%Y-%m-%d}",
                     next(
@@ -1133,7 +1133,7 @@ def run():
                 )
             while True:
                 loan_index_selected = input(
-                    f'\nChoose from {colored(f"1-{len(audiobook_loans)}", "magenta", attrs=["bold"])}, '
+                    f'\nChoose from {colored(f"1-{len(audiobook_loans)}", attrs=["bold"])}, '
                     "or leave blank to quit, then press enter: "
                 ).strip()
                 if not loan_index_selected:
