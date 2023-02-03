@@ -459,12 +459,19 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
             logger.warning("Already saved %s", colored(part_filename, "magenta"))
         else:
             try:
+                already_downloaded_len = 0
+                if os.path.exists(part_tmp_filename):
+                    already_downloaded_len = os.stat(part_tmp_filename).st_size
+
                 part_download_res = session.get(
                     part_download_url,
                     headers={
                         "User-Agent": UA,
                         "ClientID": license_client_id,
                         "License": lic_file_contents,
+                        "Range": f"bytes={already_downloaded_len}-"
+                        if already_downloaded_len
+                        else None,
                     },
                     timeout=args.timeout,
                     stream=True,
@@ -475,10 +482,13 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
                     part_download_res.raw,
                     "read",
                     total=part_file_size,
+                    initial=already_downloaded_len,
                     desc=f"Part {part_number:2d}",
                     disable=args.hide_progress,
                 ) as res_raw:
-                    with open(part_tmp_filename, "wb") as outfile:
+                    with open(
+                        part_tmp_filename, "ab" if already_downloaded_len else "wb"
+                    ) as outfile:
                         shutil.copyfileobj(res_raw, outfile)
 
                 # try to remux file to remove mp3 lame tag errors
