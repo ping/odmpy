@@ -1157,12 +1157,17 @@ def run():
                 args.download_dir,
                 f"{slugify(file_name, allow_unicode=True)}.odm",
             )
-            odm_res_content = libby_client.fulfill_odm(
-                selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
-            )
-            with open(odm_file_path, "wb") as f:
-                f.write(odm_res_content)
-                logger.info("Downloaded odm to %s", colored.magenta(odm_file_path))
+            if not os.path.exists(odm_file_path):
+                odm_res_content = libby_client.fulfill_odm(
+                    selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
+                )
+                with open(odm_file_path, "wb") as f:
+                    f.write(odm_res_content)
+                    logger.info(
+                        "Downloaded odm to %s", colored(odm_file_path, "magenta")
+                    )
+            else:
+                logger.info("Already downloaded odm file: %s", odm_file_path)
             process_odm(odm_file_path, args, cleanup_odm_license=not args.keepodm)
 
         except RuntimeError as run_err:
