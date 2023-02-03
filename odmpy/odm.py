@@ -1154,7 +1154,7 @@ def run():
 
         except RuntimeError as run_err:
             logger.error(colored.red(str(run_err)))
-        except Exception as err:  # noqa
+        except Exception:  # pylint: disable=broad-except
             logger.exception(colored.red("An unexpected error has occured"))
 
         return  # end libby command
