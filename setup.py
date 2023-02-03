@@ -20,7 +20,7 @@ from setuptools import setup
 
 __author__ = "ping"
 __url__ = "https://github.com/ping/odmpy/"
-__version__ = "0.5.0"  # also update odmpy/odm.py
+__version__ = "0.6.0"  # also update odmpy/odm.py
 
 
 __long_description__ = """
@@ -55,7 +55,6 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Environment :: Console",
         "Intended Audience :: End Users/Desktop",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
     ],
 )
