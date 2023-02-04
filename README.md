@@ -164,6 +164,14 @@ There are many ways to get around this but the easiest for me was to use a
 Follow the instructions in this [gist](https://gist.github.com/ping/b58ae66359691db1d08f929a9e57a03d)
 to get started.
 
+Alternatively, if you have switched over to Libby, `odmpy` now
+supports direct from Libby downloads through the `libby` command.
+
+```bash
+# view available options
+odmpy libby -h
+```
+
 ## Credits
 
 - [overdrive](https://github.com/chbrown/overdrive)
