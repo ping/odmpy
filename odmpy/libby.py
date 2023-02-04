@@ -16,7 +16,6 @@
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import glob
 import json
 import logging
 import os
