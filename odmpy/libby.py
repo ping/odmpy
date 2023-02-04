@@ -185,45 +185,13 @@ class LibbyClient(object):
     def is_valid_sync_code(code: str) -> bool:
         return code.isdigit() and len(code) == 8
 
-    def save_settings(self, updates: dict) -> None:
-        """
-        Persist identity settings
-
-        :param updates:
-        :return:
-        """
-        self.identity.update(updates)
-        with open(self.identity_settings_file, "w", encoding="utf-8") as f:
-            json.dump(self.identity, f)
-
-    def clear_settings(self) -> None:
-        """
-        Wipe previously saved settings
-
-        :return:
-        """
-        if os.path.exists(self.identity_settings_file):
-            os.remove(self.identity_settings_file)
-        self.identity = {}
-
-    def has_chip(self) -> bool:
-        """
-        Check if client has identity token
-
-        :return:
-        """
-        return self.identity.get("identity")
-
-    def has_sync_code(self) -> bool:
-        """
-        Check if client has linked account
-
-        :return:
-        """
-        return self.identity.get("__odmpy_sync_code")
-
     @staticmethod
     def default_headers() -> dict:
+        """
+        Default HTTP headers
+
+        :return:
+        """
         return {
             "User-Agent": "Mozilla/5.0",
             "Accept": "application/json",
@@ -265,6 +233,43 @@ class LibbyClient(object):
         if return_res:
             return res
         return res.json()
+
+    def save_settings(self, updates: dict) -> None:
+        """
+        Persist identity settings
+
+        :param updates:
+        :return:
+        """
+        self.identity.update(updates)
+        with open(self.identity_settings_file, "w", encoding="utf-8") as f:
+            json.dump(self.identity, f)
+
+    def clear_settings(self) -> None:
+        """
+        Wipe previously saved settings
+
+        :return:
+        """
+        if os.path.exists(self.identity_settings_file):
+            os.remove(self.identity_settings_file)
+        self.identity = {}
+
+    def has_chip(self) -> bool:
+        """
+        Check if client has identity token
+
+        :return:
+        """
+        return self.identity.get("identity")
+
+    def has_sync_code(self) -> bool:
+        """
+        Check if client has linked account
+
+        :return:
+        """
+        return self.identity.get("__odmpy_sync_code")
 
     def get_chip(self, auto_save: bool = True, authenticated: bool = False) -> dict:
         """
@@ -390,6 +395,12 @@ class LibbyClient(object):
         )
 
     def process_audiobook(self, loan: dict):
+        """
+        Returns the data needed to download an audiobook
+
+        :param loan:
+        :return:
+        """
         loan_type = "audiobook" if loan["type"]["id"] == "audiobook" else "book"
         card_id = loan["cardId"]
         title_id = loan["id"]
