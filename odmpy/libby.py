@@ -3,6 +3,7 @@ import logging
 import os
 import json
 import re
+from typing import Optional
 
 import requests
 from requests.adapters import HTTPAdapter, Retry
@@ -10,7 +11,9 @@ from requests.adapters import HTTPAdapter, Retry
 
 class LibbyClient(object):
     # Reverse engineering of the libby endpoints is thanks to https://github.com/lullius/pylibby
-    def __init__(self, settings_folder, max_retries=0, timeout=10, logger=None):
+    def __init__(
+        self, settings_folder: str, max_retries: int = 0, timeout: int = 10, logger=None
+    ):
         if not logger:
             logger = logging.getLogger(__name__)
         self.logger = logger
@@ -37,12 +40,13 @@ class LibbyClient(object):
         self.thunder_session = thunder_session
 
     @staticmethod
-    def is_valid_sync_code(code):
+    def is_valid_sync_code(code: str):
         return code.isdigit() and len(code) == 8
 
-    def save_settings(self, updates):
+    def save_settings(self, updates: dict) -> None:
         """
         Persist identity settings
+
         :param updates:
         :return:
         """
@@ -50,30 +54,33 @@ class LibbyClient(object):
         with open(self.identity_settings_file, "w", encoding="utf-8") as f:
             json.dump(self.identity, f)
 
-    def clear_settings(self):
+    def clear_settings(self) -> None:
         """
         Wipe previously saved settings
+
         :return:
         """
         if os.path.exists(self.identity_settings_file):
             os.remove(self.identity_settings_file)
 
-    def has_chip(self):
+    def has_chip(self) -> bool:
         """
         Check if client has identity token
+
         :return:
         """
         return self.identity.get("identity")
 
-    def has_sync_code(self):
+    def has_sync_code(self) -> bool:
         """
         Check if client has linked account
+
         :return:
         """
         return self.identity.get("__odmpy_sync_code")
 
     @staticmethod
-    def default_headers():
+    def default_headers() -> dict:
         return {
             "User-Agent": "Mozilla/5.0",
             "Accept": "application/json",
@@ -81,14 +88,14 @@ class LibbyClient(object):
 
     def make_request(
         self,
-        endpoint_url,
-        params=None,
-        data=None,
-        headers=None,
-        method=None,
-        authenticated=True,
-        session=None,
-        return_res=False,
+        endpoint_url: str,
+        params: Optional[dict] = None,
+        data: Optional[dict] = None,
+        headers: Optional[dict] = None,
+        method: Optional[str] = None,
+        authenticated: bool = True,
+        session: Optional[requests.sessions.Session] = None,
+        return_res: bool = False,
     ):
         if not method:
             # try to set a HTTP method
@@ -116,9 +123,10 @@ class LibbyClient(object):
             return res
         return res.json()
 
-    def get_chip(self, auto_save=True, authenticated=False):
+    def get_chip(self, auto_save: bool = True, authenticated: bool = False) -> dict:
         """
         Get an identity chip (contains auth token)
+
         :param auto_save:
         :param authenticated:
         :return:
@@ -134,9 +142,10 @@ class LibbyClient(object):
             self.save_settings(res)
         return res
 
-    def clone_by_code(self, code, auto_save=True):
+    def clone_by_code(self, code: str, auto_save: bool = True) -> dict:
         """
         Link account to identy token retrieved in `get_chip()`
+
         :param code:
         :param auto_save:
         :return:
@@ -152,16 +161,18 @@ class LibbyClient(object):
             self.save_settings({"__odmpy_sync_code": code})
         return res
 
-    def sync(self):
+    def sync(self) -> dict:
         """
         Get the user account state, which includes loans, holds, etc
+
         :return:
         """
         return self.make_request("https://sentry-read.svc.overdrive.com/chip/sync")
 
-    def is_logged_in(self):
+    def is_logged_in(self) -> bool:
         """
         Check if successfully logged in
+
         :return:
         """
         synced_state = self.sync()
@@ -169,9 +180,10 @@ class LibbyClient(object):
             "cards"
         )
 
-    def media_info(self, media_id, refresh=False):
+    def media_info(self, media_id: str, refresh: bool = False) -> dict:
         """
         Get media info. For a loan, `media_id` is the `loan["id"]`.
+
         :param media_id:
         :param refresh:
         :return:
@@ -189,7 +201,7 @@ class LibbyClient(object):
             authenticated=False,
         )
 
-    def clean_media_cache(self, keep_ids=None):
+    def clean_media_cache(self, keep_ids: Optional[list[str]] = None):
         # [!] not used, not tested
         if not keep_ids:
             keep_ids = []
@@ -202,17 +214,19 @@ class LibbyClient(object):
                 os.remove(cached_file)
 
     @staticmethod
-    def is_audiobook_loan(book):
+    def is_audiobook_loan(book: dict) -> bool:
         """
         Verify if book is a downloadable audiobook
+
         :param book:
         :return:
         """
-        return [f for f in book.get("formats", []) if f["id"] == "audiobook-mp3"]
+        return bool([f for f in book.get("formats", []) if f["id"] == "audiobook-mp3"])
 
-    def get_audiobook_loans(self):
+    def get_audiobook_loans(self) -> list[dict]:
         """
         Get audiobook loans
+
         :return:
         """
         return [
@@ -221,7 +235,7 @@ class LibbyClient(object):
             if self.is_audiobook_loan(book)
         ]
 
-    def fulfill(self, loan_id, card_id, format_id):
+    def fulfill(self, loan_id: str, card_id: str, format_id: str) -> dict:
         """
         Get the fulfillment details for a loan
 
@@ -235,7 +249,7 @@ class LibbyClient(object):
             return_res=True,
         )
 
-    def fulfill_odm(self, loan_id, card_id, format_id):
+    def fulfill_odm(self, loan_id: str, card_id: str, format_id: str) -> bytes:
         """
         Returns the odm contents directly
 
