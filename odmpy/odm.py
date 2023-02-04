@@ -70,7 +70,7 @@ requests_logger.addHandler(ch)
 requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
 
-__version__ = "0.6.1"  # also update ../setup.py
+__version__ = "0.6.2"  # also update ../setup.py
 
 MARKER_TIMESTAMP_MMSS = r"(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)"
 MARKER_TIMESTAMP_HHMMSS = (
