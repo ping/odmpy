@@ -101,16 +101,17 @@ options:
 ```
 
 ```
-usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--keepodm] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k] [-f]
-                   [--nobookfolder] [-j] [-r RETRIES] [--hideprogress]
+usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--direct] [--keepodm] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k]
+                   [-f] [--nobookfolder] [-j] [-r RETRIES] [--hideprogress]
 
 Interactive Libby Interface
 
 options:
   -h, --help            show this help message and exit
   --settings SETTINGS_FOLDER
-                        Settings folder to store odmpy required settings, e.g. Libby authentication.
-  --keepodm             Keep the downloaded odm and license files.
+                        Settings folder to store odmpy required settings, e.g. Libby authentication
+  --direct              Don't download the odm file from Libby but instead process the audiobook download directly
+  --keepodm             Keep the downloaded odm and license files
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
                         Download folder path
   -c, --chapters        Add chapter marks (experimental)
@@ -139,8 +140,11 @@ odmpy ret "MyLoans/Book1.odm"
 # Get information about a loan Book1.odm
 odmpy info "MyLoans/Book1.odm"
 
-# Start the Libby interface
+# Start the Libby interface to select an audiobook loan to download
 odmpy libby
+
+# Download via Libby without generating the odm file
+odmpy libby --direct
 
 ```
 

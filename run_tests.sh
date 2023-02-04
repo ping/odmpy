@@ -88,5 +88,9 @@ rm -rf "$TEST_DOWNLOAD_DIR" && mkdir -p "$TEST_DOWNLOAD_DIR"
 python -m odmpy dl "$TEST_DATA_DIR/test_ref24.odm" -d "$TEST_DOWNLOAD_DIR" -k --hideprogress > /dev/null
 python -m unittest -v tests.OdmpyTests.test_cover_fail_ref24
 
+echo "-=-=-=-=-=-=-=-=-=- RUNNING TESTS FOR LIBBY TOC PARSING ... -=-=-=-=-=-=-=-=-=-"
+python -m unittest -v tests.OdmpyTests.test_parse_part_path
+python -m unittest -v tests.OdmpyTests.test_parse_toc
+
 # clean up
 clear_test_data

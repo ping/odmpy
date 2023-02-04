@@ -58,7 +58,7 @@ from .constants import (
     UNSUPPORTED_PARSER_ENTITIES,
     PERFORMER_FID,
 )
-from .libby import LibbyClient
+from .libby import LibbyClient, merge_toc
 
 logger = logging.getLogger(__file__)
 requests_logger = logging.getLogger("urllib3")
@@ -80,7 +80,8 @@ MARKER_TIMESTAMP_HHMMSS = (
 
 def process_odm(odm_file, args, cleanup_odm_license=False):
     """
-    Main working method to process an odm file.
+    Download the audiobook loan using the specified odm file
+
     :param odm_file:
     :param args:
     :param cleanup_odm_license:
@@ -898,6 +899,524 @@ def process_odm(odm_file, args, cleanup_odm_license=False):
             json.dump(debug_meta, outfile, indent=2)
 
 
+def process_audiobook_loan(loan, openbook, parsed_toc, session, args):
+    """
+    Download the audiobook loan directly via Libby without the use of
+    an odm file
+
+    :param loan:
+    :param openbook:
+    :param parsed_toc:
+    :param session: From `LibbyClient.libby_session` because it contains a needed auth cookie
+    :param args:
+    :return:
+    """
+
+    ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "error"
+    debug_meta = {}
+
+    title = loan["title"]
+    cover_highest_res = next(
+        iter(
+            sorted(
+                list(loan.get("covers").values()),
+                key=lambda c: c.get("width", 0),
+                reverse=True,
+            )
+        ),
+        None,
+    )
+    cover_url = cover_highest_res["href"] if cover_highest_res else None
+    authors = [
+        c["name"] for c in openbook.get("creator", []) if c.get("role", "") == "author"
+    ]
+    if not authors:
+        authors = [
+            c["name"]
+            for c in openbook.get("creator", [])
+            if c.get("role", "") == "editor"
+        ]
+    if not authors:
+        authors = [c["name"] for c in openbook.get("creator", [])]
+    narrators = [
+        c["name"]
+        for c in openbook.get("creator", [])
+        if c.get("role", "") == "narrator"
+    ]
+    publisher = loan.get("publisherAccount", {}).get("name", "") or ""
+    description = (
+        openbook.get("description", {}).get("full", "")
+        or openbook.get("description", {}).get("short")
+        or ""
+    )
+    debug_meta["meta"] = {
+        "title": title,
+        "coverUrl": cover_url,
+        "authors": authors,
+        "publisher": publisher,
+        "description": description,
+    }
+
+    download_parts = list(parsed_toc.values())
+    debug_meta["download_parts"] = []
+    for p in download_parts:
+        chapters = [
+            {"title": m.title, "start": m.start_second, "end": m.end_second}
+            for m in p["chapters"]
+        ]
+        debug_meta["download_parts"].append(
+            {
+                "url": p["url"],
+                "audio-duration": p["audio-duration"],
+                "file-length": p["file-length"],
+                "spine-position": p["spine-position"],
+                "chapters": chapters,
+            }
+        )
+
+    logger.info(
+        f'Downloading "{colored(title, "blue", attrs=["bold"])}" '
+        f'by "{colored(", ".join(authors), "blue", attrs=["bold"])}" '
+        f"in {len(download_parts)} part(s)..."
+    )
+    book_folder = os.path.join(
+        args.download_dir,
+        f"{title.replace(os.sep, '-')} - {', '.join(authors).replace(os.sep, '-')}",
+    )
+    if args.no_book_folder:
+        book_folder = args.download_dir
+
+    # for merged mp3
+    book_filename = os.path.join(
+        book_folder,
+        f"{title.replace(os.sep, '-')} - {', '.join(authors).replace(os.sep, '-')}.mp3",
+    )
+    # for merged m4b
+    book_m4b_filename = os.path.join(
+        book_folder,
+        f"{title.replace(os.sep, '-')} - {', '.join(authors).replace(os.sep, '-')}.m4b",
+    )
+
+    if not os.path.exists(book_folder):
+        try:
+            os.makedirs(book_folder)
+        except OSError as exc:
+            # ref http://www.ioplex.com/~miallen/errcmpp.html
+            if exc.errno not in (36, 63) or args.no_book_folder:
+                raise
+
+            # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
+            # create book folder, file with just the title
+            book_folder = os.path.join(
+                args.download_dir, f"{title.replace(os.sep, '-')}"
+            )
+            os.makedirs(book_folder)
+
+            book_filename = os.path.join(
+                book_folder, f"{title.replace(os.sep, '-')}.mp3"
+            )
+            book_m4b_filename = os.path.join(
+                book_folder, f"{title.replace(os.sep, '-')}.m4b"
+            )
+
+    # check early if a merged file is already saved
+    if args.merge_output and os.path.isfile(
+        book_filename if args.merge_format == "mp3" else book_m4b_filename
+    ):
+        logger.warning(
+            'Already saved "%s"',
+            colored(
+                book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                "magenta",
+            ),
+        )
+        sys.exit()
+
+    cover_filename = os.path.join(book_folder, "cover.jpg")
+    debug_filename = os.path.join(book_folder, "debug.json")
+
+    if not os.path.isfile(cover_filename) and cover_url:
+        try:
+            square_cover_url_params = {
+                "type": "auto",
+                "width": 510,
+                "height": 510,
+                "force": "true",
+                "quality": 80,
+                "url": urlparse(cover_url).path,
+            }
+            # credit: https://github.com/lullius/pylibby/pull/18
+            # this endpoint produces a resized version of the cover
+            cover_res = session.get(
+                "https://ic.od-cdn.com/resize",
+                params=square_cover_url_params,
+                headers={"User-Agent": UA},
+                timeout=args.timeout,
+            )
+            cover_res.raise_for_status()
+            with open(cover_filename, "wb") as outfile:
+                outfile.write(cover_res.content)
+        except requests.exceptions.HTTPError as he:
+            logger.warning(
+                "Error downloading square cover: %s",
+                colored(str(he), "red", attrs=["bold"]),
+            )
+            # fallback to original cover url
+            try:
+                cover_res = session.get(
+                    cover_url,
+                    headers={"User-Agent": UA},
+                    timeout=args.timeout,
+                )
+                cover_res.raise_for_status()
+                with open(cover_filename, "wb") as outfile:
+                    outfile.write(cover_res.content)
+            except requests.exceptions.HTTPError as he2:
+                logger.warning(
+                    "Error downloading cover: %s",
+                    colored(str(he2), "red", attrs=["bold"]),
+                )
+
+    cover_bytes = None
+    if os.path.isfile(cover_filename):
+        with open(cover_filename, "rb") as f:
+            cover_bytes = f.read()
+
+    keep_cover = args.always_keep_cover
+    file_tracks = []
+    for p in download_parts:
+        part_number = p["spine-position"] + 1
+        part_filename = os.path.join(
+            book_folder,
+            f"{slugify(f'{title} - Part {part_number:02d}', allow_unicode=True)}.mp3",
+        )
+        part_tmp_filename = f"{part_filename}.part"
+        part_file_size = p["file-length"]
+        part_download_url = p["url"]
+
+        if os.path.isfile(part_filename):
+            logger.warning("Already saved %s", colored(part_filename, "magenta"))
+        else:
+            try:
+                already_downloaded_len = 0
+                if os.path.exists(part_tmp_filename):
+                    already_downloaded_len = os.stat(part_tmp_filename).st_size
+
+                part_download_res = session.get(
+                    part_download_url,
+                    headers={
+                        "User-Agent": "Mozilla/5.0",
+                        "Range": f"bytes={already_downloaded_len}-"
+                        if already_downloaded_len
+                        else None,
+                    },
+                    timeout=args.timeout,
+                    stream=True,
+                )
+                part_download_res.raise_for_status()
+
+                with tqdm.wrapattr(
+                    part_download_res.raw,
+                    "read",
+                    total=part_file_size,
+                    initial=already_downloaded_len,
+                    desc=f"Part {part_number:2d}",
+                    disable=args.hide_progress,
+                ) as res_raw:
+                    with open(
+                        part_tmp_filename, "ab" if already_downloaded_len else "wb"
+                    ) as outfile:
+                        shutil.copyfileobj(res_raw, outfile)
+
+                # try to remux file to remove mp3 lame tag errors
+                cmd = [
+                    "ffmpeg",
+                    "-y",
+                    "-nostdin",
+                    "-hide_banner",
+                    "-loglevel",
+                    ffmpeg_loglevel,
+                    "-i",
+                    part_tmp_filename,
+                    "-c:a",
+                    "copy",
+                    "-c:v",
+                    "copy",
+                    part_filename,
+                ]
+                try:
+                    exit_code = subprocess.call(cmd)
+                    if exit_code:
+                        logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
+                        logger.warning(f"Command: {' '.join(cmd)!s}")
+                        os.rename(part_tmp_filename, part_filename)
+                    else:
+                        os.remove(part_tmp_filename)
+                except Exception as ffmpeg_ex:  # pylint: disable=broad-except
+                    logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
+                    os.rename(part_tmp_filename, part_filename)
+
+            except HTTPError as he:
+                logger.error(f"HTTPError: {str(he)}")
+                logger.debug(he.response.content)
+                sys.exit(1)
+
+            except ConnectionError as ce:
+                logger.error(f"ConnectionError: {str(ce)}")
+                sys.exit(1)
+
+        try:
+            # Fill id3 info for mp3 part
+            audiofile = eyed3.load(part_filename)
+            if not audiofile.tag:
+                audiofile.initTag()
+            if not audiofile.tag.title:
+                audiofile.tag.title = str(title)
+            if not audiofile.tag.album:
+                audiofile.tag.album = str(title)
+            if not audiofile.tag.artist:
+                audiofile.tag.artist = str(authors[0])
+            if not audiofile.tag.album_artist:
+                audiofile.tag.album_artist = str(authors[0])
+            if not audiofile.tag.track_num:
+                audiofile.tag.track_num = (part_number, len(download_parts))
+            if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
+                audiofile.tag.setTextFrame(PERFORMER_FID, str(narrators[0]))
+            if not audiofile.tag.publisher:
+                audiofile.tag.publisher = str(publisher)
+            if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
+                audiofile.tag.comments.set(str(description), description="Description")
+            if cover_bytes:
+                audiofile.tag.images.set(
+                    art.TO_ID3_ART_TYPES[art.FRONT_COVER][0],
+                    cover_bytes,
+                    "image/jpeg",
+                    description="Cover",
+                )
+            audiofile.tag.save()
+
+            if (
+                args.add_chapters
+                and not args.merge_output
+                and not audiofile.tag.table_of_contents
+            ):
+                toc = audiofile.tag.table_of_contents.set(
+                    "toc".encode("ascii"),
+                    toplevel=True,
+                    ordered=True,
+                    child_ids=[],
+                    description="Table of Contents",
+                )
+                chapter_marks = p["chapters"]
+                for i, m in enumerate(chapter_marks):
+                    title_frameset = eyed3.id3.frames.FrameSet()
+                    title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, m.title)
+                    chap = audiofile.tag.chapters.set(
+                        f"ch{i}".encode("ascii"),
+                        times=(m.start_second * 1000, m.end_second * 1000),
+                        sub_frames=title_frameset,
+                    )
+                    toc.child_ids.append(chap.element_id)
+                    start_time = datetime.timedelta(seconds=m.start_second)
+                    end_time = datetime.timedelta(seconds=m.end_second)
+                    logger.debug(
+                        'Added chap tag => %s: %s-%s "%s" to "%s"',
+                        colored(f"ch{i}", "cyan"),
+                        start_time,
+                        end_time,
+                        colored(m.title, "cyan"),
+                        colored(part_filename, "blue"),
+                    )
+                audiofile.tag.save()
+
+        except Exception as e:  # pylint: disable=broad-except
+            logger.warning(
+                "Error saving ID3: %s", colored(str(e), "red", attrs=["bold"])
+            )
+            keep_cover = True
+
+        logger.info('Saved "%s"', colored(part_filename, "magenta"))
+        file_tracks.append({"file": part_filename})
+
+    debug_meta["file_tracks"] = file_tracks
+    if args.merge_output:
+        logger.info(
+            'Generating "%s"...',
+            colored(
+                book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                "magenta",
+            ),
+        )
+
+        # We can't directly generate a m4b here even if specified because eyed3 doesn't support m4b/mp4
+        temp_book_filename = f"{book_filename}.part"
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-nostdin",
+            "-hide_banner",
+            "-loglevel",
+            ffmpeg_loglevel,
+        ]
+        if not args.hide_progress:
+            cmd.append("-stats")
+        cmd.extend(
+            [
+                "-i",
+                f"concat:{'|'.join([ft['file'] for ft in file_tracks])}",
+                "-acodec",
+                "copy",
+                "-b:a",
+                "64k",  # explicitly set audio bitrate
+                "-f",
+                "mp3",
+                temp_book_filename,
+            ]
+        )
+        exit_code = subprocess.call(cmd)
+
+        if exit_code:
+            logger.error(f"ffmpeg exited with the code: {exit_code!s}")
+            logger.error(f"Command: {' '.join(cmd)!s}")
+            sys.exit(exit_code)
+        os.rename(temp_book_filename, book_filename)
+
+        audiofile = eyed3.load(book_filename)
+        audiofile.tag.title = str(title)
+        if not audiofile.tag.album:
+            audiofile.tag.album = str(title)
+        if not audiofile.tag.artist:
+            audiofile.tag.artist = str(authors[0])
+        if not audiofile.tag.album_artist:
+            audiofile.tag.album_artist = str(authors[0])
+        if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
+            audiofile.tag.setTextFrame(PERFORMER_FID, str(narrators[0]))
+        if not audiofile.tag.publisher:
+            audiofile.tag.publisher = str(publisher)
+        if eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
+            audiofile.tag.comments.set(str(description), description="Description")
+
+        if args.add_chapters and not audiofile.tag.table_of_contents:
+            toc = audiofile.tag.table_of_contents.set(
+                "toc".encode("ascii"),
+                toplevel=True,
+                ordered=True,
+                child_ids=[],
+                description="Table of Contents",
+            )
+            merged_markers = merge_toc(parsed_toc)
+            debug_meta["merged_markers"] = [
+                {"title": m.title, "start": m.start_second, "end": m.end_second}
+                for m in merged_markers
+            ]
+
+            for i, m in enumerate(merged_markers):
+                title_frameset = eyed3.id3.frames.FrameSet()
+                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, m.title)
+                chap = audiofile.tag.chapters.set(
+                    f"ch{i}".encode("ascii"),
+                    times=(m.start_second * 1000, m.end_second * 1000),
+                    sub_frames=title_frameset,
+                )
+                toc.child_ids.append(chap.element_id)
+                start_time = datetime.timedelta(seconds=m.start_second)
+                end_time = datetime.timedelta(seconds=m.end_second)
+                logger.debug(
+                    'Added chap tag => %s: %s-%s "%s" to "%s"',
+                    colored(f"ch{i}", "cyan"),
+                    start_time,
+                    end_time,
+                    colored(m.title, "cyan"),
+                    colored(book_filename, "blue"),
+                )
+
+        audiofile.tag.save()
+
+        if args.merge_format == "mp3":
+            logger.info(
+                'Merged files into "%s"',
+                colored(
+                    book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                    "magenta",
+                ),
+            )
+
+        if args.merge_format == "m4b":
+            temp_book_m4b_filename = f"{book_m4b_filename}.part"
+            cmd = [
+                "ffmpeg",
+                "-y",
+                "-nostdin",
+                "-hide_banner",
+                "-loglevel",
+                ffmpeg_loglevel,
+            ]
+            if not args.hide_progress:
+                cmd.append("-stats")
+            cmd.extend(
+                [
+                    "-i",
+                    book_filename,
+                ]
+            )
+            if os.path.isfile(cover_filename):
+                cmd.extend(["-i", cover_filename])
+
+            cmd.extend(
+                [
+                    "-map",
+                    "0:a",
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "64k",  # explicitly set audio bitrate
+                ]
+            )
+            if os.path.isfile(cover_filename):
+                cmd.extend(
+                    [
+                        "-map",
+                        "1:v",
+                        "-c:v",
+                        "copy",
+                        "-disposition:v:0",
+                        "attached_pic",
+                    ]
+                )
+
+            cmd.extend(["-f", "mp4", temp_book_m4b_filename])
+            exit_code = subprocess.call(cmd)
+
+            if exit_code:
+                logger.error(f"ffmpeg exited with the code: {exit_code!s}")
+                logger.error(f"Command: {' '.join(cmd)!s}")
+                sys.exit(exit_code)
+
+            os.rename(temp_book_m4b_filename, book_m4b_filename)
+            logger.info('Merged files into "%s"', colored(book_m4b_filename, "magenta"))
+            try:
+                os.remove(book_filename)
+            except Exception as e:  # pylint: disable=broad-except
+                logger.warning(f'Error deleting "{book_filename}": {str(e)}')
+
+        if not args.keep_mp3:
+            for f in file_tracks:
+                try:
+                    os.remove(f["file"])
+                except Exception as e:  # pylint: disable=broad-except
+                    logger.warning(f'Error deleting "{f["file"]}": {str(e)}')
+
+    if not keep_cover and os.path.isfile(cover_filename):
+        try:
+            os.remove(cover_filename)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.warning(f'Error deleting "{cover_filename}": {str(e)}')
+
+    if args.write_json:
+        with open(debug_filename, "w", encoding="utf-8") as outfile:
+            json.dump(debug_meta, outfile, indent=2)
+
+
 def add_common_download_arguments(parser_dl):
     """
     Add common arguments needed for downloading
@@ -1045,12 +1564,18 @@ def run():
         type=str,
         default="./odmpy_settings",
         metavar="SETTINGS_FOLDER",
-        help="Settings folder to store odmpy required settings, e.g. Libby authentication.",
+        help="Settings folder to store odmpy required settings, e.g. Libby authentication",
+    )
+    parser_libby.add_argument(
+        "--direct",
+        dest="libby_direct",
+        action="store_true",
+        help="Don't download the odm file from Libby but instead process the audiobook download directly",
     )
     parser_libby.add_argument(
         "--keepodm",
         action="store_true",
-        help="Keep the downloaded odm and license files.",
+        help="Keep the downloaded odm and license files",
     )
     add_common_download_arguments(parser_libby)
 
@@ -1167,6 +1692,18 @@ def run():
 
             loan_index_selected = int(loan_index_selected)
             selected_loan = audiobook_loans[loan_index_selected - 1]
+
+            if args.libby_direct:
+                openbook, toc = libby_client.process_audiobook(selected_loan)
+                process_audiobook_loan(
+                    selected_loan,
+                    openbook,
+                    toc,
+                    libby_client.libby_session,
+                    args,
+                )
+                return
+
             file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
             odm_file_path = os.path.join(
                 args.download_dir,

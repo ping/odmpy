@@ -17,14 +17,141 @@
 #
 
 import glob
+import json
 import logging
 import os
-import json
 import re
+from collections import namedtuple, OrderedDict
 from typing import Optional
+from urllib.parse import urljoin
+
 
 import requests
 from requests.adapters import HTTPAdapter, Retry
+
+FILE_PART_RE = re.compile(
+    r"(?P<part_name>{[A-F0-9\-]{36}}[^#]+)(#(?P<second_stamp>\d+))?$"
+)
+ChapterMarker = namedtuple(
+    "ChapterMarker", ["title", "part_name", "start_second", "end_second"]
+)
+
+
+def parse_part_path(title: str, part_path: str) -> ChapterMarker:
+    """
+    Extracts chapter marker info from the part path,
+    e.g. {AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}Fmt425-Part03.mp3#3000
+    yields `ChapterMarker(title, "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}Fmt425-Part03.mp3", 3000)`
+
+    :param title:
+    :param part_path:
+    :return:
+    """
+    mobj = FILE_PART_RE.match(part_path)
+    if not mobj:
+        raise ValueError(f"Unexpected path format: {part_path}")
+    return ChapterMarker(
+        title=title,
+        part_name=mobj.group("part_name"),
+        start_second=int(mobj.group("second_stamp"))
+        if mobj.group("second_stamp")
+        else 0,
+        end_second=0,
+    )
+
+
+def parse_toc(base_url: str, toc: list[dict], spine: list[dict]) -> dict:
+    """
+    Parses `openbook["nav"]["toc"]` and `openbook["spine"]` to a format
+    suitable for processing.
+
+    :param base_url:
+    :param toc:
+    :param spine:
+    :return:
+    """
+    entries = []
+    for item in toc:
+        entries.append(parse_part_path(item["title"], item["path"]))
+        for content in item.get("contents", []):
+            # we use the original `item["title"]` instead of `content["title"]`
+            # so that we can de-dup these entries later
+            entries.append(parse_part_path(item["title"], content["path"]))
+
+    # use an OrderedDict to ensure that we can consistently test this
+    parsed_toc = OrderedDict()
+
+    for entry in entries:
+        if entry.part_name not in parsed_toc:
+            parsed_toc[entry.part_name] = {"chapters": []}
+        if not parsed_toc[entry.part_name]["chapters"]:
+            # first entry for the part_name
+            parsed_toc[entry.part_name]["chapters"].append(entry)
+            continue
+        # de-dup entries because OD sometimes generates timestamped chapter titles marks
+        # for the same chapter in the same part, e.g. "Chapter 2 (00:00)", "Chapter 2 (12:34)"
+        if entry.title == parsed_toc[entry.part_name]["chapters"][-1].title:
+            continue
+        parsed_toc[entry.part_name]["chapters"].append(entry)
+
+    for s in spine:
+        parsed_toc[s["-odread-original-path"]].update(
+            {
+                "url": urljoin(base_url, s["path"]),
+                "audio-duration": s["audio-duration"],
+                "file-length": s["-odread-file-bytes"],
+                "spine-position": s["-odread-spine-position"],
+            }
+        )
+    for item in parsed_toc.values():
+        chapters = item["chapters"]
+        updated_chapters = []
+        for i, chapter in enumerate(chapters):
+            # update end_second mark
+            updated_chapter = ChapterMarker(
+                title=chapter.title,
+                part_name=chapter.part_name,
+                start_second=chapter.start_second,
+                end_second=(
+                    chapters[i + 1].start_second
+                    if i < (len(chapters) - 1)
+                    else item["audio-duration"]
+                ),
+            )
+            updated_chapters.append(updated_chapter)
+        item["chapters"] = updated_chapters
+
+    return parsed_toc
+
+
+def merge_toc(toc: dict) -> list[ChapterMarker]:
+    """
+    Generates a list of ChapterMarker for the merged audiobook based on the parsed toc
+
+    :param toc: parsed toc
+    :return:
+    """
+    chapters = OrderedDict()
+    parts = list(toc.values())
+    for i, part in enumerate(parts):
+        cumu_part_duration = sum([p["audio-duration"] for p in parts[:i]])
+        for marker in part["chapters"]:
+            if marker.title not in chapters:
+                chapters[marker.title] = {
+                    "start": cumu_part_duration + marker.start_second,
+                    "end": 0,
+                }
+            chapters[marker.title]["end"] = cumu_part_duration + marker.end_second
+
+    return [
+        ChapterMarker(
+            title=title,
+            part_name="",
+            start_second=marker["start"],
+            end_second=marker["end"],
+        )
+        for title, marker in list(chapters.items())
+    ]
 
 
 class LibbyClient(object):
@@ -58,7 +185,7 @@ class LibbyClient(object):
         self.thunder_session = thunder_session
 
     @staticmethod
-    def is_valid_sync_code(code: str):
+    def is_valid_sync_code(code: str) -> bool:
         return code.isdigit() and len(code) == 8
 
     def save_settings(self, updates: dict) -> None:
@@ -283,3 +410,34 @@ class LibbyClient(object):
             headers=headers,
             return_res=True,
         ).content
+
+    def open_loan(self, loan_type: str, card_id: str, title_id: str) -> dict:
+        """
+        Gets the meta urls needed to fulfill a loan
+
+        :param loan_type:
+        :param card_id:
+        :param title_id:
+        :return:
+        """
+        return self.make_request(
+            f"https://sentry-read.svc.overdrive.com/open/{loan_type}/card/{card_id}/title/{title_id}"
+        )
+
+    def process_audiobook(self, loan: dict):
+        loan_type = "audiobook" if loan["type"]["id"] == "audiobook" else "book"
+        card_id = loan["cardId"]
+        title_id = loan["id"]
+        meta = self.open_loan(loan_type, card_id, title_id)
+        download_base = meta["urls"]["web"]
+
+        # Sets a needed cookie
+        web_url = download_base + "?" + meta["message"]
+        _ = self.make_request(
+            web_url, headers={"Accept": "*/*"}, authenticated=False, return_res=True
+        )
+
+        # contains nav/toc and spine
+        openbook = self.make_request(meta["urls"]["openbook"])
+        toc = parse_toc(download_base, openbook["nav"]["toc"], openbook["spine"])
+        return openbook, toc
