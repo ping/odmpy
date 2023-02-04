@@ -1656,6 +1656,7 @@ def run():
             if not audiobook_loans:
                 logger.info("No downloadable audiobook loans found.")
                 return
+
             logger.info(
                 "Found %s downloadable loans.",
                 colored(str(len(audiobook_loans)), "blue"),
@@ -1681,57 +1682,63 @@ def run():
                     ),
                 )
             while True:
-                loan_index_selected = input(
+                loan_choices = input(
                     f'\nChoose from {colored(f"1-{len(audiobook_loans)}", attrs=["bold"])}, '
                     "or leave blank to quit, then press enter: "
                 ).strip()
-                if not loan_index_selected:
+                if not loan_choices:
                     break
-                if (
-                    (not loan_index_selected.isdigit())
-                    or int(loan_index_selected) < 1
-                    or int(loan_index_selected) > len(audiobook_loans)
-                ):
-                    logger.warning(f"Invalid choice: {loan_index_selected}")
-                    continue
-                break
 
-            if not loan_index_selected:
-                return
-
-            loan_index_selected = int(loan_index_selected)
-            selected_loan = audiobook_loans[loan_index_selected - 1]
+                loan_choices = loan_choices.split(" ")
+                loan_choices_isvalid = True
+                for loan_index_selected in loan_choices:
+                    if (
+                        (not loan_index_selected.isdigit())
+                        or int(loan_index_selected) < 1
+                        or int(loan_index_selected) > len(audiobook_loans)
+                    ):
+                        logger.warning(f"Invalid choice: {loan_index_selected}")
+                        loan_choices_isvalid = False
+                        continue
+                if loan_choices_isvalid:
+                    break
 
             if args.libby_direct:
-                openbook, toc = libby_client.process_audiobook(selected_loan)
-                process_audiobook_loan(
-                    selected_loan,
-                    openbook,
-                    toc,
-                    libby_client.libby_session,
-                    args,
-                )
+                for loan_index_selected in loan_choices:
+                    loan_index_selected = int(loan_index_selected)
+                    selected_loan = audiobook_loans[loan_index_selected - 1]
+                    openbook, toc = libby_client.process_audiobook(selected_loan)
+                    process_audiobook_loan(
+                        selected_loan,
+                        openbook,
+                        toc,
+                        libby_client.libby_session,
+                        args,
+                    )
                 return
 
-            file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
-            odm_file_path = os.path.join(
-                args.download_dir,
-                f"{slugify(file_name, allow_unicode=True)}.odm",
-            )
-            # don't re-download odm if it already exists so that we don't
-            # needlessly use up the fulfillment limits
-            if not os.path.exists(odm_file_path):
-                odm_res_content = libby_client.fulfill_odm(
-                    selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
+            for loan_index_selected in loan_choices:
+                loan_index_selected = int(loan_index_selected)
+                selected_loan = audiobook_loans[loan_index_selected - 1]
+                file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
+                odm_file_path = os.path.join(
+                    args.download_dir,
+                    f"{slugify(file_name, allow_unicode=True)}.odm",
                 )
-                with open(odm_file_path, "wb") as f:
-                    f.write(odm_res_content)
-                    logger.info(
-                        "Downloaded odm to %s", colored(odm_file_path, "magenta")
+                # don't re-download odm if it already exists so that we don't
+                # needlessly use up the fulfillment limits
+                if not os.path.exists(odm_file_path):
+                    odm_res_content = libby_client.fulfill_odm(
+                        selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
                     )
-            else:
-                logger.info("Already downloaded odm file: %s", odm_file_path)
-            process_odm(odm_file_path, args, cleanup_odm_license=not args.keepodm)
+                    with open(odm_file_path, "wb") as f:
+                        f.write(odm_res_content)
+                        logger.info(
+                            "Downloaded odm to %s", colored(odm_file_path, "magenta")
+                        )
+                else:
+                    logger.info("Already downloaded odm file: %s", odm_file_path)
+                process_odm(odm_file_path, args, cleanup_odm_license=not args.keepodm)
 
         except RuntimeError as run_err:
             logger.error(colored(str(run_err), "red"))
