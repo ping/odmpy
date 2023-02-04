@@ -176,13 +176,10 @@ class LibbyClient(object):
             with open(self.identity_settings_file, "r", encoding="utf-8") as f:
                 self.identity = json.load(f)
         libby_session = requests.Session()
-        thunder_session = requests.Session()
         adapter = HTTPAdapter(max_retries=Retry(total=max_retries, backoff_factor=0.1))
         for prefix in ("http://", "https://"):
             libby_session.mount(prefix, adapter)
-            thunder_session.mount(prefix, adapter)
         self.libby_session = libby_session
-        self.thunder_session = thunder_session
 
     @staticmethod
     def is_valid_sync_code(code: str) -> bool:
@@ -325,39 +322,6 @@ class LibbyClient(object):
         return synced_state.get("result", "") == "synchronized" and synced_state.get(
             "cards"
         )
-
-    def media_info(self, media_id: str, refresh: bool = False) -> dict:
-        """
-        Get media info. For a loan, `media_id` is the `loan["id"]`.
-
-        :param media_id:
-        :param refresh:
-        :return:
-        """
-        # [!] not used, not tested
-        cached_media_info_file = os.path.join(
-            self.temp_folder, f"{media_id}.media.json"
-        )
-        if os.path.exists(cached_media_info_file) and not refresh:
-            with open(cached_media_info_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        return self.make_request(
-            f"https://thunder.api.overdrive.com/v2/media/{media_id}",
-            session=self.thunder_session,
-            authenticated=False,
-        )
-
-    def clean_media_cache(self, keep_ids: Optional[list[str]] = None):
-        # [!] not used, not tested
-        if not keep_ids:
-            keep_ids = []
-        media_id_re = re.compile(r"(?P<media_id>\d+)\.media\.json")
-
-        cached_media_files = glob.glob(f"{self.temp_folder}/*.media.json")
-        for cached_file in cached_media_files:
-            mobj = media_id_re.match(os.path.basename(cached_file))
-            if mobj and mobj.group("media_id") not in keep_ids:
-                os.remove(cached_file)
 
     @staticmethod
     def is_audiobook_loan(book: dict) -> bool:
