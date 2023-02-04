@@ -1,4 +1,4 @@
-# odmpy ![Python >= 3.7](https://img.shields.io/badge/Python-%3E%3D%203.5-3776ab.svg?maxAge=2592000)
+# odmpy
 
 A simple console manager for OverDrive audiobook loans. A python port of [overdrive](https://github.com/chbrown/overdrive).
 
