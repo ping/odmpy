@@ -1567,6 +1567,12 @@ def run():
         help="Settings folder to store odmpy required settings, e.g. Libby authentication",
     )
     parser_libby.add_argument(
+        "--reset",
+        dest="reset_settings",
+        action="store_true",
+        help="Remove previously saved odmpy Libby settings",
+    )
+    parser_libby.add_argument(
         "--direct",
         dest="libby_direct",
         action="store_true",
@@ -1603,6 +1609,9 @@ def run():
             libby_client = LibbyClient(
                 args.settings_folder, timeout=args.timeout, logger=logger
             )
+            if args.reset_settings:
+                libby_client.clear_settings()
+
             if not libby_client.has_sync_code():
                 instructions = (
                     "A Libby setup code is needed to allow odmpy to interact with Libby.\n"

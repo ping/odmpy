@@ -207,6 +207,7 @@ class LibbyClient(object):
         """
         if os.path.exists(self.identity_settings_file):
             os.remove(self.identity_settings_file)
+        self.identity = {}
 
     def has_chip(self) -> bool:
         """

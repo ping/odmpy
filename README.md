@@ -101,8 +101,8 @@ options:
 ```
 
 ```
-usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--direct] [--keepodm] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k]
-                   [-f] [--nobookfolder] [-j] [-r RETRIES] [--hideprogress]
+usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--reset] [--direct] [--keepodm] [-d DOWNLOAD_DIR] [-c] [-m]
+                   [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder] [-j] [-r RETRIES] [--hideprogress]
 
 Interactive Libby Interface
 
@@ -110,6 +110,7 @@ options:
   -h, --help            show this help message and exit
   --settings SETTINGS_FOLDER
                         Settings folder to store odmpy required settings, e.g. Libby authentication
+  --reset               Remove previously saved odmpy Libby settings
   --direct              Don't download the odm file from Libby but instead process the audiobook download directly
   --keepodm             Keep the downloaded odm and license files
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
