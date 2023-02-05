@@ -320,8 +320,9 @@ def run():
                 )
             while True:
                 loan_choices = input(
-                    f'\nChoose from {colored(f"1-{len(audiobook_loans)}", attrs=["bold"])}, '
-                    "or leave blank to quit, then press enter: "
+                    f'\nChoose from {colored(f"1-{len(audiobook_loans)}", attrs=["bold"])} '
+                    "(separate choices with a space or leave blank to quit), \n"
+                    "then press enter: "
                 ).strip()
                 if not loan_choices:
                     break
