@@ -51,14 +51,18 @@ from .shared import (
     generate_cover,
     merge_into_mp3,
     convert_to_m4b,
+    create_opf,
 )
 from .constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES
 from .libby import USER_AGENT, merge_toc
-
+from .overdrive import OverdriveClient
 
 MARKER_TIMESTAMP_MMSS = r"(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)"
 MARKER_TIMESTAMP_HHMMSS = (
     r"(?P<hr>[0-9]+):(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)"
+)
+RESERVE_ID_RE = re.compile(
+    r"(?P<reserve_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
 )
 
 
@@ -75,6 +79,7 @@ def process_odm(odm_file, args, logger, cleanup_odm_license=False):
     ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "error"
     xml_doc = xml.etree.ElementTree.parse(odm_file)
     root = xml_doc.getroot()
+    overdrive_media_id = root.attrib.get("id", "")
     metadata = None
     for t in root.itertext():
         if not t.startswith("<Metadata>"):
@@ -705,6 +710,38 @@ def process_odm(odm_file, args, logger, cleanup_odm_license=False):
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(f'Error deleting "{cover_filename}": {str(e)}')
 
+    if args.generate_opf:
+        opf_file_path = os.path.join(
+            book_folder, f"{slugify(title, allow_unicode=True)}.opf"
+        )
+        if not os.path.exists(opf_file_path):
+            mobj = RESERVE_ID_RE.match(overdrive_media_id)
+            if not mobj:
+                logger.warning(
+                    f"Could not get a valid reserve ID: {overdrive_media_id}"
+                )
+            else:
+                reserve_id = mobj.group("reserve_id")
+                od_client = OverdriveClient(user_agent=USER_AGENT, timeout=args.timeout)
+                media_info = od_client.media(reserve_id)
+                create_opf(
+                    media_info,
+                    cover_filename if keep_cover else None,
+                    file_tracks
+                    if not args.merge_output
+                    else [
+                        {
+                            "file": book_filename
+                            if args.merge_format == "mp3"
+                            else book_m4b_filename
+                        }
+                    ],
+                    opf_file_path,
+                    logger,
+                )
+        else:
+            logger.info("Already saved %s", colored(opf_file_path, "magenta"))
+
     if args.write_json:
         with open(debug_filename, "w", encoding="utf-8") as outfile:
             json.dump(debug_meta, outfile, indent=2)
@@ -1048,6 +1085,31 @@ def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
             os.remove(cover_filename)
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(f'Error deleting "{cover_filename}": {str(e)}')
+
+    if args.generate_opf:
+        opf_file_path = os.path.join(
+            book_folder, f"{slugify(title, allow_unicode=True)}.opf"
+        )
+        if not os.path.exists(opf_file_path):
+            od_client = OverdriveClient(user_agent=USER_AGENT, timeout=args.timeout)
+            media_info = od_client.media(loan["id"])
+            create_opf(
+                media_info,
+                cover_filename if keep_cover else None,
+                file_tracks
+                if not args.merge_output
+                else [
+                    {
+                        "file": book_filename
+                        if args.merge_format == "mp3"
+                        else book_m4b_filename
+                    }
+                ],
+                opf_file_path,
+                logger,
+            )
+        else:
+            logger.info("Already saved %s", colored(opf_file_path, "magenta"))
 
     if args.write_json:
         with open(debug_filename, "w", encoding="utf-8") as outfile:

@@ -111,6 +111,12 @@ def add_common_download_arguments(parser_dl):
         help="Generate a meta json file (for debugging)",
     )
     parser_dl.add_argument(
+        "--opf",
+        dest="generate_opf",
+        action="store_true",
+        help="Generate an OPF file for the book",
+    )
+    parser_dl.add_argument(
         "-r",
         "--retry",
         dest="retries",

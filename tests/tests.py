@@ -530,6 +530,21 @@ class OdmpyTests(unittest.TestCase):
             merge_toc(parse_toc(base_url, toc, spine)), expected_merged_result
         )
 
+    def test_opf(self):
+        """
+        Test OPF generation
+        ```
+        python -m odmpy dl test_data/test.odm -d test_data/downloads/ -k --opf
+        ```
+        """
+        expected_file = os.path.join(self.test_data_dir, "test.opf.xml")
+        test_file = os.path.join(self.book_folder, "ceremonies-for-christmas.opf")
+        self.assertTrue(os.path.isfile(test_file))
+        with open(expected_file) as expected, open(test_file) as actual:
+            expected_text = expected.read()
+            actual_text = actual.read()
+            self.assertEqual(expected_text, actual_text)
+
 
 if __name__ == "__main__":
     unittest.main()

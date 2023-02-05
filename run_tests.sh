@@ -92,5 +92,11 @@ echo "-=-=-=-=-=-=-=-=-=- RUNNING TESTS FOR LIBBY TOC PARSING ... -=-=-=-=-=-=-=
 python -m unittest -v tests.OdmpyTests.test_parse_part_path
 python -m unittest -v tests.OdmpyTests.test_parse_toc
 
+export TEST_ODM="test1.odm"
+echo "-=-=-=-=-=-=-=-=-=- RUNNING TESTS FOR OPF $TEST_ODM ... -=-=-=-=-=-=-=-=-=-"
+rm -rf "$TEST_DOWNLOAD_DIR" && mkdir -p "$TEST_DOWNLOAD_DIR"
+python -m odmpy dl "$TEST_DATA_DIR/$TEST_ODM" -d "$TEST_DOWNLOAD_DIR" -k --opf --hideprogress > /dev/null
+python -m unittest -v tests.OdmpyTests.test_opf
+
 # clean up
 clear_test_data

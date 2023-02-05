@@ -20,6 +20,7 @@ import os
 import subprocess
 import sys
 from urllib.parse import urlparse
+import xml.etree.ElementTree as ET
 
 import eyed3
 import requests
@@ -27,6 +28,7 @@ from eyed3.utils import art
 from termcolor import colored
 
 from .constants import PERFORMER_FID
+from .utils import slugify
 from .libby import USER_AGENT
 
 
@@ -318,3 +320,146 @@ def convert_to_m4b(
         os.remove(book_filename)
     except Exception as e:  # pylint: disable=broad-except
         logger.warning(f'Error deleting "{book_filename}": {str(e)}')
+
+
+def set_ele_attributes(ele, attributes):
+    for k, v in attributes.items():
+        ele.set(k, v)
+
+
+def create_opf(media_info, cover_filename, file_tracks, opf_file_path, logger):
+    """
+
+    :param media_info:
+    :param cover_filename:
+    :param file_tracks:
+    :param opf_file_path:
+    :param logger:
+    :return:
+    """
+    ET.register_namespace("opf", "http://www.idpf.org/2007/opf")
+    ET.register_namespace("dc", "http://purl.org/dc/elements/1.1/")
+    package = ET.Element("package")
+    set_ele_attributes(
+        package,
+        {
+            "version": "2.0",
+            "xmlns": "http://www.idpf.org/2007/opf",
+            "unique-identifier": "BookId",
+        },
+    )
+    metadata = ET.SubElement(package, "metadata")
+    set_ele_attributes(
+        metadata,
+        {
+            "xmlns:dc": "http://purl.org/dc/elements/1.1/",
+            "xmlns:opf": "http://www.idpf.org/2007/opf",
+        },
+    )
+    title = ET.SubElement(metadata, "dc:title")
+    title.text = media_info["title"]
+    if media_info.get("sortTitle"):
+        title.set("opf:file-as", media_info["sortTitle"])
+    if media_info.get("subtitle"):
+        ET.SubElement(metadata, "dc:subtitle").text = media_info["subtitle"]
+    ET.SubElement(metadata, "dc:language").text = media_info["languages"][0]["id"]
+    identifier = ET.SubElement(metadata, "dc:identifier")
+    identifier.set("id", "BookId")
+    isbn = next(
+        iter(
+            [
+                f["identifiers"][0]["value"]
+                for f in media_info["formats"]
+                if f["id"] == "audiobook-mp3"
+                and [i for i in f["identifiers"] if i["type"] == "ISBN"]
+            ]
+        ),
+        None,
+    )
+    if isbn:
+        identifier.set("opf:scheme", "ISBN")
+        identifier.text = isbn
+    else:
+        identifier.set("opf:scheme", "overdrive")
+        identifier.text = media_info["id"]
+
+    # add overdrive id and reserveId
+    overdrive_id = ET.SubElement(metadata, "dc:identifier")
+    overdrive_id.set("opf:scheme", "OverdriveId")
+    overdrive_id.text = media_info["id"]
+    overdrive_reserve_id = ET.SubElement(metadata, "dc:identifier")
+    overdrive_reserve_id.set("opf:scheme", "OverdriveReserveId")
+    overdrive_reserve_id.text = media_info["reserveId"]
+
+    # Roles https://idpf.org/epub/20/spec/OPF_2.0_final_spec.html#Section2.2.6
+    for media_role, opf_role in (
+        ("Author", "aut"),
+        ("Narrator", "nrt"),
+        ("Editor", "edt"),
+    ):
+        creators = [
+            c for c in media_info["creators"] if c.get("role", "") == media_role
+        ]
+        for c in creators:
+            creator = ET.SubElement(metadata, "dc:creator")
+            creator.set("opf:role", opf_role)
+            set_ele_attributes(
+                creator, {"opf:role": opf_role, "opf:file-as": c["sortName"]}
+            )
+            creator.text = c["name"]
+
+    if media_info.get("publisher", {}).get("name"):
+        ET.SubElement(metadata, "dc:publisher").text = media_info["publisher"]["name"]
+    if media_info.get("description"):
+        ET.SubElement(metadata, "dc:description").text = media_info["description"]
+    for s in media_info.get("subject", []):
+        ET.SubElement(metadata, "dc:subject").text = s["name"]
+    for k in media_info.get("keywords", []):
+        ET.SubElement(metadata, "dc:tag").text = k
+    if media_info.get("publishDate"):
+        pub_date = ET.SubElement(metadata, "dc:date")
+        pub_date.set("opf:event", "publication")
+        pub_date.text = media_info["publishDate"]
+    if media_info.get("detailedSeries"):
+        series_info = media_info["detailedSeries"]
+        if series_info.get("seriesName"):
+            set_ele_attributes(
+                ET.SubElement(metadata, "meta"),
+                {"name": "calibre:series", "content": series_info["seriesName"]},
+            )
+        if series_info.get("readingOrder"):
+            set_ele_attributes(
+                ET.SubElement(metadata, "meta"),
+                {
+                    "name": "calibre:series_index",
+                    "content": series_info["readingOrder"],
+                },
+            )
+
+    manifest = ET.SubElement(package, "manifest")
+    if cover_filename:
+        set_ele_attributes(
+            ET.SubElement(manifest, "item"),
+            {
+                "id": "cover",
+                "href": os.path.basename(cover_filename),
+                "media-type": "image/jpeg",
+            },
+        )
+    spine = ET.SubElement(package, "spine")
+    for f in file_tracks:
+        file_name, _ = os.path.splitext(os.path.basename(f["file"]))
+        file_id = slugify(file_name)
+        set_ele_attributes(
+            ET.SubElement(manifest, "item"),
+            {
+                "id": file_id,
+                "href": os.path.basename(f["file"]),
+                "media-type": "audio/mpeg",
+            },
+        )
+        set_ele_attributes(ET.SubElement(spine, "itemref"), {"idref": file_id})
+
+    tree = ET.ElementTree(package)
+    tree.write(opf_file_path, xml_declaration=True, encoding="utf-8")
+    logger.info('Saved "%s"', colored(opf_file_path, "magenta"))
