@@ -24,15 +24,18 @@ from collections import namedtuple, OrderedDict
 from typing import Optional
 from urllib.parse import urljoin
 
-
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
+ChapterMarker = namedtuple(
+    "ChapterMarker", ["title", "part_name", "start_second", "end_second"]
+)
 FILE_PART_RE = re.compile(
     r"(?P<part_name>{[A-F0-9\-]{36}}[^#]+)(#(?P<second_stamp>\d+))?$"
 )
-ChapterMarker = namedtuple(
-    "ChapterMarker", ["title", "part_name", "start_second", "end_second"]
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+    "Version/14.0.2 Safari/605.1.15"
 )
 
 
@@ -156,7 +159,12 @@ def merge_toc(toc: dict) -> list[ChapterMarker]:
 class LibbyClient(object):
     # Reverse engineering of the libby endpoints is thanks to https://github.com/lullius/pylibby
     def __init__(
-        self, settings_folder: str, max_retries: int = 0, timeout: int = 10, logger=None
+        self,
+        settings_folder: str,
+        max_retries: int = 0,
+        timeout: int = 10,
+        logger=None,
+        **kwargs,
     ):
         if not logger:
             logger = logging.getLogger(__name__)
@@ -179,26 +187,27 @@ class LibbyClient(object):
         for prefix in ("http://", "https://"):
             libby_session.mount(prefix, adapter)
         self.libby_session = libby_session
+        self.user_agent = kwargs.pop("user_agent", USER_AGENT)
+        self.api_base = "https://sentry-read.svc.overdrive.com/"
 
     @staticmethod
     def is_valid_sync_code(code: str) -> bool:
         return code.isdigit() and len(code) == 8
 
-    @staticmethod
-    def default_headers() -> dict:
+    def default_headers(self) -> dict:
         """
         Default HTTP headers
 
         :return:
         """
         return {
-            "User-Agent": "Mozilla/5.0",
+            "User-Agent": self.user_agent,
             "Accept": "application/json",
         }
 
     def make_request(
         self,
-        endpoint_url: str,
+        endpoint: str,
         params: Optional[dict] = None,
         data: Optional[dict] = None,
         headers: Optional[dict] = None,
@@ -207,6 +216,7 @@ class LibbyClient(object):
         session: Optional[requests.sessions.Session] = None,
         return_res: bool = False,
     ):
+        endpoint_url = urljoin(self.api_base, endpoint)
         if not method:
             # try to set a HTTP method
             if data is not None:
@@ -279,7 +289,7 @@ class LibbyClient(object):
         :return:
         """
         res = self.make_request(
-            "https://sentry-read.svc.overdrive.com/chip",
+            "/chip",
             params={"client": "dewey"},
             method="POST",
             authenticated=authenticated,
@@ -300,9 +310,7 @@ class LibbyClient(object):
         if not self.is_valid_sync_code(code):
             raise ValueError(f"Invalid code: {code}")
 
-        res = self.make_request(
-            "https://sentry-read.svc.overdrive.com/chip/clone/code", data={"code": code}
-        )
+        res = self.make_request("chip/clone/code", data={"code": code})
         if auto_save:
             # persist to settings
             self.save_settings({"__odmpy_sync_code": code})
@@ -314,7 +322,7 @@ class LibbyClient(object):
 
         :return:
         """
-        return self.make_request("https://sentry-read.svc.overdrive.com/chip/sync")
+        return self.make_request("chip/sync")
 
     def is_logged_in(self) -> bool:
         """
@@ -359,7 +367,7 @@ class LibbyClient(object):
         :return:
         """
         return self.make_request(
-            f"https://sentry-read.svc.overdrive.com/card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
+            f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
             return_res=True,
         )
 
@@ -375,7 +383,7 @@ class LibbyClient(object):
         headers = self.default_headers()
         headers["Accept"] = "*/*"
         return self.make_request(
-            f"https://sentry-read.svc.overdrive.com/card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
+            f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
             headers=headers,
             return_res=True,
         ).content
@@ -389,9 +397,7 @@ class LibbyClient(object):
         :param title_id:
         :return:
         """
-        return self.make_request(
-            f"https://sentry-read.svc.overdrive.com/open/{loan_type}/card/{card_id}/title/{title_id}"
-        )
+        return self.make_request(f"open/{loan_type}/card/{card_id}/title/{title_id}")
 
     def process_audiobook(self, loan: dict):
         """
@@ -409,7 +415,11 @@ class LibbyClient(object):
         # Sets a needed cookie
         web_url = download_base + "?" + meta["message"]
         _ = self.make_request(
-            web_url, headers={"Accept": "*/*"}, authenticated=False, return_res=True
+            web_url,
+            headers={"Accept": "*/*"},
+            method="HEAD",
+            authenticated=False,
+            return_res=True,
         )
 
         # contains nav/toc and spine
