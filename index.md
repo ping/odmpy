@@ -1,6 +1,6 @@
 ## About
 
-`odmpy` is a simple console manager for OverDrive audiobook loans. A python port of [overdrive](https://github.com/chbrown/overdrive) with additional functionality.
+A simple console manager for OverDrive audiobook loans. A python port of [overdrive](https://github.com/chbrown/overdrive).
 
 Requires Python >=3.7.
 
@@ -17,7 +17,7 @@ Requires Python >=3.7.
 
 ```bash
 # Install / Update to specific version
-pip3 install git+https://git@github.com/ping/odmpy.git@0.6.2 --upgrade
+pip3 install git+https://git@github.com/ping/odmpy.git@0.6.3 --upgrade
 
 # Install / Update from latest source
 pip3 install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -46,11 +46,13 @@ Available commands:
     ret                 Return a loan file.
     libby               Interact directly with Libby to download audiobooks
 
-Version 0.6.2. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy/
+Version 0.6.3. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy/
 ```
 
 ```
-usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder] [-j] [-r RETRIES] [--hideprogress] odm_file
+usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder] [-j] [--opf]
+                [-r RETRIES] [--hideprogress]
+                odm_file
 
 Download from a loan file.
 
@@ -69,6 +71,7 @@ options:
   -f, --keepmp3         Keep downloaded mp3 files (after merging)
   --nobookfolder        Don't create a book subfolder
   -j, --writejson       Generate a meta json file (for debugging)
+  --opf                 Generate an OPF file for the book
   -r RETRIES, --retry RETRIES
                         Number of retries if download fails. Default 1.
   --hideprogress        Hide the download progress bar (e.g. during testing)
@@ -102,7 +105,7 @@ options:
 
 ```
 usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--reset] [--direct] [--keepodm] [-d DOWNLOAD_DIR] [-c] [-m]
-                   [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder] [-j] [-r RETRIES] [--hideprogress]
+                   [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder] [-j] [--opf] [-r RETRIES] [--hideprogress]
 
 Interactive Libby Interface
 
@@ -123,6 +126,7 @@ options:
   -f, --keepmp3         Keep downloaded mp3 files (after merging)
   --nobookfolder        Don't create a book subfolder
   -j, --writejson       Generate a meta json file (for debugging)
+  --opf                 Generate an OPF file for the book
   -r RETRIES, --retry RETRIES
                         Number of retries if download fails. Default 1.
   --hideprogress        Hide the download progress bar (e.g. during testing)
