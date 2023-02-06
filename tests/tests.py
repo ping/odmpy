@@ -4,13 +4,14 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+import json
 import logging
 import os
-import json
 import unittest
 from collections import OrderedDict
 
 import eyed3
+from lxml import etree
 
 import odmpy.constants
 from odmpy.libby import parse_part_path, parse_toc, merge_toc, ChapterMarker
@@ -537,9 +538,18 @@ class OdmpyTests(unittest.TestCase):
         python -m odmpy dl test_data/test.odm -d test_data/downloads/ -k --opf
         ```
         """
+        schema_file = os.path.join(self.test_data_dir, "opf.schema.xml")
         expected_file = os.path.join(self.test_data_dir, "test.opf.xml")
         test_file = os.path.join(self.book_folder, "ceremonies-for-christmas.opf")
         self.assertTrue(os.path.isfile(test_file))
+
+        with open(test_file) as actual, open(
+            schema_file, "r", encoding="utf-8"
+        ) as schema:
+            actual_opf = etree.parse(actual)
+            relaxng = etree.RelaxNG(etree.parse(schema))
+            relaxng.validate(actual_opf)
+
         with open(expected_file) as expected, open(test_file) as actual:
             expected_text = expected.read()
             actual_text = actual.read()

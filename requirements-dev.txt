@@ -1,3 +1,5 @@
 flake8
 pylint
 black
+# for tests: to validate opf
+lxml
