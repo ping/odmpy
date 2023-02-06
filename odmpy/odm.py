@@ -45,7 +45,7 @@ requests_logger.addHandler(ch)
 requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
 
-__version__ = "0.6.3"  # also update ../setup.py
+__version__ = "0.6.4"  # also update ../setup.py
 
 
 def add_common_download_arguments(parser_dl: argparse.ArgumentParser):
