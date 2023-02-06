@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import argparse
 import base64
 import datetime
 import hashlib
@@ -66,7 +66,12 @@ RESERVE_ID_RE = re.compile(
 )
 
 
-def process_odm(odm_file, args, logger, cleanup_odm_license=False):
+def process_odm(
+    odm_file: str,
+    args: argparse.Namespace,
+    logger: logging.Logger,
+    cleanup_odm_license: bool = False,
+) -> None:
     """
     Download the audiobook loan using the specified odm file
 
@@ -461,6 +466,7 @@ def process_odm(odm_file, args, logger, cleanup_odm_license=False):
                 published_date=None,  # odm does not contain date info
                 part_number=part_number,
                 total_parts=len(download_parts),
+                overdrive_id=overdrive_media_id,
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
@@ -629,6 +635,7 @@ def process_odm(odm_file, args, logger, cleanup_odm_license=False):
             published_date=None,  # odm does not contain date info
             part_number=0,
             total_parts=0,
+            overdrive_id=overdrive_media_id,
             overwrite_title=True,
             always_overwrite=args.overwrite_tags,
             delimiter=args.tag_delimiter,
@@ -766,7 +773,14 @@ def process_odm(odm_file, args, logger, cleanup_odm_license=False):
             json.dump(debug_meta, outfile, indent=2)
 
 
-def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
+def process_audiobook_loan(
+    loan: dict,
+    openbook: dict,
+    parsed_toc: dict,
+    session: requests.Session,
+    args: argparse.Namespace,
+    logger: logging.Logger,
+) -> None:
     """
     Download the audiobook loan directly via Libby without the use of
     an odm file
@@ -776,6 +790,7 @@ def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
     :param parsed_toc:
     :param session: From `LibbyClient.libby_session` because it contains a needed auth cookie
     :param args:
+    :param logger:
     :return:
     """
 
@@ -783,6 +798,7 @@ def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
     debug_meta = {}
 
     title = loan["title"]
+    overdrive_media_id = loan["id"]
     sub_title = loan.get("subtitle", None)
     cover_highest_res = next(
         iter(
@@ -974,6 +990,7 @@ def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
                 published_date=publish_date,
                 part_number=part_number,
                 total_parts=len(download_parts),
+                overdrive_id=overdrive_media_id,
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
@@ -1051,6 +1068,7 @@ def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
             published_date=publish_date,
             part_number=0,
             total_parts=0,
+            overdrive_id=overdrive_media_id,
             always_overwrite=args.overwrite_tags,
             delimiter=args.tag_delimiter,
         )

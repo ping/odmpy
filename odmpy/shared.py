@@ -15,12 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import logging
 import os
 import subprocess
 import sys
-from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
+from typing import Optional
+from urllib.parse import urlparse
 
 import eyed3
 import requests
@@ -28,11 +29,11 @@ from eyed3.utils import art
 from termcolor import colored
 
 from .constants import PERFORMER_FID, LANGUAGE_FID
-from .utils import slugify
 from .libby import USER_AGENT
+from .utils import slugify
 
 
-def generate_names(title, authors, args):
+def generate_names(title: str, authors: list[str], args) -> (str, str, str):
     """
     Creates the download folder if necessary and generates the merged book names
 
@@ -87,22 +88,23 @@ def generate_names(title, authors, args):
 
 def write_tags(
     audiofile,
-    title,
-    sub_title,
-    authors,
-    narrators,
-    publisher,
-    description,
-    cover_bytes,
-    genres,
-    languages,
-    published_date,
-    part_number,
-    total_parts,
-    overwrite_title=False,
-    always_overwrite=False,
-    delimiter=";",
-):
+    title: str,
+    sub_title: Optional[str],
+    authors: list[str],
+    narrators: Optional[list[str]],
+    publisher: str,
+    description: str,
+    cover_bytes: Optional[bytes],
+    genres: Optional[list[str]],
+    languages: list[str],
+    published_date: Optional[str],
+    part_number: int,
+    total_parts: int,
+    overdrive_id: str,
+    overwrite_title: bool = False,
+    always_overwrite: bool = False,
+    delimiter: str = ";",
+) -> None:
     """
     Write out ID3 tags to the audiofile
 
@@ -119,6 +121,7 @@ def write_tags(
     :param published_date:
     :param part_number:
     :param total_parts:
+    :param overdrive_id:
     :param overwrite_title:
     :param always_overwrite:
     :param delimiter:
@@ -171,9 +174,21 @@ def write_tags(
             "image/jpeg",
             description="Cover",
         )
+    # Output some OD identifiers in the mp3
+    if overdrive_id:
+        audiofile.tag.user_text_frames.set(
+            overdrive_id,
+            "OverDrive Media ID" if overdrive_id.isdigit() else "OverDrive Reserve ID",
+        )
 
 
-def generate_cover(book_folder, cover_url, session, timeout, logger):
+def generate_cover(
+    book_folder: str,
+    cover_url: str,
+    session: requests.Session,
+    timeout: int,
+    logger: logging.Logger,
+) -> (str, Optional[bytes]):
     """
     Get the book cover
 
@@ -227,7 +242,7 @@ def generate_cover(book_folder, cover_url, session, timeout, logger):
                     colored(str(he2), "red", attrs=["bold"]),
                 )
 
-    cover_bytes = None
+    cover_bytes: Optional[bytes] = None
     if os.path.isfile(cover_filename):
         with open(cover_filename, "rb") as f:
             cover_bytes = f.read()
@@ -235,7 +250,13 @@ def generate_cover(book_folder, cover_url, session, timeout, logger):
     return cover_filename, cover_bytes
 
 
-def merge_into_mp3(book_filename, file_tracks, ffmpeg_loglevel, hide_progress, logger):
+def merge_into_mp3(
+    book_filename: str,
+    file_tracks: list[dict],
+    ffmpeg_loglevel: str,
+    hide_progress: bool,
+    logger: logging.Logger,
+) -> None:
     """
     Merge the files into a single mp3
 
@@ -281,13 +302,13 @@ def merge_into_mp3(book_filename, file_tracks, ffmpeg_loglevel, hide_progress, l
 
 
 def convert_to_m4b(
-    book_filename,
-    book_m4b_filename,
-    cover_filename,
-    ffmpeg_loglevel,
-    hide_progress,
-    logger,
-):
+    book_filename: str,
+    book_m4b_filename: str,
+    cover_filename: str,
+    ffmpeg_loglevel: str,
+    hide_progress: str,
+    logger: logging.Logger,
+) -> None:
     """
     Converts the merged mp3 into a m4b
 
@@ -356,12 +377,18 @@ def convert_to_m4b(
         logger.warning(f'Error deleting "{book_filename}": {str(e)}')
 
 
-def set_ele_attributes(ele, attributes):
+def set_ele_attributes(ele: ET.Element, attributes: dict) -> None:
     for k, v in attributes.items():
         ele.set(k, v)
 
 
-def create_opf(media_info, cover_filename, file_tracks, opf_file_path, logger):
+def create_opf(
+    media_info: dict,
+    cover_filename: str,
+    file_tracks: list[dict],
+    opf_file_path: str,
+    logger: logging.Logger,
+) -> None:
     """
 
     :param media_info:
