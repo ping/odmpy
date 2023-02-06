@@ -392,8 +392,6 @@ def create_opf(media_info, cover_filename, file_tracks, opf_file_path, logger):
     )
     title = ET.SubElement(metadata, "dc:title")
     title.text = media_info["title"]
-    if media_info.get("sortTitle"):
-        title.set("opf:file-as", media_info["sortTitle"])
     if media_info.get("subtitle"):
         ET.SubElement(metadata, "dc:subtitle").text = media_info["subtitle"]
     ET.SubElement(metadata, "dc:language").text = media_info["languages"][0]["id"]
