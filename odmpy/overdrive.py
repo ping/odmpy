@@ -13,9 +13,9 @@ THUNDER_API_URL = "https://thunder.api.overdrive.com/v2/"
 CLIENT_ID = "dewey"
 
 
-class OverdriveClient(object):
+class OverDriveClient(object):
     """
-    A really simplified Overdrive Thunder API client
+    A really simplified OverDrive Thunder API client
     """
 
     def __init__(self, **kwargs) -> None:

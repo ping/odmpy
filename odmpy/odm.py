@@ -156,7 +156,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser):
 def run():
     parser = argparse.ArgumentParser(
         prog="odmpy",
-        description="Download/return an Overdrive loan audiobook",
+        description="Download/return an OverDrive loan audiobook",
         epilog=(
             f"Version {__version__}. "
             f"[Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}-{sys.platform}] "

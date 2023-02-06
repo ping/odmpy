@@ -444,10 +444,10 @@ def create_opf(
 
     # add overdrive id and reserveId
     overdrive_id = ET.SubElement(metadata, "dc:identifier")
-    overdrive_id.set("opf:scheme", "OverdriveId")
+    overdrive_id.set("opf:scheme", "OverDriveId")
     overdrive_id.text = media_info["id"]
     overdrive_reserve_id = ET.SubElement(metadata, "dc:identifier")
-    overdrive_reserve_id.set("opf:scheme", "OverdriveReserveId")
+    overdrive_reserve_id.set("opf:scheme", "OverDriveReserveId")
     overdrive_reserve_id.text = media_info["reserveId"]
 
     # Roles https://idpf.org/epub/20/spec/OPF_2.0_final_spec.html#Section2.2.6

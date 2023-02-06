@@ -55,7 +55,7 @@ from .shared import (
 )
 from .constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES
 from .libby import USER_AGENT, merge_toc
-from .overdrive import OverdriveClient
+from .overdrive import OverDriveClient
 
 MARKER_TIMESTAMP_MMSS = r"(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)"
 MARKER_TIMESTAMP_HHMMSS = (
@@ -748,7 +748,7 @@ def process_odm(
                 )
             else:
                 reserve_id = mobj.group("reserve_id")
-                od_client = OverdriveClient(user_agent=USER_AGENT, timeout=args.timeout)
+                od_client = OverDriveClient(user_agent=USER_AGENT, timeout=args.timeout)
                 media_info = od_client.media(reserve_id)
                 create_opf(
                     media_info,
@@ -1146,7 +1146,7 @@ def process_audiobook_loan(
             book_folder, f"{slugify(title, allow_unicode=True)}.opf"
         )
         if not os.path.exists(opf_file_path):
-            od_client = OverdriveClient(user_agent=USER_AGENT, timeout=args.timeout)
+            od_client = OverDriveClient(user_agent=USER_AGENT, timeout=args.timeout)
             media_info = od_client.media(loan["id"])
             create_opf(
                 media_info,
