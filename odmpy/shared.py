@@ -27,7 +27,7 @@ import requests
 from eyed3.utils import art
 from termcolor import colored
 
-from .constants import PERFORMER_FID
+from .constants import PERFORMER_FID, LANGUAGE_FID
 from .utils import slugify
 from .libby import USER_AGENT
 
@@ -88,48 +88,82 @@ def generate_names(title, authors, args):
 def write_tags(
     audiofile,
     title,
+    sub_title,
     authors,
     narrators,
     publisher,
     description,
     cover_bytes,
+    genres,
+    languages,
+    published_date,
     part_number,
     total_parts,
     overwrite_title=False,
+    always_overwrite=False,
+    delimiter=";",
 ):
     """
     Write out ID3 tags to the audiofile
 
     :param audiofile:
     :param title:
+    :param sub_title:
     :param authors:
     :param narrators:
     :param publisher:
     :param description:
     :param cover_bytes:
+    :param genres:
+    :param languages:
+    :param published_date:
     :param part_number:
     :param total_parts:
     :param overwrite_title:
+    :param always_overwrite:
+    :param delimiter:
     :return:
     """
+    if not delimiter:
+        delimiter = ";"
+
     if not audiofile.tag:
         audiofile.initTag()
-    if overwrite_title or not audiofile.tag.title:
+    if always_overwrite or overwrite_title or not audiofile.tag.title:
         audiofile.tag.title = str(title)
-    if not audiofile.tag.album:
+    if sub_title and (
+        always_overwrite
+        or not audiofile.tag.getTextFrame(eyed3.id3.frames.SUBTITLE_FID)
+    ):
+        audiofile.tag.setTextFrame(eyed3.id3.frames.SUBTITLE_FID, sub_title)
+    if always_overwrite or not audiofile.tag.album:
         audiofile.tag.album = str(title)
-    if authors and not audiofile.tag.artist:
-        audiofile.tag.artist = str(authors[0])
-    if authors and not audiofile.tag.album_artist:
-        audiofile.tag.album_artist = str(authors[0])
-    if part_number and not audiofile.tag.track_num:
+    if authors and (always_overwrite or not audiofile.tag.artist):
+        audiofile.tag.artist = delimiter.join([str(a) for a in authors])
+    if authors and (always_overwrite or not audiofile.tag.album_artist):
+        audiofile.tag.album_artist = delimiter.join([str(a) for a in authors])
+    if part_number and (always_overwrite or not audiofile.tag.track_num):
         audiofile.tag.track_num = (part_number, total_parts)
-    if narrators and not audiofile.tag.getTextFrame(PERFORMER_FID):
-        audiofile.tag.setTextFrame(PERFORMER_FID, str(narrators[0]))
-    if publisher and not audiofile.tag.publisher:
+    if narrators and (
+        always_overwrite or not audiofile.tag.getTextFrame(PERFORMER_FID)
+    ):
+        audiofile.tag.setTextFrame(
+            PERFORMER_FID, delimiter.join([str(n) for n in narrators])
+        )
+    if publisher and (always_overwrite or not audiofile.tag.publisher):
         audiofile.tag.publisher = str(publisher)
-    if description and eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set:
+    if description and (
+        always_overwrite or eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set
+    ):
         audiofile.tag.comments.set(str(description), description="Description")
+    if genres and (always_overwrite or not audiofile.tag.genre):
+        audiofile.tag.genre = delimiter.join(genres)
+    if languages and (always_overwrite or not audiofile.tag.getTextFrame(LANGUAGE_FID)):
+        audiofile.tag.setTextFrame(
+            LANGUAGE_FID, delimiter.join([str(lang) for lang in languages])
+        )
+    if published_date and (always_overwrite or not audiofile.tag.release_date):
+        audiofile.tag.release_date = published_date
     if cover_bytes:
         audiofile.tag.images.set(
             art.TO_ID3_ART_TYPES[art.FRONT_COVER][0],

@@ -117,6 +117,27 @@ def add_common_download_arguments(parser_dl):
         help="Generate an OPF file for the book",
     )
     parser_dl.add_argument(
+        "--overwritetags",
+        dest="overwrite_tags",
+        action="store_true",
+        help=(
+            "Always overwrite ID3 tags. By default odmpy tries to non-destructively "
+            "tag audiofiles. This option forces odmpy to overwrite tags where possible."
+        ),
+    )
+    parser_dl.add_argument(
+        "--tagsdelimiter",
+        dest="tag_delimiter",
+        metavar="DELIMITER",
+        type=str,
+        default=";",
+        help=(
+            "For ID3 tags with multiple values, this defines the delimiter. "
+            'For example, with the default delimiter ";", authors are written '
+            'to the artist tag as "Author A;Author B;Author C".'
+        ),
+    )
+    parser_dl.add_argument(
         "-r",
         "--retry",
         dest="retries",
@@ -306,7 +327,7 @@ def run():
                     "%s: %-55s  %-25s  \n    * %s  %s",
                     colored(f"{index:2d}", attrs=["bold"]),
                     colored(loan["title"], attrs=["bold"]),
-                    f'By: {loan["firstCreatorSortName"]}',
+                    f'By: {loan["firstCreatorName"]}',
                     f"Expires: {expiry_date:%Y-%m-%d}",
                     next(
                         iter(
@@ -345,6 +366,9 @@ def run():
                 for loan_index_selected in loan_choices:
                     loan_index_selected = int(loan_index_selected)
                     selected_loan = audiobook_loans[loan_index_selected - 1]
+                    logger.info(
+                        'Opening book "%s"...', colored(selected_loan["title"], "blue")
+                    )
                     openbook, toc = libby_client.process_audiobook(selected_loan)
                     process_audiobook_loan(
                         selected_loan,
@@ -367,6 +391,9 @@ def run():
                 # don't re-download odm if it already exists so that we don't
                 # needlessly use up the fulfillment limits
                 if not os.path.exists(odm_file_path):
+                    logger.info(
+                        'Opening book "%s"...', colored(selected_loan["title"], "blue")
+                    )
                     odm_res_content = libby_client.fulfill_odm(
                         selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
                     )

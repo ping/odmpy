@@ -51,7 +51,7 @@ Version 0.6.3. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy/
 
 ```
 usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder] [-j] [--opf]
-                [-r RETRIES] [--hideprogress]
+                [--overwritetags] [--tagsdelimiter DELIMITER] [-r RETRIES] [--hideprogress]
                 odm_file
 
 Download from a loan file.
@@ -72,6 +72,11 @@ options:
   --nobookfolder        Don't create a book subfolder
   -j, --writejson       Generate a meta json file (for debugging)
   --opf                 Generate an OPF file for the book
+  --overwritetags       Always overwrite ID3 tags. By default odmpy tries to non-destructively tag audiofiles. This
+                        option forces odmpy to overwrite tags where possible.
+  --tagsdelimiter DELIMITER
+                        For ID3 tags with multiple values, this defines the delimiter. For example, with the default
+                        delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
   -r RETRIES, --retry RETRIES
                         Number of retries if download fails. Default 1.
   --hideprogress        Hide the download progress bar (e.g. during testing)
@@ -105,7 +110,8 @@ options:
 
 ```
 usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--reset] [--direct] [--keepodm] [-d DOWNLOAD_DIR] [-c] [-m]
-                   [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder] [-j] [--opf] [-r RETRIES] [--hideprogress]
+                   [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder] [-j] [--opf] [--overwritetags]
+                   [--tagsdelimiter DELIMITER] [-r RETRIES] [--hideprogress]
 
 Interactive Libby Interface
 
@@ -127,6 +133,11 @@ options:
   --nobookfolder        Don't create a book subfolder
   -j, --writejson       Generate a meta json file (for debugging)
   --opf                 Generate an OPF file for the book
+  --overwritetags       Always overwrite ID3 tags. By default odmpy tries to non-destructively tag audiofiles. This
+                        option forces odmpy to overwrite tags where possible.
+  --tagsdelimiter DELIMITER
+                        For ID3 tags with multiple values, this defines the delimiter. For example, with the default
+                        delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
   -r RETRIES, --retry RETRIES
                         Number of retries if download fails. Default 1.
   --hideprogress        Hide the download progress bar (e.g. during testing)

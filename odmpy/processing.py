@@ -106,6 +106,7 @@ def process_odm(odm_file, args, logger, cleanup_odm_license=False):
     debug_meta = {}
 
     title = metadata.find("Title").text
+    sub_title = metadata.find("SubTitle").text if metadata.find("SubTitle") else None
     cover_url = (
         metadata.find("CoverUrl").text if metadata.find("CoverUrl") is not None else ""
     )
@@ -127,6 +128,12 @@ def process_odm(odm_file, args, logger, cleanup_odm_license=False):
         for c in metadata.find("Creators")
         if "Narrator" in c.attrib.get("role", "")
     ]
+    languages = [
+        lang.attrib.get("code", "")
+        for lang in metadata.find("Languages")
+        if lang.attrib.get("code", "")
+    ]
+    subjects = [subj.text for subj in metadata.find("Subjects")]
     publisher = metadata.find("Publisher").text
     description = (
         metadata.find("Description").text
@@ -441,15 +448,21 @@ def process_odm(odm_file, args, logger, cleanup_odm_license=False):
             # Fill id3 info for mp3 part
             audiofile = eyed3.load(part_filename)
             write_tags(
-                audiofile,
-                title,
-                authors,
-                narrators,
-                publisher,
-                description,
-                cover_bytes,
-                part_number,
-                len(download_parts),
+                audiofile=audiofile,
+                title=title,
+                sub_title=sub_title,
+                authors=authors,
+                narrators=narrators,
+                publisher=publisher,
+                description=description,
+                cover_bytes=cover_bytes,
+                genres=subjects,
+                languages=languages,
+                published_date=None,  # odm does not contain date info
+                part_number=part_number,
+                total_parts=len(download_parts),
+                always_overwrite=args.overwrite_tags,
+                delimiter=args.tag_delimiter,
             )
             audiofile.tag.save()
 
@@ -603,16 +616,22 @@ def process_odm(odm_file, args, logger, cleanup_odm_license=False):
 
         audiofile = eyed3.load(book_filename)
         write_tags(
-            audiofile,
-            title,
-            authors,
-            narrators,
-            publisher,
-            description,
-            cover_bytes,
-            0,
-            0,
+            audiofile=audiofile,
+            title=title,
+            sub_title=sub_title,
+            authors=authors,
+            narrators=narrators,
+            publisher=publisher,
+            description=description,
+            cover_bytes=cover_bytes,
+            genres=subjects,
+            languages=languages,
+            published_date=None,  # odm does not contain date info
+            part_number=0,
+            total_parts=0,
             overwrite_title=True,
+            always_overwrite=args.overwrite_tags,
+            delimiter=args.tag_delimiter,
         )
 
         if args.add_chapters and not audiofile.tag.table_of_contents:
@@ -764,6 +783,7 @@ def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
     debug_meta = {}
 
     title = loan["title"]
+    sub_title = loan.get("subtitle", None)
     cover_highest_res = next(
         iter(
             sorted(
@@ -791,6 +811,11 @@ def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
         for c in openbook.get("creator", [])
         if c.get("role", "") == "narrator"
     ]
+    # lang
+    languages = [openbook.get("language")]
+    # subjects
+    subjects = [subj["name"] for subj in loan.get("subjects", []) if subj.get("name")]
+    publish_date = loan.get("publishDate", None)
     publisher = loan.get("publisherAccount", {}).get("name", "") or ""
     description = (
         openbook.get("description", {}).get("full", "")
@@ -936,15 +961,21 @@ def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
             # Fill id3 info for mp3 part
             audiofile = eyed3.load(part_filename)
             write_tags(
-                audiofile,
-                title,
-                authors,
-                narrators,
-                publisher,
-                description,
-                cover_bytes,
-                part_number,
-                len(download_parts),
+                audiofile=audiofile,
+                title=title,
+                sub_title=sub_title,
+                authors=authors,
+                narrators=narrators,
+                publisher=publisher,
+                description=description,
+                cover_bytes=cover_bytes,
+                genres=subjects,
+                languages=languages,
+                published_date=publish_date,
+                part_number=part_number,
+                total_parts=len(download_parts),
+                always_overwrite=args.overwrite_tags,
+                delimiter=args.tag_delimiter,
             )
             audiofile.tag.save()
 
@@ -1007,15 +1038,21 @@ def process_audiobook_loan(loan, openbook, parsed_toc, session, args, logger):
 
         audiofile = eyed3.load(book_filename)
         write_tags(
-            audiofile,
-            title,
-            authors,
-            narrators,
-            publisher,
-            description,
-            cover_bytes,
-            0,
-            0,
+            audiofile=audiofile,
+            title=title,
+            sub_title=sub_title,
+            authors=authors,
+            narrators=narrators,
+            publisher=publisher,
+            description=description,
+            cover_bytes=cover_bytes,
+            genres=subjects,
+            languages=languages,
+            published_date=publish_date,
+            part_number=0,
+            total_parts=0,
+            always_overwrite=args.overwrite_tags,
+            delimiter=args.tag_delimiter,
         )
 
         if args.add_chapters and not audiofile.tag.table_of_contents:

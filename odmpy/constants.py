@@ -24,6 +24,7 @@ UA = "OverDrive Media Console"
 UA_LONG = "OverDrive Media Console/3.7.0.28 iOS/10.3.3"
 
 PERFORMER_FID = b"TPE3"
+LANGUAGE_FID = b"TLAN"
 
 # Ref: https://github.com/ping/odmpy/issues/19
 UNSUPPORTED_PARSER_ENTITIES = {
