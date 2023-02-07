@@ -62,10 +62,6 @@ from .constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES
 from .libby import USER_AGENT, merge_toc
 from .overdrive import OverDriveClient
 
-MARKER_TIMESTAMP_MMSS = r"(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)"
-MARKER_TIMESTAMP_HHMMSS = (
-    r"(?P<hr>[0-9]+):(?P<min>[0-9]+):(?P<sec>[0-9]+)\.(?P<ms>[0-9]+)"
-)
 RESERVE_ID_RE = re.compile(
     r"(?P<reserve_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
 )
