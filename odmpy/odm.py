@@ -355,7 +355,7 @@ def run():
                 for loan_index_selected in loan_choices:
                     if (
                         (not loan_index_selected.isdigit())
-                        or int(loan_index_selected) < 1
+                        or int(loan_index_selected) < 0
                         or int(loan_index_selected) > len(audiobook_loans)
                     ):
                         logger.warning(f"Invalid choice: {loan_index_selected}")
@@ -366,6 +366,8 @@ def run():
 
             if args.libby_direct:
                 for loan_index_selected in loan_choices:
+                    if loan_index_selected == 0:
+                        loan_index_selected = -1
                     loan_index_selected = int(loan_index_selected)
                     selected_loan = audiobook_loans[loan_index_selected - 1]
                     logger.info(
