@@ -253,6 +253,7 @@ def generate_cover(
 def merge_into_mp3(
     book_filename: str,
     file_tracks: list[dict],
+    audio_bitrate: int,
     ffmpeg_loglevel: str,
     hide_progress: bool,
     logger: logging.Logger,
@@ -262,6 +263,7 @@ def merge_into_mp3(
 
     :param book_filename: mp3 file name
     :param file_tracks:
+    :param audio_bitrate:
     :param ffmpeg_loglevel:
     :param hide_progress:
     :param logger:
@@ -287,7 +289,9 @@ def merge_into_mp3(
             "-acodec",
             "copy",
             "-b:a",
-            "64k",  # explicitly set audio bitrate
+            f"{audio_bitrate}k"
+            if audio_bitrate
+            else "64k",  # explicitly set audio bitrate
             "-f",
             "mp3",
             temp_book_filename,
@@ -305,6 +309,7 @@ def convert_to_m4b(
     book_filename: str,
     book_m4b_filename: str,
     cover_filename: str,
+    audio_bitrate: int,
     ffmpeg_loglevel: str,
     hide_progress: str,
     logger: logging.Logger,
@@ -315,6 +320,7 @@ def convert_to_m4b(
     :param book_filename: mp3 file name
     :param book_m4b_filename:
     :param cover_filename:
+    :param audio_bitrate:
     :param ffmpeg_loglevel:
     :param hide_progress:
     :param logger:
@@ -347,7 +353,9 @@ def convert_to_m4b(
             "-c:a",
             "aac",
             "-b:a",
-            "64k",  # explicitly set audio bitrate
+            f"{audio_bitrate}k"
+            if audio_bitrate
+            else "64k",  # explicitly set audio bitrate
         ]
     )
     if os.path.isfile(cover_filename):

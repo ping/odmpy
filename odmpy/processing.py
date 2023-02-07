@@ -364,6 +364,7 @@ def process_odm(
     file_tracks = []
     keep_cover = args.always_keep_cover
     audio_lengths_ms = []
+    audio_bitrate = 0
     for p in download_parts:
         part_number = int(p["number"])
         part_filename = os.path.join(
@@ -452,6 +453,8 @@ def process_odm(
         try:
             # Fill id3 info for mp3 part
             audiofile = eyed3.load(part_filename)
+            _, audio_bitrate = audiofile.info.bit_rate
+
             write_tags(
                 audiofile=audiofile,
                 title=title,
@@ -584,7 +587,12 @@ def process_odm(
         )
 
         merge_into_mp3(
-            book_filename, file_tracks, ffmpeg_loglevel, args.hide_progress, logger
+            book_filename=book_filename,
+            file_tracks=file_tracks,
+            audio_bitrate=audio_bitrate,
+            ffmpeg_loglevel=ffmpeg_loglevel,
+            hide_progress=args.hide_progress,
+            logger=logger,
         )
 
         audiofile = eyed3.load(book_filename)
@@ -674,12 +682,13 @@ def process_odm(
 
         if args.merge_format == "m4b":
             convert_to_m4b(
-                book_filename,
-                book_m4b_filename,
-                cover_filename,
-                ffmpeg_loglevel,
-                args.hide_progress,
-                logger,
+                book_filename=book_filename,
+                book_m4b_filename=book_m4b_filename,
+                cover_filename=cover_filename,
+                audio_bitrate=audio_bitrate,
+                ffmpeg_loglevel=ffmpeg_loglevel,
+                hide_progress=args.hide_progress,
+                logger=logger,
             )
 
         if not args.keep_mp3:
@@ -857,6 +866,7 @@ def process_audiobook_loan(
 
     keep_cover = args.always_keep_cover
     file_tracks = []
+    audio_bitrate = 0
     for p in download_parts:
         part_number = p["spine-position"] + 1
         part_filename = os.path.join(
@@ -941,6 +951,10 @@ def process_audiobook_loan(
         try:
             # Fill id3 info for mp3 part
             audiofile = eyed3.load(part_filename)
+            variable_bitrate, audio_bitrate = audiofile.info.bit_rate
+            if variable_bitrate:
+                # don't use vbr
+                audio_bitrate = 0
             write_tags(
                 audiofile=audiofile,
                 title=title,
@@ -1015,7 +1029,12 @@ def process_audiobook_loan(
         )
 
         merge_into_mp3(
-            book_filename, file_tracks, ffmpeg_loglevel, args.hide_progress, logger
+            book_filename=book_filename,
+            file_tracks=file_tracks,
+            audio_bitrate=audio_bitrate,
+            ffmpeg_loglevel=ffmpeg_loglevel,
+            hide_progress=args.hide_progress,
+            logger=logger,
         )
 
         audiofile = eyed3.load(book_filename)
@@ -1085,12 +1104,13 @@ def process_audiobook_loan(
 
         if args.merge_format == "m4b":
             convert_to_m4b(
-                book_filename,
-                book_m4b_filename,
-                cover_filename,
-                ffmpeg_loglevel,
-                args.hide_progress,
-                logger,
+                book_filename=book_filename,
+                book_m4b_filename=book_m4b_filename,
+                cover_filename=cover_filename,
+                audio_bitrate=audio_bitrate,
+                ffmpeg_loglevel=ffmpeg_loglevel,
+                hide_progress=args.hide_progress,
+                logger=logger,
             )
 
         if not args.keep_mp3:
