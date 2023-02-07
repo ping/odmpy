@@ -27,7 +27,6 @@ import re
 import shutil
 import subprocess
 import sys
-import time
 import uuid
 import xml.etree.ElementTree
 from collections import OrderedDict
@@ -44,7 +43,13 @@ from termcolor import colored
 from tqdm import tqdm
 import eyed3
 
-from .utils import unescape_html, slugify, mp3_duration_ms
+from .utils import (
+    unescape_html,
+    slugify,
+    mp3_duration_ms,
+    parse_duration_to_seconds,
+    parse_duration_to_milliseconds,
+)
 from .shared import (
     generate_names,
     write_tags,
@@ -210,12 +215,7 @@ def process_odm(
                     for p in f.find("Parts"):
                         part_duration = p.attrib["duration"]
                         # part duration can look like '%M:%S.%f' or '%H:%M:%S.%f'
-                        try:
-                            mins, secs = map(float, part_duration.split(":"))
-                            hrs = 0
-                        except ValueError:  # ValueError: too many values to unpack
-                            hrs, mins, secs = map(float, part_duration.split(":"))
-                        total_secs += hrs * 60 * 60 + secs + mins * 60
+                        total_secs = parse_duration_to_seconds(part_duration)
                         parts.append(
                             {
                                 "name": p.attrib["name"],
@@ -472,6 +472,10 @@ def process_odm(
             )
             audiofile.tag.save()
 
+            # Notes: Can't switch over to using eyed3 (audiofile.info.time_secs)
+            # because it is completely off by about 10-20 seconds.
+            # Also can't rely on `p["duration"]` because it is also often off
+            # by about 1 second.
             audio_lengths_ms.append(mp3_duration_ms(part_filename))
 
             # Extract OD chapter info from mp3s for use in merged file
@@ -489,45 +493,8 @@ def process_odm(
                     for m in tree.iter("Marker"):
                         marker_name = m.find("Name").text.strip()
                         marker_timestamp = m.find("Time").text
-                        timestamp = None
-                        ts_mark = 0
-                        # 2 timestamp formats found
-                        for r in ("%M:%S.%f", "%H:%M:%S.%f"):
-                            try:
-                                timestamp = time.strptime(marker_timestamp, r)
-                                ts = datetime.timedelta(
-                                    hours=timestamp.tm_hour,
-                                    minutes=timestamp.tm_min,
-                                    seconds=timestamp.tm_sec,
-                                )
-                                ts_mark = int(1000 * ts.total_seconds())
-                                break
-                            except ValueError:
-                                pass
-
-                        if not timestamp:
-                            # some invalid timestamp string, e.g. 60:15.00
-                            mobj = re.match(MARKER_TIMESTAMP_HHMMSS, marker_timestamp)
-                            if mobj:
-                                ts_mark = (
-                                    int(mobj.group("hr")) * 60 * 60 * 1000
-                                    + int(mobj.group("min")) * 60 * 1000
-                                    + int(mobj.group("sec")) * 1000
-                                    + int(mobj.group("ms"))
-                                )
-                            else:
-                                mobj = re.match(MARKER_TIMESTAMP_MMSS, marker_timestamp)
-                                if mobj:
-                                    ts_mark = (
-                                        int(mobj.group("min")) * 60 * 1000
-                                        + int(mobj.group("sec")) * 1000
-                                        + int(mobj.group("ms"))
-                                    )
-                                else:
-                                    raise ValueError(
-                                        f"Invalid marker timestamp: {marker_timestamp}"
-                                    )
-
+                        # 2 timestamp formats found ("%M:%S.%f", "%H:%M:%S.%f")
+                        ts_mark = parse_duration_to_milliseconds(marker_timestamp)
                         track_count += 1
                         part_markers.append(
                             (f"ch{track_count:02d}", marker_name, ts_mark)
@@ -827,9 +794,7 @@ def process_audiobook_loan(
         for c in openbook.get("creator", [])
         if c.get("role", "") == "narrator"
     ]
-    # lang
     languages = [openbook.get("language")]
-    # subjects
     subjects = [subj["name"] for subj in loan.get("subjects", []) if subj.get("name")]
     publish_date = loan.get("publishDate", None)
     publisher = loan.get("publisherAccount", {}).get("name", "") or ""

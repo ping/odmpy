@@ -21,6 +21,37 @@ import re
 import unicodedata
 from mutagen.mp3 import MP3
 
+TIMESTAMP_RE = re.compile(
+    r"^((?P<hr>[0-9]+):)?(?P<min>[0-9]+):(?P<sec>[0-9]+)(\.(?P<ms>[0-9]+))?$"
+)
+
+
+def parse_duration_to_milliseconds(text: str) -> int:
+    """
+    Converts a duration string into milliseconds
+
+    :param text: A duration string, e.g. "10:15", "10:15.300", "1:10:15"
+    :return:
+    """
+    mobj = TIMESTAMP_RE.match(text)
+    if not mobj:
+        raise ValueError(f"Invalid timestamp text: {text}")
+    hours = int(mobj.group("hr") or 0)
+    minutes = int(mobj.group("min") or 0)
+    seconds = int(mobj.group("sec") or 0)
+    milliseconds = int((mobj.group("ms") or "0").ljust(3, "0"))
+    return hours * 60 * 60 * 1000 + minutes * 60 * 1000 + seconds * 1000 + milliseconds
+
+
+def parse_duration_to_seconds(text: str) -> int:
+    """
+    Converts a duration string into seconds
+
+    :param text: A duration string, e.g. "10:15", "10:15.300", "1:10:15"
+    :return:
+    """
+    return round(parse_duration_to_milliseconds(text) / 1000.0)
+
 
 def mp3_duration_ms(filename):
     # Ref: https://github.com/ping/odmpy/pull/3
