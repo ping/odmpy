@@ -385,7 +385,57 @@ def convert_to_m4b(
         logger.warning(f'Error deleting "{book_filename}": {str(e)}')
 
 
+def remux_mp3(
+    part_tmp_filename: str,
+    part_filename: str,
+    ffmpeg_loglevel: str,
+    logger: logging.Logger,
+) -> None:
+    """
+    Try to remux file to remove mp3 lame tag errors
+
+    :param part_tmp_filename:
+    :param part_filename:
+    :param ffmpeg_loglevel:
+    :param logger:
+    :return:
+    """
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-nostdin",
+        "-hide_banner",
+        "-loglevel",
+        ffmpeg_loglevel,
+        "-i",
+        part_tmp_filename,
+        "-c:a",
+        "copy",
+        "-c:v",
+        "copy",
+        part_filename,
+    ]
+    try:
+        exit_code = subprocess.call(cmd)
+        if exit_code:
+            logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
+            logger.warning(f"Command: {' '.join(cmd)!s}")
+            os.rename(part_tmp_filename, part_filename)
+        else:
+            os.remove(part_tmp_filename)
+    except Exception as ffmpeg_ex:  # pylint: disable=broad-except
+        logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
+        os.rename(part_tmp_filename, part_filename)
+
+
 def set_ele_attributes(ele: ET.Element, attributes: dict) -> None:
+    """
+    Set multiple attributes on an Element
+
+    :param ele: Element
+    :param attributes:
+    :return:
+    """
     for k, v in attributes.items():
         ele.set(k, v)
 

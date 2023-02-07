@@ -25,7 +25,6 @@ import math
 import os
 import re
 import shutil
-import subprocess
 import sys
 import uuid
 import xml.etree.ElementTree
@@ -54,6 +53,7 @@ from .shared import (
     generate_names,
     write_tags,
     generate_cover,
+    remux_mp3,
     merge_into_mp3,
     convert_to_m4b,
     create_opf,
@@ -414,32 +414,12 @@ def process_odm(
                         shutil.copyfileobj(res_raw, outfile)
 
                 # try to remux file to remove mp3 lame tag errors
-                cmd = [
-                    "ffmpeg",
-                    "-y",
-                    "-nostdin",
-                    "-hide_banner",
-                    "-loglevel",
-                    ffmpeg_loglevel,
-                    "-i",
-                    part_tmp_filename,
-                    "-c:a",
-                    "copy",
-                    "-c:v",
-                    "copy",
-                    part_filename,
-                ]
-                try:
-                    exit_code = subprocess.call(cmd)
-                    if exit_code:
-                        logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
-                        logger.warning(f"Command: {' '.join(cmd)!s}")
-                        os.rename(part_tmp_filename, part_filename)
-                    else:
-                        os.remove(part_tmp_filename)
-                except Exception as ffmpeg_ex:  # pylint: disable=broad-except
-                    logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
-                    os.rename(part_tmp_filename, part_filename)
+                remux_mp3(
+                    part_tmp_filename=part_tmp_filename,
+                    part_filename=part_filename,
+                    ffmpeg_loglevel=ffmpeg_loglevel,
+                    logger=logger,
+                )
 
             except HTTPError as he:
                 logger.error(f"HTTPError: {str(he)}")
@@ -912,32 +892,12 @@ def process_audiobook_loan(
                         shutil.copyfileobj(res_raw, outfile)
 
                 # try to remux file to remove mp3 lame tag errors
-                cmd = [
-                    "ffmpeg",
-                    "-y",
-                    "-nostdin",
-                    "-hide_banner",
-                    "-loglevel",
-                    ffmpeg_loglevel,
-                    "-i",
-                    part_tmp_filename,
-                    "-c:a",
-                    "copy",
-                    "-c:v",
-                    "copy",
-                    part_filename,
-                ]
-                try:
-                    exit_code = subprocess.call(cmd)
-                    if exit_code:
-                        logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
-                        logger.warning(f"Command: {' '.join(cmd)!s}")
-                        os.rename(part_tmp_filename, part_filename)
-                    else:
-                        os.remove(part_tmp_filename)
-                except Exception as ffmpeg_ex:  # pylint: disable=broad-except
-                    logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
-                    os.rename(part_tmp_filename, part_filename)
+                remux_mp3(
+                    part_tmp_filename=part_tmp_filename,
+                    part_filename=part_filename,
+                    ffmpeg_loglevel=ffmpeg_loglevel,
+                    logger=logger,
+                )
 
             except HTTPError as he:
                 logger.error(f"HTTPError: {str(he)}")
