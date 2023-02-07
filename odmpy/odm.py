@@ -310,15 +310,17 @@ def run():
                 for book in synced_state.get("loans", [])
                 if libby_client.is_audiobook_loan(book)
             ]
-            cards = synced_state.get("cards", [])
             if not audiobook_loans:
                 logger.info("No downloadable audiobook loans found.")
                 return
 
+            cards = synced_state.get("cards", [])
             logger.info(
                 "Found %s downloadable loans.",
                 colored(str(len(audiobook_loans)), "blue"),
             )
+            # sort by checkout date so that recent most is at the bottom
+            audiobook_loans = sorted(audiobook_loans, key=lambda l: l["checkoutDate"])
             for index, loan in enumerate(audiobook_loans, start=1):
                 expiry_date = datetime.datetime.strptime(
                     loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
