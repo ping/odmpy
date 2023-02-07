@@ -31,7 +31,7 @@ ChapterMarker = namedtuple(
     "ChapterMarker", ["title", "part_name", "start_second", "end_second"]
 )
 FILE_PART_RE = re.compile(
-    r"(?P<part_name>{[A-F0-9\-]{36}}[^#]+)(#(?P<second_stamp>\d+))?$"
+    r"(?P<part_name>{[A-F0-9\-]{36}}[^#]+)(#(?P<second_stamp>\d+(\.\d+)?))?$"
 )
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "
@@ -55,7 +55,7 @@ def parse_part_path(title: str, part_path: str) -> ChapterMarker:
     return ChapterMarker(
         title=title,
         part_name=mobj.group("part_name"),
-        start_second=int(mobj.group("second_stamp"))
+        start_second=float(mobj.group("second_stamp"))
         if mobj.group("second_stamp")
         else 0,
         end_second=0,

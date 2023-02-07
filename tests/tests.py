@@ -382,6 +382,15 @@ class OdmpyTests(unittest.TestCase):
             marker.part_name, "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}Fmt425-Part01.mp3"
         )
 
+        marker = parse_part_path(
+            "Test", "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}Fmt425-Part01.mp3#123.456"
+        )
+        self.assertEqual(marker.title, "Test")
+        self.assertEqual(marker.start_second, 123.456)
+        self.assertEqual(
+            marker.part_name, "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}Fmt425-Part01.mp3"
+        )
+
     def test_parse_toc(self):
         base_url = "http://localhost/"
         toc = [

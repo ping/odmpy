@@ -949,7 +949,10 @@ def process_audiobook_loan(
                     title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, m.title)
                     chap = audiofile.tag.chapters.set(
                         f"ch{i}".encode("ascii"),
-                        times=(m.start_second * 1000, m.end_second * 1000),
+                        times=(
+                            round(m.start_second * 1000),
+                            round(m.end_second * 1000),
+                        ),
                         sub_frames=title_frameset,
                     )
                     toc.child_ids.append(chap.element_id)
@@ -1032,7 +1035,7 @@ def process_audiobook_loan(
                 title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, m.title)
                 chap = audiofile.tag.chapters.set(
                     f"ch{i}".encode("ascii"),
-                    times=(m.start_second * 1000, m.end_second * 1000),
+                    times=(round(m.start_second * 1000), round(m.end_second * 1000)),
                     sub_frames=title_frameset,
                 )
                 toc.child_ids.append(chap.element_id)
