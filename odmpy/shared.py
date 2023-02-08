@@ -20,7 +20,7 @@ import os
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 from urllib.parse import urlparse
 
 import eyed3  # type: ignore[import]
@@ -33,7 +33,7 @@ from .libby import USER_AGENT
 from .utils import slugify
 
 
-def generate_names(title: str, authors: List[str], args) -> tuple[str, str, str]:
+def generate_names(title: str, authors: List[str], args) -> Tuple[str, str, str]:
     """
     Creates the download folder if necessary and generates the merged book names
 
@@ -188,7 +188,7 @@ def generate_cover(
     session: requests.Session,
     timeout: int,
     logger: logging.Logger,
-) -> tuple[str, Optional[bytes]]:
+) -> Tuple[str, Optional[bytes]]:
     """
     Get the book cover
 

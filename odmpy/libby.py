@@ -21,7 +21,7 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Optional, NamedTuple, Dict, List
+from typing import Optional, NamedTuple, Dict, List, Tuple
 from typing import OrderedDict as OrderedDictType
 
 try:
@@ -432,7 +432,7 @@ class LibbyClient(object):
 
     def process_audiobook(
         self, loan: Dict
-    ) -> tuple[Dict, OrderedDictType[str, PartMeta]]:
+    ) -> Tuple[Dict, OrderedDictType[str, PartMeta]]:
         """
         Returns the data needed to download an audiobook
 
