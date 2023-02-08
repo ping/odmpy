@@ -20,7 +20,7 @@ import os
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-from typing import Optional
+from typing import Optional, Dict, List, Tuple
 from urllib.parse import urlparse
 
 import eyed3  # type: ignore[import]
@@ -33,7 +33,7 @@ from .libby import USER_AGENT
 from .utils import slugify
 
 
-def generate_names(title: str, authors: list[str], args) -> tuple[str, str, str]:
+def generate_names(title: str, authors: List[str], args) -> Tuple[str, str, str]:
     """
     Creates the download folder if necessary and generates the merged book names
 
@@ -90,13 +90,13 @@ def write_tags(
     audiofile,
     title: str,
     sub_title: Optional[str],
-    authors: list[str],
-    narrators: Optional[list[str]],
+    authors: List[str],
+    narrators: Optional[List[str]],
     publisher: str,
     description: str,
     cover_bytes: Optional[bytes],
-    genres: Optional[list[str]],
-    languages: Optional[list[str]],
+    genres: Optional[List[str]],
+    languages: Optional[List[str]],
     published_date: Optional[str],
     part_number: int,
     total_parts: int,
@@ -188,7 +188,7 @@ def generate_cover(
     session: requests.Session,
     timeout: int,
     logger: logging.Logger,
-) -> tuple[str, Optional[bytes]]:
+) -> Tuple[str, Optional[bytes]]:
     """
     Get the book cover
 
@@ -252,7 +252,7 @@ def generate_cover(
 
 def merge_into_mp3(
     book_filename: str,
-    file_tracks: list[dict],
+    file_tracks: List[Dict],
     audio_bitrate: int,
     ffmpeg_loglevel: str,
     hide_progress: bool,
@@ -428,7 +428,7 @@ def remux_mp3(
         os.rename(part_tmp_filename, part_filename)
 
 
-def set_ele_attributes(ele: ET.Element, attributes: dict) -> None:
+def set_ele_attributes(ele: ET.Element, attributes: Dict) -> None:
     """
     Set multiple attributes on an Element
 
@@ -441,9 +441,9 @@ def set_ele_attributes(ele: ET.Element, attributes: dict) -> None:
 
 
 def create_opf(
-    media_info: dict,
+    media_info: Dict,
     cover_filename: Optional[str],
-    file_tracks: list[dict],
+    file_tracks: List[Dict],
     opf_file_path: str,
     logger: logging.Logger,
 ) -> None:
@@ -521,7 +521,8 @@ def create_opf(
             creator = ET.SubElement(metadata, "dc:creator")
             creator.set("opf:role", opf_role)
             set_ele_attributes(
-                creator, {"opf:role": opf_role, "opf:file-as": c["sortName"]}
+                creator,
+                {"opf:role": opf_role, "opf:file-as": c["sortName"]},
             )
             creator.text = c["name"]
 

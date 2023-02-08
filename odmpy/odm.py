@@ -26,6 +26,7 @@ import os
 import sys
 import xml.etree.ElementTree
 from http.client import HTTPConnection
+from typing import Dict
 
 import requests
 from requests.exceptions import HTTPError, ConnectionError
@@ -171,7 +172,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser):
 
 
 def extact_odm(
-    libby_client: LibbyClient, selected_loan: dict, args: argparse.Namespace
+    libby_client: LibbyClient, selected_loan: Dict, args: argparse.Namespace
 ) -> str:
     """
     Extracts the ODM file for processing

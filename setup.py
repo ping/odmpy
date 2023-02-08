@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
+import sys
 
 from setuptools import setup  # type: ignore[import]
 
@@ -26,6 +27,16 @@ __version__ = "0.6.5"  # also update odmpy/odm.py
 __long_description__ = """
 ``odmpy`` is a console manager for OverDrive audiobook loan files (.odm).
 """
+
+install_requires = [
+    "requests",
+    "eyed3",
+    "mutagen",
+    "termcolor",
+    "tqdm",
+]
+if sys.version_info[0:2] < (3, 8):
+    install_requires.append("typing_extensions")
 
 setup(
     name="odmpy",
@@ -39,14 +50,8 @@ setup(
             "odmpy = odmpy.__main__:main",
         ]
     },
-    python_requires=">=3.9",
-    install_requires=[
-        "requests",
-        "eyed3",
-        "mutagen",
-        "termcolor",
-        "tqdm",
-    ],
+    python_requires=">=3.7",
+    install_requires=install_requires,
     include_package_data=True,
     platforms="any",
     long_description=__long_description__,
@@ -58,5 +63,9 @@ setup(
         "Environment :: Console",
         "Intended Audience :: End Users/Desktop",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
 )

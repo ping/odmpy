@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Dict
 from urllib.parse import urljoin
 
 import requests
@@ -24,7 +24,7 @@ class OverDriveClient(object):
         self.timeout = kwargs.pop("timeout", 10)
         self.session = kwargs.pop("session", None) or requests.Session()
 
-    def default_headers(self) -> dict:
+    def default_headers(self) -> Dict:
         """
         Default http request headers.
 
@@ -37,7 +37,7 @@ class OverDriveClient(object):
         }
         return headers
 
-    def default_params(self) -> dict:
+    def default_params(self) -> Dict:
         """
         Default set of GET request parameters.
 
@@ -49,9 +49,9 @@ class OverDriveClient(object):
     def make_request(
         self,
         endpoint: str,
-        params: Optional[dict] = None,
-        data: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        params: Optional[Dict] = None,
+        data: Optional[Dict] = None,
+        headers: Optional[Dict] = None,
         method: Optional[str] = None,
     ):
         """
@@ -62,7 +62,7 @@ class OverDriveClient(object):
         :param data: POST data parameters
         :param method: HTTP method, e.g. 'PUT'
         :param headers: Custom headers
-        :return: Union[List, dict, str]
+        :return: Union[List, Dict, str]
         """
         endpoint_url = urljoin(THUNDER_API_URL, endpoint)
         headers = headers or self.default_headers()
@@ -88,7 +88,7 @@ class OverDriveClient(object):
             return res.json()
         return res.text
 
-    def media(self, title_id: str, **kwargs) -> dict:
+    def media(self, title_id: str, **kwargs) -> Dict:
         """
         Retrieve a title.
         Title id can also be a reserve id.

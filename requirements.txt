@@ -3,3 +3,4 @@ eyed3
 mutagen
 termcolor
 tqdm
+typing_extensions; python_version < '3.8'
