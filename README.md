@@ -2,7 +2,7 @@
 
 A simple console manager for OverDrive audiobook loans. A python port of [overdrive](https://github.com/chbrown/overdrive).
 
-Requires Python >=3.7.
+Requires Python >=3.9.
 
 ## Features
 
