@@ -41,7 +41,6 @@ class OverDriveClient(object):
         """
         Default set of GET request parameters.
 
-        :param paging:
         :return:
         """
         params = {"x-client-id": CLIENT_ID}
