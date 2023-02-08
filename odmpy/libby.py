@@ -21,7 +21,7 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Optional, NamedTuple, Dict
+from typing import Optional, NamedTuple, Dict, List
 
 try:
     from typing import TypedDict
@@ -52,7 +52,7 @@ USER_AGENT = (
 PartMeta = TypedDict(
     "PartMeta",
     {
-        "chapters": list[ChapterMarker],
+        "chapters": List[ChapterMarker],
         "url": str,
         "audio-duration": float,
         "file-length": int,
@@ -85,7 +85,7 @@ def parse_part_path(title: str, part_path: str) -> ChapterMarker:
 
 
 def parse_toc(
-    base_url: str, toc: list[Dict], spine: list[Dict]
+    base_url: str, toc: List[Dict], spine: List[Dict]
 ) -> OrderedDict[str, PartMeta]:
     """
     Parses `openbook["nav"]["toc"]` and `openbook["spine"]` to a format
@@ -96,7 +96,7 @@ def parse_toc(
     :param spine:
     :return:
     """
-    entries: list[ChapterMarker] = []
+    entries: List[ChapterMarker] = []
     for item in toc:
         entries.append(parse_part_path(item["title"], item["path"]))
         for content in item.get("contents", []):
@@ -156,7 +156,7 @@ def parse_toc(
     return parsed_toc
 
 
-def merge_toc(toc: Dict) -> list[ChapterMarker]:
+def merge_toc(toc: Dict) -> List[ChapterMarker]:
     """
     Generates a list of ChapterMarker for the merged audiobook based on the parsed toc
 
@@ -182,7 +182,7 @@ def merge_toc(toc: Dict) -> list[ChapterMarker]:
             start_second=marker["start"],
             end_second=marker["end"],
         )
-        for title, marker in list(chapters.items())
+        for title, marker in List(chapters.items())
     ]
 
 
@@ -375,7 +375,7 @@ class LibbyClient(object):
         """
         return bool([f for f in book.get("formats", []) if f["id"] == "audiobook-mp3"])
 
-    def get_audiobook_loans(self) -> list[Dict]:
+    def get_audiobook_loans(self) -> List[Dict]:
         """
         Get audiobook loans
 

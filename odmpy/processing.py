@@ -29,7 +29,7 @@ import sys
 import uuid
 import xml.etree.ElementTree
 from collections import OrderedDict
-from typing import Optional, Any, Union, Dict
+from typing import Optional, Any, Union, Dict, List
 
 try:
     from functools import reduce
@@ -370,7 +370,7 @@ def process_odm(
         lic_file_contents = lic_file.read()
 
     track_count = 0
-    file_tracks: list[Dict] = []
+    file_tracks: List[Dict] = []
     keep_cover = args.always_keep_cover
     audio_lengths_ms = []
     audio_bitrate = 0
@@ -502,7 +502,7 @@ def process_odm(
                 and not audiofile.tag.table_of_contents
             ):
                 # set the chapter marks
-                generated_markers: list[Dict[str, Union[str, int]]] = []
+                generated_markers: List[Dict[str, Union[str, int]]] = []
                 for j, file_marker in enumerate(part_markers):
                     generated_markers.append(
                         {
@@ -611,7 +611,7 @@ def process_odm(
         )
 
         if args.add_chapters and not audiofile.tag.table_of_contents:
-            merged_markers: list[Dict[str, Union[str, int]]] = []
+            merged_markers: List[Dict[str, Union[str, int]]] = []
             for i, f in enumerate(file_tracks):
                 prev_tracks_len_ms = (
                     0 if i == 0 else reduce(lambda x, y: x + y, audio_lengths_ms[0:i])
@@ -772,7 +772,7 @@ def process_audiobook_loan(
     cover_highest_res = next(
         iter(
             sorted(
-                list(loan.get("covers", []).values()),
+                List(loan.get("covers", []).values()),
                 key=lambda c: c.get("width", 0),
                 reverse=True,
             )
@@ -796,7 +796,7 @@ def process_audiobook_loan(
         for c in openbook.get("creator", [])
         if c.get("role", "") == "narrator"
     ]
-    languages: Optional[list[str]] = (
+    languages: Optional[List[str]] = (
         [str(openbook.get("language"))] if openbook.get("language") else []
     )
     subjects = [subj["name"] for subj in loan.get("subjects", []) if subj.get("name")]
@@ -817,7 +817,7 @@ def process_audiobook_loan(
         }
     }
 
-    download_parts: list[PartMeta] = list(parsed_toc.values())  # noqa
+    download_parts: List[PartMeta] = List(parsed_toc.values())  # noqa
     debug_meta["download_parts"] = []
     for p in download_parts:
         chapters = [
