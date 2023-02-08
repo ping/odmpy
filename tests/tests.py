@@ -566,7 +566,7 @@ class OdmpyTests(unittest.TestCase):
             try:
                 self.assertEqual(expected_text, actual_text)
             except AssertionError:
-                if sys.version_info[0:2] < (3, 8):
+                if sys.version_info[0:2] > (3, 7):
                     # ignore error because properties are written out
                     # in a difference sequence for py 3.7
                     raise
