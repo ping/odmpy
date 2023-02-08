@@ -20,22 +20,39 @@ import json
 import logging
 import os
 import re
-from collections import namedtuple, OrderedDict
-from typing import Optional
+from collections import OrderedDict
+from typing import Optional, TypedDict, NamedTuple
 from urllib.parse import urljoin
 
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
-ChapterMarker = namedtuple(
-    "ChapterMarker", ["title", "part_name", "start_second", "end_second"]
-)
+
+class ChapterMarker(NamedTuple):
+    title: str
+    part_name: str
+    start_second: float
+    end_second: float
+
+
 FILE_PART_RE = re.compile(
     r"(?P<part_name>{[A-F0-9\-]{36}}[^#]+)(#(?P<second_stamp>\d+(\.\d+)?))?$"
 )
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "
     "Version/14.0.2 Safari/605.1.15"
+)
+
+# TypedDict to hold the metadata about an audiobook part
+PartMeta = TypedDict(
+    "PartMeta",
+    {
+        "chapters": list[ChapterMarker],
+        "url": str,
+        "audio-duration": float,
+        "file-length": int,
+        "spine-position": int,
+    },
 )
 
 
@@ -62,7 +79,9 @@ def parse_part_path(title: str, part_path: str) -> ChapterMarker:
     )
 
 
-def parse_toc(base_url: str, toc: list[dict], spine: list[dict]) -> dict:
+def parse_toc(
+    base_url: str, toc: list[dict], spine: list[dict]
+) -> OrderedDict[str, PartMeta]:
     """
     Parses `openbook["nav"]["toc"]` and `openbook["spine"]` to a format
     suitable for processing.
@@ -72,7 +91,7 @@ def parse_toc(base_url: str, toc: list[dict], spine: list[dict]) -> dict:
     :param spine:
     :return:
     """
-    entries = []
+    entries: list[ChapterMarker] = []
     for item in toc:
         entries.append(parse_part_path(item["title"], item["path"]))
         for content in item.get("contents", []):
@@ -81,11 +100,17 @@ def parse_toc(base_url: str, toc: list[dict], spine: list[dict]) -> dict:
             entries.append(parse_part_path(item["title"], content["path"]))
 
     # use an OrderedDict to ensure that we can consistently test this
-    parsed_toc: OrderedDict = OrderedDict()
+    parsed_toc: OrderedDict[str, PartMeta] = OrderedDict()
 
     for entry in entries:
         if entry.part_name not in parsed_toc:
-            parsed_toc[entry.part_name] = {"chapters": []}
+            parsed_toc[entry.part_name] = {
+                "chapters": [],
+                "url": "",
+                "audio-duration": 0,
+                "file-length": 0,
+                "spine-position": 0,
+            }
         if not parsed_toc[entry.part_name]["chapters"]:
             # first entry for the part_name
             parsed_toc[entry.part_name]["chapters"].append(entry)
@@ -105,8 +130,8 @@ def parse_toc(base_url: str, toc: list[dict], spine: list[dict]) -> dict:
                 "spine-position": s["-odread-spine-position"],
             }
         )
-    for item in parsed_toc.values():
-        chapters = item["chapters"]
+    for chapter_mark in parsed_toc.values():  # type: PartMeta
+        chapters = chapter_mark["chapters"]
         updated_chapters = []
         for i, chapter in enumerate(chapters):
             # update end_second mark
@@ -117,11 +142,11 @@ def parse_toc(base_url: str, toc: list[dict], spine: list[dict]) -> dict:
                 end_second=(
                     chapters[i + 1].start_second
                     if i < (len(chapters) - 1)
-                    else item["audio-duration"]
+                    else chapter_mark["audio-duration"]
                 ),
             )
             updated_chapters.append(updated_chapter)
-        item["chapters"] = updated_chapters
+        chapter_mark["chapters"] = updated_chapters
 
     return parsed_toc
 
@@ -399,7 +424,7 @@ class LibbyClient(object):
         """
         return self.make_request(f"open/{loan_type}/card/{card_id}/title/{title_id}")
 
-    def process_audiobook(self, loan: dict) -> tuple[dict, dict]:
+    def process_audiobook(self, loan: dict) -> tuple[dict, OrderedDict[str, PartMeta]]:
         """
         Returns the data needed to download an audiobook
 

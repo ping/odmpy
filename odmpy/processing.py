@@ -61,7 +61,7 @@ from .shared import (
     create_opf,
 )
 from .constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES
-from .libby import USER_AGENT, merge_toc
+from .libby import USER_AGENT, merge_toc, PartMeta
 from .overdrive import OverDriveClient
 
 RESERVE_ID_RE = re.compile(
@@ -746,7 +746,7 @@ def process_odm(
 def process_audiobook_loan(
     loan: dict,
     openbook: dict,
-    parsed_toc: dict,
+    parsed_toc: OrderedDict[str, PartMeta],
     session: requests.Session,
     args: argparse.Namespace,
     logger: logging.Logger,
@@ -817,7 +817,7 @@ def process_audiobook_loan(
         }
     }
 
-    download_parts = list(parsed_toc.values())
+    download_parts: list[PartMeta] = list(parsed_toc.values())  # noqa
     debug_meta["download_parts"] = []
     for p in download_parts:
         chapters = [
