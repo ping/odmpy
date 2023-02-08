@@ -46,7 +46,7 @@ requests_logger.addHandler(ch)
 requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
 
-__version__ = "0.6.4"  # also update ../setup.py
+__version__ = "0.6.5"  # also update ../setup.py
 
 
 def positive_int(value: str) -> int:
