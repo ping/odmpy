@@ -20,6 +20,7 @@ import os
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+from collections import OrderedDict
 from typing import Optional, Dict, List, Tuple
 from urllib.parse import urlparse
 
@@ -521,7 +522,8 @@ def create_opf(
             creator = ET.SubElement(metadata, "dc:creator")
             creator.set("opf:role", opf_role)
             set_ele_attributes(
-                creator, {"opf:role": opf_role, "opf:file-as": c["sortName"]}
+                creator,
+                OrderedDict({"opf:role": opf_role, "opf:file-as": c["sortName"]}),
             )
             creator.text = c["name"]
 
@@ -542,26 +544,32 @@ def create_opf(
         if series_info.get("seriesName"):
             set_ele_attributes(
                 ET.SubElement(metadata, "meta"),
-                {"name": "calibre:series", "content": series_info["seriesName"]},
+                OrderedDict(
+                    {"name": "calibre:series", "content": series_info["seriesName"]}
+                ),
             )
         if series_info.get("readingOrder"):
             set_ele_attributes(
                 ET.SubElement(metadata, "meta"),
-                {
-                    "name": "calibre:series_index",
-                    "content": series_info["readingOrder"],
-                },
+                OrderedDict(
+                    {
+                        "name": "calibre:series_index",
+                        "content": series_info["readingOrder"],
+                    }
+                ),
             )
 
     manifest = ET.SubElement(package, "manifest")
     if cover_filename:
         set_ele_attributes(
             ET.SubElement(manifest, "item"),
-            {
-                "id": "cover",
-                "href": os.path.basename(cover_filename),
-                "media-type": "image/jpeg",
-            },
+            OrderedDict(
+                {
+                    "id": "cover",
+                    "href": os.path.basename(cover_filename),
+                    "media-type": "image/jpeg",
+                }
+            ),
         )
     spine = ET.SubElement(package, "spine")
     for f in file_tracks:
@@ -569,11 +577,13 @@ def create_opf(
         file_id = slugify(file_name)
         set_ele_attributes(
             ET.SubElement(manifest, "item"),
-            {
-                "id": file_id,
-                "href": os.path.basename(f["file"]),
-                "media-type": "audio/mpeg",
-            },
+            OrderedDict(
+                {
+                    "id": file_id,
+                    "href": os.path.basename(f["file"]),
+                    "media-type": "audio/mpeg",
+                }
+            ),
         )
         set_ele_attributes(ET.SubElement(spine, "itemref"), {"idref": file_id})
 
