@@ -320,7 +320,7 @@ def run():
                 colored(str(len(audiobook_loans)), "blue"),
             )
             # sort by checkout date so that recent most is at the bottom
-            audiobook_loans = sorted(audiobook_loans, key=lambda l: l["checkoutDate"])
+            audiobook_loans = sorted(audiobook_loans, key=lambda ln: ln["checkoutDate"])
             for index, loan in enumerate(audiobook_loans, start=1):
                 expiry_date = datetime.datetime.strptime(
                     loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
