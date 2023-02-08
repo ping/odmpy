@@ -20,6 +20,7 @@
 
 import argparse
 import datetime
+import json
 import logging
 import os
 import sys
@@ -30,10 +31,10 @@ import requests
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 
-from .utils import slugify
-from .processing import process_odm, process_audiobook_loan
 from .constants import UA_LONG
 from .libby import LibbyClient
+from .processing import process_odm, process_audiobook_loan
+from .utils import slugify
 
 logger = logging.getLogger(__file__)
 requests_logger = logging.getLogger("urllib3")
@@ -46,6 +47,22 @@ requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
 
 __version__ = "0.6.4"  # also update ../setup.py
+
+
+def positive_int(value: str) -> int:
+    """
+    Ensure that argument is a postive integer
+
+    :param value:
+    :return:
+    """
+    try:
+        int_value = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f'"{value}" is an invalid positive int value')
+    if int_value <= 0:
+        raise argparse.ArgumentTypeError(f'"{value}" is an invalid positive int value')
+    return int_value
 
 
 def add_common_download_arguments(parser_dl: argparse.ArgumentParser):
@@ -153,6 +170,46 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser):
     )
 
 
+def extact_odm(
+    libby_client: LibbyClient, selected_loan: dict, args: argparse.Namespace
+) -> str:
+    """
+    Extracts the ODM file for processing
+
+    :param libby_client:
+    :param selected_loan:
+    :param args:
+    :return: The path to the ODM file
+    """
+    file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
+    odm_file_path = os.path.join(
+        args.download_dir,
+        f"{slugify(file_name, allow_unicode=True)}.odm",
+    )
+    # don't re-download odm if it already exists so that we don't
+    # needlessly use up the fulfillment limits
+    if not os.path.exists(odm_file_path):
+        logger.info(
+            'Opening book "%s"...',
+            colored(selected_loan["title"], "blue"),
+        )
+        odm_res_content = libby_client.fulfill_odm(
+            selected_loan["id"],
+            selected_loan["cardId"],
+            "audiobook-mp3",
+        )
+        with open(odm_file_path, "wb") as f:
+            f.write(odm_res_content)
+            logger.info(
+                "Downloaded odm to %s",
+                colored(odm_file_path, "magenta"),
+            )
+    else:
+        logger.info("Already downloaded odm file: %s", odm_file_path)
+
+    return odm_file_path
+
+
 def run():
     parser = argparse.ArgumentParser(
         prog="odmpy",
@@ -242,6 +299,21 @@ def run():
         help="Keep the downloaded odm and license files",
     )
     add_common_download_arguments(parser_libby)
+    parser_libby.add_argument(
+        "--latest",
+        dest="download_latest_n",
+        type=positive_int,
+        default=0,
+        metavar="N",
+        help="Non-interactive mode that downloads the latest N number of loans",
+    )
+    parser_libby.add_argument(
+        "--exportloans",
+        dest="export_loans_path",
+        metavar="LOAN_JSON_FILEPATH",
+        type=str,
+        help="Non-interactive mode that exports audiobook loans information into a json file at the path specified",
+    )
 
     args = parser.parse_args()
     if args.verbose:
@@ -253,6 +325,8 @@ def run():
         args.download_dir = os.path.expanduser(args.download_dir)
     if hasattr(args, "settings_folder") and args.settings_folder:
         args.settings_folder = os.path.expanduser(args.settings_folder)
+    if hasattr(args, "export_loans_path") and args.export_loans_path:
+        args.export_loans_path = os.path.expanduser(args.export_loans_path)
 
     # suppress warnings
     logging.getLogger("eyed3").setLevel(
@@ -310,8 +384,57 @@ def run():
                 for book in synced_state.get("loans", [])
                 if libby_client.is_audiobook_loan(book)
             ]
+
+            # sort by checkout date so that recent most is at the bottom
+            audiobook_loans = sorted(audiobook_loans, key=lambda ln: ln["checkoutDate"])
+
+            if args.export_loans_path:
+                logger.info(
+                    "Non-interactive mode. Exporting loans json to %s...",
+                    colored(args.export_loans_path, "magenta"),
+                )
+                with open(args.export_loans_path, "w", encoding="utf-8") as f:
+                    json.dump(audiobook_loans, f)
+                    logger.info(
+                        'Saved loans as "%s"',
+                        colored(args.export_loans_path, "magenta", attrs=["bold"]),
+                    )
+                return
+
             if not audiobook_loans:
                 logger.info("No downloadable audiobook loans found.")
+                return
+
+            if args.download_latest_n:
+                logger.info(
+                    "Non-interactive mode. Downloading latest %s loan(s)...",
+                    colored(str(args.download_latest_n), "blue"),
+                )
+
+                if args.libby_direct:
+                    for selected_loan in audiobook_loans[-args.download_latest_n :]:
+                        logger.info(
+                            'Opening book "%s"...',
+                            colored(selected_loan["title"], "blue"),
+                        )
+                        openbook, toc = libby_client.process_audiobook(selected_loan)
+                        process_audiobook_loan(
+                            selected_loan,
+                            openbook,
+                            toc,
+                            libby_client.libby_session,
+                            args,
+                            logger,
+                        )
+                    return
+
+                for selected_loan in audiobook_loans[-args.download_latest_n :]:
+                    process_odm(
+                        extact_odm(libby_client, selected_loan, args),
+                        args,
+                        logger,
+                        cleanup_odm_license=not args.keepodm,
+                    )
                 return
 
             cards = synced_state.get("cards", [])
@@ -319,8 +442,6 @@ def run():
                 "Found %s downloadable loans.",
                 colored(str(len(audiobook_loans)), "blue"),
             )
-            # sort by checkout date so that recent most is at the bottom
-            audiobook_loans = sorted(audiobook_loans, key=lambda ln: ln["checkoutDate"])
             for index, loan in enumerate(audiobook_loans, start=1):
                 expiry_date = datetime.datetime.strptime(
                     loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
@@ -385,29 +506,11 @@ def run():
             for loan_index_selected in loan_choices:
                 loan_index_selected = int(loan_index_selected)
                 selected_loan = audiobook_loans[loan_index_selected - 1]
-                file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
-                odm_file_path = os.path.join(
-                    args.download_dir,
-                    f"{slugify(file_name, allow_unicode=True)}.odm",
-                )
-                # don't re-download odm if it already exists so that we don't
-                # needlessly use up the fulfillment limits
-                if not os.path.exists(odm_file_path):
-                    logger.info(
-                        'Opening book "%s"...', colored(selected_loan["title"], "blue")
-                    )
-                    odm_res_content = libby_client.fulfill_odm(
-                        selected_loan["id"], selected_loan["cardId"], "audiobook-mp3"
-                    )
-                    with open(odm_file_path, "wb") as f:
-                        f.write(odm_res_content)
-                        logger.info(
-                            "Downloaded odm to %s", colored(odm_file_path, "magenta")
-                        )
-                else:
-                    logger.info("Already downloaded odm file: %s", odm_file_path)
                 process_odm(
-                    odm_file_path, args, logger, cleanup_odm_license=not args.keepodm
+                    extact_odm(libby_client, selected_loan, args),
+                    args,
+                    logger,
+                    cleanup_odm_license=not args.keepodm,
                 )
 
         except RuntimeError as run_err:
@@ -454,4 +557,9 @@ def run():
 
         sys.exit()
 
-    process_odm(args.odm_file, args, logger)
+    if args.command_name in ("dl", "info"):
+        process_odm(args.odm_file, args, logger)
+        return
+
+    # we shouldn't get this error
+    logger.error("Unknown command: %s", colored(args.command_name, "red"))
