@@ -39,6 +39,7 @@ setup(
             "odmpy = odmpy.__main__:main",
         ]
     },
+    python_requires=">=3.7",
     install_requires=[
         "requests",
         "eyed3",
