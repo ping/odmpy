@@ -772,7 +772,7 @@ def process_audiobook_loan(
     cover_highest_res = next(
         iter(
             sorted(
-                List(loan.get("covers", []).values()),
+                list(loan.get("covers", []).values()),
                 key=lambda c: c.get("width", 0),
                 reverse=True,
             )
@@ -817,7 +817,7 @@ def process_audiobook_loan(
         }
     }
 
-    download_parts: List[PartMeta] = List(parsed_toc.values())  # noqa
+    download_parts: List[PartMeta] = list(parsed_toc.values())  # noqa
     debug_meta["download_parts"] = []
     for p in download_parts:
         chapters = [

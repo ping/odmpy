@@ -182,7 +182,7 @@ def merge_toc(toc: Dict) -> List[ChapterMarker]:
             start_second=marker["start"],
             end_second=marker["end"],
         )
-        for title, marker in List(chapters.items())
+        for title, marker in list(chapters.items())
     ]
 
 
