@@ -30,6 +30,7 @@ import uuid
 import xml.etree.ElementTree
 from collections import OrderedDict
 from typing import Optional, Any, Union, Dict, List
+from typing import OrderedDict as OrderedDictType
 
 try:
     from functools import reduce
@@ -746,7 +747,7 @@ def process_odm(
 def process_audiobook_loan(
     loan: Dict,
     openbook: Dict,
-    parsed_toc: OrderedDict[str, PartMeta],
+    parsed_toc: OrderedDictType[str, PartMeta],
     session: requests.Session,
     args: argparse.Namespace,
     logger: logging.Logger,

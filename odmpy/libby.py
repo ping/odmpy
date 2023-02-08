@@ -22,6 +22,7 @@ import os
 import re
 from collections import OrderedDict
 from typing import Optional, NamedTuple, Dict, List
+from typing import OrderedDict as OrderedDictType
 
 try:
     from typing import TypedDict
@@ -86,7 +87,7 @@ def parse_part_path(title: str, part_path: str) -> ChapterMarker:
 
 def parse_toc(
     base_url: str, toc: List[Dict], spine: List[Dict]
-) -> OrderedDict[str, PartMeta]:
+) -> OrderedDictType[str, PartMeta]:
     """
     Parses `openbook["nav"]["toc"]` and `openbook["spine"]` to a format
     suitable for processing.
@@ -105,7 +106,7 @@ def parse_toc(
             entries.append(parse_part_path(item["title"], content["path"]))
 
     # use an OrderedDict to ensure that we can consistently test this
-    parsed_toc: OrderedDict[str, PartMeta] = OrderedDict()
+    parsed_toc: OrderedDictType[str, PartMeta] = OrderedDict()
 
     for entry in entries:
         if entry.part_name not in parsed_toc:
@@ -429,7 +430,9 @@ class LibbyClient(object):
         """
         return self.make_request(f"open/{loan_type}/card/{card_id}/title/{title_id}")
 
-    def process_audiobook(self, loan: Dict) -> tuple[Dict, OrderedDict[str, PartMeta]]:
+    def process_audiobook(
+        self, loan: Dict
+    ) -> tuple[Dict, OrderedDictType[str, PartMeta]]:
         """
         Returns the data needed to download an audiobook
 
