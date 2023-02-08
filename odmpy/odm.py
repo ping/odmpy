@@ -366,8 +366,6 @@ def run():
 
             if args.libby_direct:
                 for loan_index_selected in loan_choices:
-                    if loan_index_selected == 0:
-                        loan_index_selected = -1
                     loan_index_selected = int(loan_index_selected)
                     selected_loan = audiobook_loans[loan_index_selected - 1]
                     logger.info(
