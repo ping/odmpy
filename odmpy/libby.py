@@ -21,7 +21,12 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Optional, TypedDict, NamedTuple
+from typing import Optional, NamedTuple, Dict
+
+try:
+    from typing import TypedDict
+except ImportError:
+    from typing_extensions import TypedDict
 from urllib.parse import urljoin
 
 import requests
@@ -80,7 +85,7 @@ def parse_part_path(title: str, part_path: str) -> ChapterMarker:
 
 
 def parse_toc(
-    base_url: str, toc: list[dict], spine: list[dict]
+    base_url: str, toc: list[Dict], spine: list[Dict]
 ) -> OrderedDict[str, PartMeta]:
     """
     Parses `openbook["nav"]["toc"]` and `openbook["spine"]` to a format
@@ -151,7 +156,7 @@ def parse_toc(
     return parsed_toc
 
 
-def merge_toc(toc: dict) -> list[ChapterMarker]:
+def merge_toc(toc: Dict) -> list[ChapterMarker]:
     """
     Generates a list of ChapterMarker for the merged audiobook based on the parsed toc
 
@@ -219,7 +224,7 @@ class LibbyClient(object):
     def is_valid_sync_code(code: str) -> bool:
         return code.isdigit() and len(code) == 8
 
-    def default_headers(self) -> dict:
+    def default_headers(self) -> Dict:
         """
         Default HTTP headers
 
@@ -233,9 +238,9 @@ class LibbyClient(object):
     def make_request(
         self,
         endpoint: str,
-        params: Optional[dict] = None,
-        data: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        params: Optional[Dict] = None,
+        data: Optional[Dict] = None,
+        headers: Optional[Dict] = None,
         method: Optional[str] = None,
         authenticated: bool = True,
         session: Optional[requests.sessions.Session] = None,
@@ -268,7 +273,7 @@ class LibbyClient(object):
             return res
         return res.json()
 
-    def save_settings(self, updates: dict) -> None:
+    def save_settings(self, updates: Dict) -> None:
         """
         Persist identity settings
 
@@ -305,7 +310,7 @@ class LibbyClient(object):
         """
         return bool(self.identity.get("__odmpy_sync_code"))
 
-    def get_chip(self, auto_save: bool = True, authenticated: bool = False) -> dict:
+    def get_chip(self, auto_save: bool = True, authenticated: bool = False) -> Dict:
         """
         Get an identity chip (contains auth token)
 
@@ -324,7 +329,7 @@ class LibbyClient(object):
             self.save_settings(res)
         return res
 
-    def clone_by_code(self, code: str, auto_save: bool = True) -> dict:
+    def clone_by_code(self, code: str, auto_save: bool = True) -> Dict:
         """
         Link account to identy token retrieved in `get_chip()`
 
@@ -341,7 +346,7 @@ class LibbyClient(object):
             self.save_settings({"__odmpy_sync_code": code})
         return res
 
-    def sync(self) -> dict:
+    def sync(self) -> Dict:
         """
         Get the user account state, which includes loans, holds, etc
 
@@ -361,7 +366,7 @@ class LibbyClient(object):
         )
 
     @staticmethod
-    def is_audiobook_loan(book: dict) -> bool:
+    def is_audiobook_loan(book: Dict) -> bool:
         """
         Verify if book is a downloadable audiobook
 
@@ -370,7 +375,7 @@ class LibbyClient(object):
         """
         return bool([f for f in book.get("formats", []) if f["id"] == "audiobook-mp3"])
 
-    def get_audiobook_loans(self) -> list[dict]:
+    def get_audiobook_loans(self) -> list[Dict]:
         """
         Get audiobook loans
 
@@ -382,7 +387,7 @@ class LibbyClient(object):
             if self.is_audiobook_loan(book)
         ]
 
-    def fulfill(self, loan_id: str, card_id: str, format_id: str) -> dict:
+    def fulfill(self, loan_id: str, card_id: str, format_id: str) -> Dict:
         """
         Get the fulfillment details for a loan
 
@@ -413,7 +418,7 @@ class LibbyClient(object):
             return_res=True,
         ).content
 
-    def open_loan(self, loan_type: str, card_id: str, title_id: str) -> dict:
+    def open_loan(self, loan_type: str, card_id: str, title_id: str) -> Dict:
         """
         Gets the meta urls needed to fulfill a loan
 
@@ -424,7 +429,7 @@ class LibbyClient(object):
         """
         return self.make_request(f"open/{loan_type}/card/{card_id}/title/{title_id}")
 
-    def process_audiobook(self, loan: dict) -> tuple[dict, OrderedDict[str, PartMeta]]:
+    def process_audiobook(self, loan: Dict) -> tuple[Dict, OrderedDict[str, PartMeta]]:
         """
         Returns the data needed to download an audiobook
 

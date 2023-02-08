@@ -29,7 +29,7 @@ import sys
 import uuid
 import xml.etree.ElementTree
 from collections import OrderedDict
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, Dict
 
 try:
     from functools import reduce
@@ -146,7 +146,7 @@ def process_odm(
     ]
     subjects = [subj.text for subj in metadata.find("Subjects") or [] if subj.text]
 
-    debug_meta: dict[str, Any] = {
+    debug_meta: Dict[str, Any] = {
         "meta": {
             "title": title,
             "coverUrl": cover_url,
@@ -190,7 +190,7 @@ def process_odm(
                         )
 
         elif args.format == "json":
-            result: dict[str, Any] = {
+            result: Dict[str, Any] = {
                 "title": title,
                 "creators": [
                     f"{c.text} ({c.attrib['role']})"
@@ -370,7 +370,7 @@ def process_odm(
         lic_file_contents = lic_file.read()
 
     track_count = 0
-    file_tracks: list[dict] = []
+    file_tracks: list[Dict] = []
     keep_cover = args.always_keep_cover
     audio_lengths_ms = []
     audio_bitrate = 0
@@ -502,7 +502,7 @@ def process_odm(
                 and not audiofile.tag.table_of_contents
             ):
                 # set the chapter marks
-                generated_markers: list[dict[str, Union[str, int]]] = []
+                generated_markers: list[Dict[str, Union[str, int]]] = []
                 for j, file_marker in enumerate(part_markers):
                     generated_markers.append(
                         {
@@ -611,7 +611,7 @@ def process_odm(
         )
 
         if args.add_chapters and not audiofile.tag.table_of_contents:
-            merged_markers: list[dict[str, Union[str, int]]] = []
+            merged_markers: list[Dict[str, Union[str, int]]] = []
             for i, f in enumerate(file_tracks):
                 prev_tracks_len_ms = (
                     0 if i == 0 else reduce(lambda x, y: x + y, audio_lengths_ms[0:i])
@@ -643,7 +643,7 @@ def process_odm(
                 description="Table of Contents",
             )
 
-            for mm in merged_markers:  # type: dict[str, Union[str, int]]
+            for mm in merged_markers:  # type: Dict[str, Union[str, int]]
                 title_frameset = eyed3.id3.frames.FrameSet()
                 title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, mm["text"])
                 chap = audiofile.tag.chapters.set(
@@ -744,8 +744,8 @@ def process_odm(
 
 
 def process_audiobook_loan(
-    loan: dict,
-    openbook: dict,
+    loan: Dict,
+    openbook: Dict,
     parsed_toc: OrderedDict[str, PartMeta],
     session: requests.Session,
     args: argparse.Namespace,
@@ -807,7 +807,7 @@ def process_audiobook_loan(
         or openbook.get("description", {}).get("short")
         or ""
     )
-    debug_meta: dict[str, Any] = {
+    debug_meta: Dict[str, Any] = {
         "meta": {
             "title": title,
             "coverUrl": cover_url,
