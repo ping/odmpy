@@ -36,6 +36,9 @@ jobs:
     - name: Analysing the code with pylint
       run: |
         pylint setup.py odmpy
+    - name: Analysing the code with mypy
+      run: |
+        mypy --package odmpy
 
   tests:
     runs-on: ubuntu-latest

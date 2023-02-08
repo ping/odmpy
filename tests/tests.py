@@ -10,8 +10,8 @@ import os
 import unittest
 from collections import OrderedDict
 
-import eyed3
-from lxml import etree
+import eyed3  # type: ignore[import]
+from lxml import etree  # type: ignore[import]
 
 import odmpy.constants
 from odmpy.libby import parse_part_path, parse_toc, merge_toc, ChapterMarker

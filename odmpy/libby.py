@@ -81,7 +81,7 @@ def parse_toc(base_url: str, toc: list[dict], spine: list[dict]) -> dict:
             entries.append(parse_part_path(item["title"], content["path"]))
 
     # use an OrderedDict to ensure that we can consistently test this
-    parsed_toc = OrderedDict()
+    parsed_toc: OrderedDict = OrderedDict()
 
     for entry in entries:
         if entry.part_name not in parsed_toc:
@@ -270,7 +270,7 @@ class LibbyClient(object):
 
         :return:
         """
-        return self.identity.get("identity")
+        return bool(self.identity.get("identity"))
 
     def has_sync_code(self) -> bool:
         """
@@ -278,7 +278,7 @@ class LibbyClient(object):
 
         :return:
         """
-        return self.identity.get("__odmpy_sync_code")
+        return bool(self.identity.get("__odmpy_sync_code"))
 
     def get_chip(self, auto_save: bool = True, authenticated: bool = False) -> dict:
         """
@@ -331,8 +331,8 @@ class LibbyClient(object):
         :return:
         """
         synced_state = self.sync()
-        return synced_state.get("result", "") == "synchronized" and synced_state.get(
-            "cards"
+        return synced_state.get("result", "") == "synchronized" and bool(
+            synced_state.get("cards")
         )
 
     @staticmethod
@@ -399,7 +399,7 @@ class LibbyClient(object):
         """
         return self.make_request(f"open/{loan_type}/card/{card_id}/title/{title_id}")
 
-    def process_audiobook(self, loan: dict):
+    def process_audiobook(self, loan: dict) -> tuple[dict, dict]:
         """
         Returns the data needed to download an audiobook
 

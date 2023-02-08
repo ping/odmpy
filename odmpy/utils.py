@@ -19,11 +19,26 @@
 #
 import re
 import unicodedata
-from mutagen.mp3 import MP3
+import xml.etree.ElementTree as ET
+from typing import Optional
+
+from mutagen.mp3 import MP3  # type: ignore[import]
 
 TIMESTAMP_RE = re.compile(
     r"^((?P<hr>[0-9]+):)?(?P<min>[0-9]+):(?P<sec>[0-9]+)(\.(?P<ms>[0-9]+))?$"
 )
+
+
+def get_element_text(ele: Optional[ET.Element]) -> str:
+    """
+    Returns the element text
+
+    :param ele:
+    :return:
+    """
+    if (ele is not None) and ele.text:
+        return ele.text or ""
+    return ""
 
 
 def parse_duration_to_milliseconds(text: str) -> int:
@@ -72,7 +87,7 @@ def unescape_html(text):
 
         return html.unescape(text)
     except ImportError:
-        import HTMLParser
+        import HTMLParser  # type: ignore[import]
 
         parser = HTMLParser.HTMLParser()
         return parser.unescape(text)

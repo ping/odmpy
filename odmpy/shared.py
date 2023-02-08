@@ -23,9 +23,9 @@ import xml.etree.ElementTree as ET
 from typing import Optional
 from urllib.parse import urlparse
 
-import eyed3
+import eyed3  # type: ignore[import]
 import requests
-from eyed3.utils import art
+from eyed3.utils import art  # type: ignore[import]
 from termcolor import colored
 
 from .constants import PERFORMER_FID, LANGUAGE_FID
@@ -33,7 +33,7 @@ from .libby import USER_AGENT
 from .utils import slugify
 
 
-def generate_names(title: str, authors: list[str], args) -> (str, str, str):
+def generate_names(title: str, authors: list[str], args) -> tuple[str, str, str]:
     """
     Creates the download folder if necessary and generates the merged book names
 
@@ -96,7 +96,7 @@ def write_tags(
     description: str,
     cover_bytes: Optional[bytes],
     genres: Optional[list[str]],
-    languages: list[str],
+    languages: Optional[list[str]],
     published_date: Optional[str],
     part_number: int,
     total_parts: int,
@@ -184,11 +184,11 @@ def write_tags(
 
 def generate_cover(
     book_folder: str,
-    cover_url: str,
+    cover_url: Optional[str],
     session: requests.Session,
     timeout: int,
     logger: logging.Logger,
-) -> (str, Optional[bytes]):
+) -> tuple[str, Optional[bytes]]:
     """
     Get the book cover
 
@@ -204,10 +204,10 @@ def generate_cover(
         try:
             square_cover_url_params = {
                 "type": "auto",
-                "width": 510,
-                "height": 510,
+                "width": str(510),
+                "height": str(510),
                 "force": "true",
-                "quality": 80,
+                "quality": str(80),
                 "url": urlparse(cover_url).path,
             }
             # credit: https://github.com/lullius/pylibby/pull/18
@@ -442,7 +442,7 @@ def set_ele_attributes(ele: ET.Element, attributes: dict) -> None:
 
 def create_opf(
     media_info: dict,
-    cover_filename: str,
+    cover_filename: Optional[str],
     file_tracks: list[dict],
     opf_file_path: str,
     logger: logging.Logger,

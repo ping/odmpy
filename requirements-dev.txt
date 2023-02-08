@@ -1,5 +1,8 @@
 flake8
 pylint
 black
+mypy
+types-requests
+types-tqdm
 # for tests: to validate opf
 lxml

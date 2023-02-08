@@ -16,7 +16,7 @@
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from setuptools import setup
+from setuptools import setup  # type: ignore[import]
 
 __author__ = "ping"
 __url__ = "https://github.com/ping/odmpy/"

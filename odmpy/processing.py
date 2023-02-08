@@ -29,6 +29,7 @@ import sys
 import uuid
 import xml.etree.ElementTree
 from collections import OrderedDict
+from typing import Optional, Any, Union
 
 try:
     from functools import reduce
@@ -40,7 +41,7 @@ from requests.adapters import HTTPAdapter, Retry
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 from tqdm import tqdm
-import eyed3
+import eyed3  # type: ignore[import]
 
 from .utils import (
     unescape_html,
@@ -48,6 +49,7 @@ from .utils import (
     mp3_duration_ms,
     parse_duration_to_seconds,
     parse_duration_to_milliseconds,
+    get_element_text,
 )
 from .shared import (
     generate_names,
@@ -109,50 +111,49 @@ def process_odm(
             metadata = xml.etree.ElementTree.fromstring(patched_text)
         break
 
-    debug_meta = {}
+    if not metadata:
+        raise ValueError("Unable to find Metadata in ODM")
 
-    title = metadata.find("Title").text
-    sub_title = metadata.find("SubTitle").text if metadata.find("SubTitle") else None
-    cover_url = (
-        metadata.find("CoverUrl").text if metadata.find("CoverUrl") is not None else ""
-    )
+    title = get_element_text(metadata.find("Title"))
+    sub_title = get_element_text(metadata.find("SubTitle"))
+    publisher = get_element_text(metadata.find("Publisher"))
+    description = get_element_text(metadata.find("Description"))
+    cover_url = get_element_text(metadata.find("CoverUrl"))
     authors = [
         unescape_html(c.text)
-        for c in metadata.find("Creators")
+        for c in metadata.find("Creators") or []
         if "Author" in c.attrib.get("role", "")
     ]
     if not authors:
         authors = [
             unescape_html(c.text)
-            for c in metadata.find("Creators")
+            for c in metadata.find("Creators") or []
             if "Editor" in c.attrib.get("role", "")
         ]
     if not authors:
-        authors = [unescape_html(c.text) for c in metadata.find("Creators")]
+        authors = [
+            unescape_html(c.text) for c in metadata.find("Creators") or [] if c.text
+        ]
     narrators = [
         unescape_html(c.text)
-        for c in metadata.find("Creators")
+        for c in metadata.find("Creators") or []
         if "Narrator" in c.attrib.get("role", "")
     ]
     languages = [
         lang.attrib.get("code", "")
-        for lang in metadata.find("Languages")
+        for lang in metadata.find("Languages") or []
         if lang.attrib.get("code", "")
     ]
-    subjects = [subj.text for subj in metadata.find("Subjects")]
-    publisher = metadata.find("Publisher").text
-    description = (
-        metadata.find("Description").text
-        if metadata.find("Description") is not None
-        else ""
-    )
+    subjects = [subj.text for subj in metadata.find("Subjects") or [] if subj.text]
 
-    debug_meta["meta"] = {
-        "title": title,
-        "coverUrl": cover_url,
-        "authors": authors,
-        "publisher": publisher,
-        "description": description,
+    debug_meta: dict[str, Any] = {
+        "meta": {
+            "title": title,
+            "coverUrl": cover_url,
+            "authors": authors,
+            "publisher": publisher,
+            "description": description,
+        }
     }
 
     # View Book Info
@@ -166,41 +167,41 @@ def process_odm(
                         ", ".join(
                             [
                                 f"{c.text} ({c.attrib['role']})"
-                                for c in metadata.find("Creators")
+                                for c in metadata.find("Creators") or []
                             ]
                         ),
                         "blue",
                     ),
                 )
             )
-            logger.info(f"{'Publisher:':10} {metadata.find('Publisher').text}")
+            logger.info(f"{'Publisher:':10} {publisher}")
+            logger.info(f"{'Subjects:':10} {', '.join(subjects)}")
             logger.info(
-                f"{'Subjects:':10} {', '.join([c.text for c in metadata.find('Subjects')])}"
+                f"{'Languages:':10} {', '.join([c.text for c in metadata.find('Languages') or [] if c.text])}"
             )
-            logger.info(
-                f"{'Languages:':10} {', '.join([c.text for c in metadata.find('Languages')])}"
-            )
-            logger.info(f"{'Description:':10}\n{metadata.find('Description').text}")
-
+            logger.info(f"{'Description:':10}\n{description}")
             for formats in root.findall("Formats"):
                 for f in formats:
                     logger.info(f"\n{'Format:':10} {f.attrib['name']}")
-                    parts = f.find("Parts")
+                    parts = f.find("Parts") or []
                     for p in parts:
                         logger.info(
                             f"* {p.attrib['name']} - {p.attrib['duration']} ({math.ceil(1.0 * int(p.attrib['filesize']) / 1024):,.0f}kB)"
                         )
 
         elif args.format == "json":
-            result = {
+            result: dict[str, Any] = {
                 "title": title,
                 "creators": [
-                    f"{c.text} ({c.attrib['role']})" for c in metadata.find("Creators")
+                    f"{c.text} ({c.attrib['role']})"
+                    for c in metadata.find("Creators") or []
                 ],
-                "publisher": metadata.find("Publisher").text,
-                "subjects": [c.text for c in metadata.find("Subjects")],
-                "languages": [c.text for c in metadata.find("Languages")],
-                "description": metadata.find("Description").text,
+                "publisher": publisher,
+                "subjects": [c.text for c in metadata.find("Subjects") or [] if c.text],
+                "languages": [
+                    c.text for c in metadata.find("Languages") or [] if c.text
+                ],
+                "description": description,
                 "formats": [],
             }
 
@@ -208,7 +209,7 @@ def process_odm(
                 for f in formats:
                     parts = []
                     total_secs = 0
-                    for p in f.find("Parts"):
+                    for p in f.find("Parts") or []:
                         part_duration = p.attrib["duration"]
                         # part duration can look like '%M:%S.%f' or '%H:%M:%S.%f'
                         total_secs = parse_duration_to_seconds(part_duration)
@@ -245,13 +246,13 @@ def process_odm(
     download_parts = []
     for formats in root.findall("Formats"):
         for f in formats:
-            protocols = f.find("Protocols")
+            protocols = f.find("Protocols") or []
             for p in protocols:
                 if p.attrib.get("method", "") != "download":
                     continue
                 download_baseurl = p.attrib["baseurl"]
                 break
-            parts = f.find("Parts")
+            parts = f.find("Parts") or []
             for p in parts:
                 download_parts.append(p.attrib)
     debug_meta["download_parts"] = download_parts
@@ -288,7 +289,14 @@ def process_odm(
         book_folder, cover_url, session, args.timeout, logger
     )
 
-    acquisition_url = root.find("License").find("AcquisitionUrl").text
+    license_ele = root.find("License")
+    if license_ele is None:
+        raise ValueError("Unable to find License in ODM")
+
+    acquisition_url = get_element_text(license_ele.find("AcquisitionUrl"))
+    if not acquisition_url:
+        raise ValueError("Unable to extract acquisition_url from ODM")
+
     media_id = root.attrib["id"]
 
     client_id = str(uuid.uuid1()).upper()
@@ -296,8 +304,8 @@ def process_odm(
     m = hashlib.sha1(raw_hash.encode("utf-16-le"))
     license_hash = base64.b64encode(m.digest())
 
-    # Extract license
-    # License file is downloadable only once per odm
+    # Extract license:
+    # License file is downloadable only once per odm,
     # so we keep it in case downloads fail
     _, odm_filename = os.path.split(odm_file)
     license_file = os.path.join(
@@ -350,14 +358,19 @@ def process_odm(
 
     ns = "{http://license.overdrive.com/2008/03/License.xsd}"
 
-    license_client = license_root.find(f"{ns}SignedInfo").find(f"{ns}ClientID")
-    license_client_id = license_client.text
+    signed_info_ele = license_root.find(f"{ns}SignedInfo")
+    if signed_info_ele is None:
+        raise ValueError("Unable to find SignedInfo in License")
+
+    license_client_id = get_element_text(signed_info_ele.find(f"{ns}ClientID"))
+    if not license_client_id:
+        raise ValueError("Unable to find ClientID in License.SignedInfo")
 
     with open(license_file, "r", encoding="utf-8") as lic_file:
         lic_file_contents = lic_file.read()
 
     track_count = 0
-    file_tracks = []
+    file_tracks: list[dict] = []
     keep_cover = args.always_keep_cover
     audio_lengths_ms = []
     audio_bitrate = 0
@@ -469,9 +482,12 @@ def process_odm(
                             frame.text.encode("ascii", "ignore").decode("ascii")
                         )
 
-                    for m in tree.iter("Marker"):
-                        marker_name = m.find("Name").text.strip()
-                        marker_timestamp = m.find("Time").text
+                    for marker in tree.iter(
+                        "Marker"
+                    ):  # type: xml.etree.ElementTree.Element
+                        marker_name = get_element_text(marker.find("Name")).strip()
+                        marker_timestamp = get_element_text(marker.find("Time"))
+
                         # 2 timestamp formats found ("%M:%S.%f", "%H:%M:%S.%f")
                         ts_mark = parse_duration_to_milliseconds(marker_timestamp)
                         track_count += 1
@@ -486,7 +502,7 @@ def process_odm(
                 and not audiofile.tag.table_of_contents
             ):
                 # set the chapter marks
-                generated_markers = []
+                generated_markers: list[dict[str, Union[str, int]]] = []
                 for j, file_marker in enumerate(part_markers):
                     generated_markers.append(
                         {
@@ -509,26 +525,28 @@ def process_odm(
                     description="Table of Contents",
                 )
 
-                for i, m in enumerate(generated_markers):
+                for gm in generated_markers:
                     title_frameset = eyed3.id3.frames.FrameSet()
                     title_frameset.setTextFrame(
-                        eyed3.id3.frames.TITLE_FID, str(m["text"])
+                        eyed3.id3.frames.TITLE_FID, str(gm["text"])
                     )
 
                     chap = audiofile.tag.chapters.set(
-                        m["id"].encode("ascii"),
-                        times=(m["start_time"], m["end_time"]),
+                        str(gm["id"]).encode("ascii"),
+                        times=(gm["start_time"], gm["end_time"]),
                         sub_frames=title_frameset,
                     )
                     toc.child_ids.append(chap.element_id)
-                    start_time = datetime.timedelta(milliseconds=m["start_time"])
-                    end_time = datetime.timedelta(milliseconds=m["end_time"])
+                    start_time = datetime.timedelta(
+                        milliseconds=float(gm["start_time"])
+                    )
+                    end_time = datetime.timedelta(milliseconds=float(gm["end_time"]))
                     logger.debug(
                         'Added chap tag => %s: %s-%s "%s" to "%s"',
-                        colored(m["id"], "cyan"),
+                        colored(str(gm["id"]), "cyan"),
                         start_time,
                         end_time,
-                        colored(m["text"], "cyan"),
+                        colored(str(gm["text"]), "cyan"),
                         colored(part_filename, "blue"),
                     )
 
@@ -593,7 +611,7 @@ def process_odm(
         )
 
         if args.add_chapters and not audiofile.tag.table_of_contents:
-            merged_markers = []
+            merged_markers: list[dict[str, Union[str, int]]] = []
             for i, f in enumerate(file_tracks):
                 prev_tracks_len_ms = (
                     0 if i == 0 else reduce(lambda x, y: x + y, audio_lengths_ms[0:i])
@@ -625,23 +643,23 @@ def process_odm(
                 description="Table of Contents",
             )
 
-            for i, m in enumerate(merged_markers):
+            for mm in merged_markers:  # type: dict[str, Union[str, int]]
                 title_frameset = eyed3.id3.frames.FrameSet()
-                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, str(m["text"]))
+                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, mm["text"])
                 chap = audiofile.tag.chapters.set(
-                    m["id"].encode("ascii"),
-                    times=(m["start_time"], m["end_time"]),
+                    str(mm["id"]).encode("ascii"),
+                    times=(mm["start_time"], mm["end_time"]),
                     sub_frames=title_frameset,
                 )
                 toc.child_ids.append(chap.element_id)
-                start_time = datetime.timedelta(milliseconds=m["start_time"])
-                end_time = datetime.timedelta(milliseconds=m["end_time"])
+                start_time = datetime.timedelta(milliseconds=float(mm["start_time"]))
+                end_time = datetime.timedelta(milliseconds=float(mm["end_time"]))
                 logger.debug(
                     'Added chap tag => %s: %s-%s "%s" to "%s"',
-                    colored(m["id"], "cyan"),
+                    colored(str(mm["id"]), "cyan"),
                     start_time,
                     end_time,
-                    colored(m["text"], "cyan"),
+                    colored(str(mm["text"]), "cyan"),
                     colored(book_filename, "blue"),
                 )
 
@@ -747,7 +765,6 @@ def process_audiobook_loan(
     """
 
     ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "error"
-    debug_meta = {}
 
     title = loan["title"]
     overdrive_media_id = loan["id"]
@@ -755,7 +772,7 @@ def process_audiobook_loan(
     cover_highest_res = next(
         iter(
             sorted(
-                list(loan.get("covers").values()),
+                list(loan.get("covers", []).values()),
                 key=lambda c: c.get("width", 0),
                 reverse=True,
             )
@@ -779,7 +796,9 @@ def process_audiobook_loan(
         for c in openbook.get("creator", [])
         if c.get("role", "") == "narrator"
     ]
-    languages = [openbook.get("language")]
+    languages: Optional[list[str]] = (
+        [str(openbook.get("language"))] if openbook.get("language") else []
+    )
     subjects = [subj["name"] for subj in loan.get("subjects", []) if subj.get("name")]
     publish_date = loan.get("publishDate", None)
     publisher = loan.get("publisherAccount", {}).get("name", "") or ""
@@ -788,12 +807,14 @@ def process_audiobook_loan(
         or openbook.get("description", {}).get("short")
         or ""
     )
-    debug_meta["meta"] = {
-        "title": title,
-        "coverUrl": cover_url,
-        "authors": authors,
-        "publisher": publisher,
-        "description": description,
+    debug_meta: dict[str, Any] = {
+        "meta": {
+            "title": title,
+            "coverUrl": cover_url,
+            "authors": authors,
+            "publisher": publisher,
+            "description": description,
+        }
     }
 
     download_parts = list(parsed_toc.values())
