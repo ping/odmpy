@@ -7,7 +7,6 @@
 import json
 import logging
 import os
-import sys
 import unittest
 from collections import OrderedDict
 
@@ -16,6 +15,7 @@ from lxml import etree  # type: ignore[import]
 
 import odmpy.constants
 from odmpy.libby import parse_part_path, parse_toc, merge_toc, ChapterMarker
+from odmpy.overdrive import OverDriveClient
 
 eyed3_log = logging.getLogger("eyed3.mp3.headers")
 eyed3_log.setLevel(logging.ERROR)
@@ -550,7 +550,6 @@ class OdmpyTests(unittest.TestCase):
         """
         # schema file has been edited to remove the legacy toc attribute for spine
         schema_file = os.path.join(self.test_data_dir, "opf.schema.xml")
-        expected_file = os.path.join(self.test_data_dir, "test.opf.xml")
         test_file = os.path.join(self.book_folder, "ceremonies-for-christmas.opf")
         self.assertTrue(os.path.isfile(test_file))
 
@@ -561,16 +560,128 @@ class OdmpyTests(unittest.TestCase):
             relaxng = etree.RelaxNG(etree.parse(schema))
             self.assertTrue(relaxng.validate(actual_opf))
 
-        with open(expected_file) as expected, open(test_file) as actual:
-            expected_text = expected.read()
-            actual_text = actual.read()
+            root = actual_opf.getroot()
+            metadata = root.find("metadata", root.nsmap)
+            self.assertIsNotNone(metadata)
+
+            metadata_nsmap = {k: v for k, v in metadata.nsmap.items() if k}
+
+            overdrive_reserve_identifier = metadata.xpath(
+                "//dc:identifier[@opf:scheme='OverDriveReserveId']",
+                namespaces=metadata_nsmap,
+            )
+            self.assertEqual(len(overdrive_reserve_identifier), 1)
+            overdrive_reserve_id = overdrive_reserve_identifier[0].text
+            self.assertTrue(overdrive_reserve_id)
+
+            od = OverDriveClient()
             try:
-                self.assertEqual(expected_text, actual_text)
-            except AssertionError:
-                if sys.version_info[0:2] > (3, 7):
-                    raise
-                # ignore error when py 3.7 because properties
-                # are written out in a difference sequence
+                media_info = od.media(overdrive_reserve_id)
+
+                # title
+                self.assertEqual(
+                    metadata.find("dc:title", metadata_nsmap).text, media_info["title"]
+                )
+                # language
+                self.assertEqual(
+                    metadata.find("dc:language", metadata_nsmap).text,
+                    media_info["languages"][0]["id"],
+                )
+                # publisher
+                self.assertEqual(
+                    metadata.find("dc:publisher", metadata_nsmap).text,
+                    media_info["publisher"]["name"],
+                )
+                # description
+                self.assertEqual(
+                    metadata.find("dc:description", metadata_nsmap).text,
+                    media_info["description"],
+                )
+
+                # pub date
+                pub_date = metadata.find("dc:date", metadata_nsmap)
+                self.assertIsNotNone(pub_date)
+                self.assertEqual(
+                    pub_date.get(f"{{{metadata_nsmap['opf']}}}event"), "publication"
+                )
+                self.assertEqual(pub_date.text, media_info["publishDate"])
+
+                # book ID, isbn
+                self.assertEqual(
+                    metadata.xpath(
+                        "//dc:identifier[@id='BookId']", namespaces=metadata_nsmap
+                    )[0].text,
+                    [f for f in media_info["formats"] if f["id"] == "audiobook-mp3"][0][
+                        "isbn"
+                    ],
+                )
+
+                # authors
+                authors = metadata.xpath(
+                    "//dc:creator[@opf:role='aut']", namespaces=metadata_nsmap
+                )
+                authors_od = [
+                    c for c in media_info["creators"] if c["role"] == "Author"
+                ]
+                self.assertTrue(len(authors), len(authors_od))
+                for author_opf, author_od in zip(authors, authors_od):
+                    self.assertEqual(author_opf.text, author_od["name"])
+                    self.assertEqual(
+                        author_opf.get(f"{{{metadata_nsmap['opf']}}}file-as"),
+                        author_od["sortName"],
+                    )
+
+                # narrators
+                narrators = metadata.xpath(
+                    "//dc:creator[@opf:role='nrt']", namespaces=metadata_nsmap
+                )
+                narrators_od = [
+                    c for c in media_info["creators"] if c["role"] == "Narrator"
+                ]
+                self.assertTrue(len(narrators), len(narrators_od))
+                for narrator_opf, narrator_od in zip(narrators, narrators_od):
+                    self.assertEqual(narrator_opf.text, narrator_od["name"])
+                    self.assertEqual(
+                        narrator_opf.get(f"{{{metadata_nsmap['opf']}}}file-as"),
+                        narrator_od["sortName"],
+                    )
+
+                # manifest
+                manifest = root.find("manifest", root.nsmap)
+                self.assertIsNotNone(manifest)
+                cover_ele = next(
+                    iter(
+                        [
+                            i
+                            for i in manifest.findall("item", namespaces=manifest.nsmap)
+                            if i.get("id") == "cover"
+                        ]
+                    ),
+                    None,
+                )
+                self.assertIsNotNone(cover_ele)
+                self.assertEqual(cover_ele.get("href"), "cover.jpg")
+                self.assertEqual(cover_ele.get("media-type"), "image/jpeg")
+                manifest_audio_files = [
+                    i
+                    for i in manifest.findall("item", namespaces=manifest.nsmap)
+                    if i.get("media-type") == "audio/mpeg"
+                ]
+                self.assertEqual(
+                    len(manifest_audio_files), self.book_parts[self.test_file]
+                )
+
+                # spine
+                spine = root.find("spine", root.nsmap)
+                self.assertIsNotNone(spine)
+                sprine_audio_files = [
+                    i for i in spine.findall("itemref", namespaces=spine.nsmap)
+                ]
+                self.assertEqual(len(sprine_audio_files), len(manifest_audio_files))
+
+            finally:
+                # close this to prevent "ResourceWarning: unclosed socket" error
+                od.session.close()
 
 
 if __name__ == "__main__":
