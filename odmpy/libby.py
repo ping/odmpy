@@ -20,13 +20,14 @@ import json
 import logging
 import os
 import re
+import sys
 from collections import OrderedDict
 from typing import Optional, NamedTuple, Dict, List, Tuple
 from typing import OrderedDict as OrderedDictType
 
-try:
+if sys.version_info >= (3, 8):
     from typing import TypedDict
-except ImportError:
+else:
     from typing_extensions import TypedDict
 from urllib.parse import urljoin
 

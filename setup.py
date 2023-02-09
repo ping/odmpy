@@ -35,7 +35,7 @@ install_requires = [
     "termcolor",
     "tqdm",
 ]
-if sys.version_info[0:2] < (3, 8):
+if sys.version_info >= (3, 8):
     install_requires.append("typing_extensions")
 
 setup(
