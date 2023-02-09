@@ -365,9 +365,10 @@ Authors:
   <element name="spine">
     <ref name="OPF20.optional-id-attribute"/>
 
-      <attribute name="toc">
-        <data type="IDREF"/>
-      </attribute>
+<!--      Removed because it is legacy and now optional -->
+<!--      <attribute name="toc">-->
+<!--        <data type="IDREF"/>-->
+<!--      </attribute>-->
 
         <ref name="OPF20.spine-content"/>
   </element>

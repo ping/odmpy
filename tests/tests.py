@@ -548,6 +548,7 @@ class OdmpyTests(unittest.TestCase):
         python -m odmpy dl test_data/test.odm -d test_data/downloads/ -k --opf
         ```
         """
+        # schema file has been edited to remove the legacy toc attribute for spine
         schema_file = os.path.join(self.test_data_dir, "opf.schema.xml")
         expected_file = os.path.join(self.test_data_dir, "test.opf.xml")
         test_file = os.path.join(self.book_folder, "ceremonies-for-christmas.opf")
@@ -558,7 +559,7 @@ class OdmpyTests(unittest.TestCase):
         ) as schema:
             actual_opf = etree.parse(actual)
             relaxng = etree.RelaxNG(etree.parse(schema))
-            relaxng.validate(actual_opf)
+            self.assertTrue(relaxng.validate(actual_opf))
 
         with open(expected_file) as expected, open(test_file) as actual:
             expected_text = expected.read()
