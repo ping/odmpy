@@ -223,6 +223,14 @@ def run():
         fromfile_prefix_chars="@",
     )
     parser.add_argument(
+        "--version",
+        action="version",
+        version=(
+            f"%(prog)s {__version__} "
+            f"[Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}-{sys.platform}]"
+        ),
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         dest="verbose",
