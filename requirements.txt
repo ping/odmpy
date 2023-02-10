@@ -1,6 +1,6 @@
 requests
 eyed3
-mutagen
+mutagen >= 1.46.0
 termcolor
 tqdm
 typing_extensions; python_version < '3.8'

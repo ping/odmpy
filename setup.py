@@ -31,7 +31,7 @@ __long_description__ = """
 install_requires = [
     "requests",
     "eyed3",
-    "mutagen",
+    "mutagen>=1.46.0",
     "termcolor",
     "tqdm",
 ]
