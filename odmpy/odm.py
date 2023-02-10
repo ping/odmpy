@@ -480,7 +480,7 @@ def run():
                 if not loan_choices:
                     break
 
-                loan_choices = loan_choices.split(" ")
+                loan_choices = list(set(loan_choices.split(" ")))  # dedup
                 loan_choices_isvalid = True
                 for loan_index_selected in loan_choices:
                     if (
