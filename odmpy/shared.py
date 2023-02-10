@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
+import argparse
 import logging
 import os
 import subprocess
@@ -33,7 +34,9 @@ from .libby import USER_AGENT
 from .utils import slugify
 
 
-def generate_names(title: str, authors: List[str], args) -> Tuple[str, str, str]:
+def generate_names(
+    title: str, authors: List[str], args: argparse.Namespace
+) -> Tuple[str, str, str]:
     """
     Creates the download folder if necessary and generates the merged book names
 
@@ -87,7 +90,7 @@ def generate_names(title: str, authors: List[str], args) -> Tuple[str, str, str]
 
 
 def write_tags(
-    audiofile,
+    audiofile: eyed3.core.AudioFile,
     title: str,
     sub_title: Optional[str],
     authors: List[str],

@@ -68,7 +68,7 @@ def parse_duration_to_seconds(text: str) -> int:
     return round(parse_duration_to_milliseconds(text) / 1000.0)
 
 
-def mp3_duration_ms(filename):
+def mp3_duration_ms(filename: str) -> int:
     # Ref: https://github.com/ping/odmpy/pull/3
     # returns the length of the mp3 in ms
 
@@ -80,7 +80,7 @@ def mp3_duration_ms(filename):
     return int(round(audio.info.length * 1000))
 
 
-def unescape_html(text):
+def unescape_html(text: str) -> str:
     """py2/py3 compatible html unescaping"""
     try:
         import html
@@ -89,12 +89,12 @@ def unescape_html(text):
     except ImportError:
         import HTMLParser  # type: ignore[import]
 
-        parser = HTMLParser.HTMLParser()
-        return parser.unescape(text)
+        unescaped: str = HTMLParser.HTMLParser().unescape(text)
+        return unescaped
 
 
 # From django
-def slugify(value, allow_unicode=False):
+def slugify(value: str, allow_unicode: bool = False) -> str:
     """
     Convert to ASCII if 'allow_unicode' is False. Convert spaces to hyphens.
     Remove characters that aren't alphanumerics, underscores, or hyphens.

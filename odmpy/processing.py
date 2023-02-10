@@ -121,22 +121,24 @@ def process_odm(
     description = get_element_text(metadata.find("Description"))
     cover_url = get_element_text(metadata.find("CoverUrl"))
     authors = [
-        unescape_html(c.text)
+        unescape_html(get_element_text(c))
         for c in metadata.find("Creators") or []
         if "Author" in c.attrib.get("role", "")
     ]
     if not authors:
         authors = [
-            unescape_html(c.text)
+            unescape_html(get_element_text(c))
             for c in metadata.find("Creators") or []
             if "Editor" in c.attrib.get("role", "")
         ]
     if not authors:
         authors = [
-            unescape_html(c.text) for c in metadata.find("Creators") or [] if c.text
+            unescape_html(get_element_text(c))
+            for c in metadata.find("Creators") or []
+            if c.text
         ]
     narrators = [
-        unescape_html(c.text)
+        unescape_html(get_element_text(c))
         for c in metadata.find("Creators") or []
         if "Narrator" in c.attrib.get("role", "")
     ]
@@ -442,7 +444,7 @@ def process_odm(
 
         try:
             # Fill id3 info for mp3 part
-            audiofile = eyed3.load(part_filename)
+            audiofile: eyed3.core.AudioFile = eyed3.load(part_filename)
             _, audio_bitrate = audiofile.info.bit_rate
 
             write_tags(
@@ -770,16 +772,12 @@ def process_audiobook_loan(
     title = loan["title"]
     overdrive_media_id = loan["id"]
     sub_title = loan.get("subtitle", None)
-    cover_highest_res = next(
-        iter(
-            sorted(
-                list(loan.get("covers", []).values()),
-                key=lambda c: c.get("width", 0),
-                reverse=True,
-            )
-        ),
-        None,
+    covers: List[Dict] = sorted(
+        list(loan.get("covers", []).values()),
+        key=lambda c: c.get("width", 0),
+        reverse=True,
     )
+    cover_highest_res: Optional[Dict] = next(iter(covers), None)
     cover_url = cover_highest_res["href"] if cover_highest_res else None
     authors = [
         c["name"] for c in openbook.get("creator", []) if c.get("role", "") == "author"

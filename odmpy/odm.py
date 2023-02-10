@@ -66,7 +66,7 @@ def positive_int(value: str) -> int:
     return int_value
 
 
-def add_common_download_arguments(parser_dl: argparse.ArgumentParser):
+def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
     """
     Add common arguments needed for downloading
 
@@ -400,14 +400,16 @@ def run() -> None:
                         "Make sure that you have entered the right code and within the time limit."
                     ) from he
             synced_state = libby_client.sync()
-            audiobook_loans: List[Dict] = [
-                book
-                for book in synced_state.get("loans", [])
-                if libby_client.is_audiobook_loan(book)
-            ]
 
             # sort by checkout date so that recent most is at the bottom
-            audiobook_loans = sorted(audiobook_loans, key=lambda ln: ln["checkoutDate"])
+            audiobook_loans = sorted(
+                [
+                    book
+                    for book in synced_state.get("loans", [])
+                    if libby_client.is_audiobook_loan(book)
+                ],
+                key=lambda ln: ln["checkoutDate"],  # type: ignore[no-any-return]
+            )
 
             if args.export_loans_path:
                 logger.info(

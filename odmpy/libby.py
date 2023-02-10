@@ -195,9 +195,9 @@ class LibbyClient(object):
         settings_folder: str,
         max_retries: int = 0,
         timeout: int = 10,
-        logger=None,
+        logger=Optional[logging.Logger],
         **kwargs,
-    ):
+    ) -> None:
         if not logger:
             logger = logging.getLogger(__name__)
         self.logger = logger
@@ -320,7 +320,7 @@ class LibbyClient(object):
         :param authenticated:
         :return:
         """
-        res = self.make_request(
+        res: Dict = self.make_request(
             "/chip",
             params={"client": "dewey"},
             method="POST",
@@ -342,7 +342,7 @@ class LibbyClient(object):
         if not self.is_valid_sync_code(code):
             raise ValueError(f"Invalid code: {code}")
 
-        res = self.make_request("chip/clone/code", data={"code": code})
+        res: Dict = self.make_request("chip/clone/code", data={"code": code})
         if auto_save:
             # persist to settings
             self.save_settings({"__odmpy_sync_code": code})
@@ -354,7 +354,8 @@ class LibbyClient(object):
 
         :return:
         """
-        return self.make_request("chip/sync")
+        res: Dict = self.make_request("chip/sync")
+        return res
 
     def is_logged_in(self) -> bool:
         """
@@ -398,10 +399,11 @@ class LibbyClient(object):
         :param format_id:
         :return:
         """
-        return self.make_request(
+        res: Dict = self.make_request(
             f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
             return_res=True,
         )
+        return res
 
     def fulfill_odm(self, loan_id: str, card_id: str, format_id: str) -> bytes:
         """
@@ -414,11 +416,12 @@ class LibbyClient(object):
         """
         headers = self.default_headers()
         headers["Accept"] = "*/*"
-        return self.make_request(
+        res: requests.Response = self.make_request(
             f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
             headers=headers,
             return_res=True,
-        ).content
+        )
+        return res.content
 
     def open_loan(self, loan_type: str, card_id: str, title_id: str) -> Dict:
         """
@@ -429,7 +432,10 @@ class LibbyClient(object):
         :param title_id:
         :return:
         """
-        return self.make_request(f"open/{loan_type}/card/{card_id}/title/{title_id}")
+        res: Dict = self.make_request(
+            f"open/{loan_type}/card/{card_id}/title/{title_id}"
+        )
+        return res
 
     def process_audiobook(
         self, loan: Dict

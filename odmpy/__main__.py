@@ -21,7 +21,7 @@ import sys
 from .odm import run
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     try:
         run()
     except KeyboardInterrupt:
