@@ -26,7 +26,7 @@ import os
 import sys
 import xml.etree.ElementTree
 from http.client import HTTPConnection
-from typing import Dict
+from typing import Dict, List
 
 import requests
 from requests.exceptions import HTTPError, ConnectionError
@@ -35,7 +35,7 @@ from termcolor import colored
 from .constants import UA_LONG
 from .libby import LibbyClient
 from .processing import process_odm, process_audiobook_loan
-from .utils import slugify
+from .utils import slugify, get_element_text
 
 logger = logging.getLogger(__file__)
 requests_logger = logging.getLogger("urllib3")
@@ -211,7 +211,7 @@ def extact_odm(
     return odm_file_path
 
 
-def run():
+def run() -> None:
     parser = argparse.ArgumentParser(
         prog="odmpy",
         description="Download/return an OverDrive loan audiobook",
@@ -317,6 +317,18 @@ def run():
         help="Non-interactive mode that downloads the latest N number of loans",
     )
     parser_libby.add_argument(
+        "--selected",
+        dest="selected_loans_indices",
+        type=positive_int,
+        nargs="+",
+        metavar="N",
+        help=(
+            "Non-interactive mode that downloads loans by the index entered. "
+            'For example, "--selected 1 3 5" will download the first, third and fifth loans in '
+            "order of the checked out date. If the 5th loan does not exist, it will be skipped."
+        ),
+    )
+    parser_libby.add_argument(
         "--exportloans",
         dest="export_loans_path",
         metavar="LOAN_JSON_FILEPATH",
@@ -388,7 +400,7 @@ def run():
                         "Make sure that you have entered the right code and within the time limit."
                     ) from he
             synced_state = libby_client.sync()
-            audiobook_loans = [
+            audiobook_loans: List[Dict] = [
                 book
                 for book in synced_state.get("loans", [])
                 if libby_client.is_audiobook_loan(book)
@@ -413,15 +425,41 @@ def run():
             if not audiobook_loans:
                 logger.info("No downloadable audiobook loans found.")
                 return
-
-            if args.download_latest_n:
-                logger.info(
-                    "Non-interactive mode. Downloading latest %s loan(s)...",
-                    colored(str(args.download_latest_n), "blue"),
-                )
-
+            if args.selected_loans_indices or args.download_latest_n:
+                selected_loans_indices = []
+                total_loans_count = len(audiobook_loans)
+                if args.selected_loans_indices:
+                    selected_loans_indices.extend(
+                        [
+                            j
+                            for j in args.selected_loans_indices
+                            if j <= total_loans_count
+                        ]
+                    )
+                    logger.info(
+                        "Non-interactive mode. Downloading selected loan(s) %s...",
+                        colored(
+                            ", ".join([str(i) for i in selected_loans_indices]),
+                            "blue",
+                            attrs=["bold"],
+                        ),
+                    )
+                if args.download_latest_n:
+                    logger.info(
+                        "Non-interactive mode. Downloading latest %s loan(s)...",
+                        colored(str(args.download_latest_n), "blue"),
+                    )
+                    selected_loans_indices.extend(
+                        list(range(1, len(audiobook_loans) + 1))[
+                            -args.download_latest_n :
+                        ]
+                    )
+                selected_loans_indices = sorted(list(set(selected_loans_indices)))
+                selected_loans: List[Dict] = [
+                    audiobook_loans[j - 1] for j in selected_loans_indices
+                ]
                 if args.libby_direct:
-                    for selected_loan in audiobook_loans[-args.download_latest_n :]:
+                    for selected_loan in selected_loans:
                         logger.info(
                             'Opening book "%s"...',
                             colored(selected_loan["title"], "blue"),
@@ -436,8 +474,7 @@ def run():
                             logger,
                         )
                     return
-
-                for selected_loan in audiobook_loans[-args.download_latest_n :]:
+                for selected_loan in selected_loans:
                     process_odm(
                         extact_odm(libby_client, selected_loan, args),
                         args,
@@ -471,16 +508,17 @@ def run():
                         )
                     ),
                 )
+            loan_choices: List[str] = []
             while True:
-                loan_choices = input(
+                user_loan_choice_input = input(
                     f'\nChoose from {colored(f"1-{len(audiobook_loans)}", attrs=["bold"])} '
                     "(separate choices with a space or leave blank to quit), \n"
                     "then press enter: "
                 ).strip()
-                if not loan_choices:
+                if not user_loan_choice_input:
                     break
 
-                loan_choices = list(set(loan_choices.split(" ")))  # dedup
+                loan_choices = list(set(user_loan_choice_input.split(" ")))
                 loan_choices_isvalid = True
                 for loan_index_selected in loan_choices:
                     if (
@@ -495,9 +533,8 @@ def run():
                     break
 
             if args.libby_direct:
-                for loan_index_selected in loan_choices:
-                    loan_index_selected = int(loan_index_selected)
-                    selected_loan = audiobook_loans[loan_index_selected - 1]
+                for c in loan_choices:
+                    selected_loan = audiobook_loans[int(c) - 1]
                     logger.info(
                         'Opening book "%s"...', colored(selected_loan["title"], "blue")
                     )
@@ -512,9 +549,8 @@ def run():
                     )
                 return
 
-            for loan_index_selected in loan_choices:
-                loan_index_selected = int(loan_index_selected)
-                selected_loan = audiobook_loans[loan_index_selected - 1]
+            for c in loan_choices:
+                selected_loan = audiobook_loans[int(c) - 1]
                 process_odm(
                     extact_odm(libby_client, selected_loan, args),
                     args,
@@ -543,7 +579,9 @@ def run():
     # Return Book
     if args.command_name == "ret":
         logger.info(f"Returning {args.odm_file} ...")
-        early_return_url = root.find("EarlyReturnURL").text
+        early_return_url = get_element_text(root.find("EarlyReturnURL"))
+        if not early_return_url:
+            raise RuntimeError("Unable to get EarlyReturnURL")
         try:
             early_return_res = requests.get(
                 early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
