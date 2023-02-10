@@ -22,7 +22,7 @@ import unicodedata
 import xml.etree.ElementTree as ET
 from typing import Optional
 
-from mutagen.mp3 import MP3  # type: ignore[import]
+from mutagen.mp3 import MP3, MPEGInfo  # type: ignore[import]
 
 TIMESTAMP_RE = re.compile(
     r"^((?P<hr>[0-9]+):)?(?P<min>[0-9]+):(?P<sec>[0-9]+)(\.(?P<ms>[0-9]+))?$"
@@ -76,8 +76,8 @@ def mp3_duration_ms(filename: str) -> int:
     # audiofile.info.time_secs
     # returns incorrect times due to it's header computation
     # mutagen does not have this issue
-    audio = MP3(filename)
-    return int(round(audio.info.length * 1000))
+    audio_info: MPEGInfo = MP3(filename).info
+    return int(round(audio_info.length * 1000))
 
 
 def unescape_html(text: str) -> str:
