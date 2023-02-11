@@ -60,9 +60,9 @@ def positive_int(value: str) -> int:
     try:
         int_value = int(value)
     except ValueError:
-        raise argparse.ArgumentTypeError(f'"{value}" is an invalid positive int value')
+        raise argparse.ArgumentTypeError(f'"{value}" is not a positive integer value')
     if int_value <= 0:
-        raise argparse.ArgumentTypeError(f'"{value}" is an invalid positive int value')
+        raise argparse.ArgumentTypeError(f'"{value}" is not a positive integer value')
     return int_value
 
 
