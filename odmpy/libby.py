@@ -42,14 +42,6 @@ class ChapterMarker(NamedTuple):
     end_second: float
 
 
-FILE_PART_RE = re.compile(
-    r"(?P<part_name>{[A-F0-9\-]{36}}[^#]+)(#(?P<second_stamp>\d+(\.\d+)?))?$"
-)
-USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-    "Version/14.0.2 Safari/605.1.15"
-)
-
 # TypedDict to hold the metadata about an audiobook part
 PartMeta = TypedDict(
     "PartMeta",
@@ -60,6 +52,14 @@ PartMeta = TypedDict(
         "file-length": int,
         "spine-position": int,
     },
+)
+
+FILE_PART_RE = re.compile(
+    r"(?P<part_name>{[A-F0-9\-]{36}}[^#]+)(#(?P<second_stamp>\d+(\.\d+)?))?$"
+)
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+    "Version/14.0.2 Safari/605.1.15"
 )
 
 
