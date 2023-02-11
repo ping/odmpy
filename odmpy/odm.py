@@ -349,14 +349,14 @@ def run() -> None:
         help="Non-interactive mode that downloads the latest N number of loans",
     )
     parser_libby.add_argument(
-        "--selected",
+        "--select",
         dest="selected_loans_indices",
         type=positive_int,
         nargs="+",
         metavar="N",
         help=(
             "Non-interactive mode that downloads loans by the index entered.\n"
-            'For example, "--selected 1 5" will download the first and fifth loans in '
+            'For example, "--select 1 5" will download the first and fifth loans in '
             "order of the checked out date.\n"
             "If the 5th loan does not exist, it will be skipped."
         ),
