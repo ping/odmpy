@@ -66,6 +66,20 @@ def positive_int(value: str) -> int:
     return int_value
 
 
+def valid_book_folder_format(value: str) -> str:
+    try:
+        value % {"Title": "", "Author": "", "Series": ""}
+    except KeyError as err:
+        raise argparse.ArgumentTypeError(
+            f'"{value}" is not a valid book folder name format: Invalid field {err}'
+        ) from err
+    except Exception as err:
+        raise argparse.ArgumentTypeError(
+            f'"{value}" is not a valid book folder name format: {err}'
+        ) from err
+    return value
+
+
 def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
     """
     Add common arguments needed for downloading
@@ -118,7 +132,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
     parser_dl.add_argument(
         "--bookfolderformat",
         dest="book_folder_format",
-        type=str,
+        type=valid_book_folder_format,
         default="%(Title)s - %(Author)s",
         help=(
             'Book folder format string. Default "%%(Title)s - %%(Author)s"\n'
