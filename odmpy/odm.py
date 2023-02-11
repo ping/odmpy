@@ -166,7 +166,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         dest="overwrite_tags",
         action="store_true",
         help=(
-            "Always overwrite ID3 tags. \n"
+            "Always overwrite ID3 tags.\n"
             "By default odmpy tries to non-destructively tag audiofiles.\n"
             "This option forces odmpy to overwrite tags where possible."
         ),
