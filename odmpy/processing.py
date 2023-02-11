@@ -119,6 +119,7 @@ def process_odm(
     sub_title = get_element_text(metadata.find("SubTitle"))
     publisher = get_element_text(metadata.find("Publisher"))
     description = get_element_text(metadata.find("Description"))
+    series = get_element_text(metadata.find("Series"))
     cover_url = get_element_text(metadata.find("CoverUrl"))
     authors = [
         unescape_html(get_element_text(c))
@@ -266,7 +267,9 @@ def process_odm(
         f"in {len(download_parts)} part(s)..."
     )
 
-    book_folder, book_filename, book_m4b_filename = generate_names(title, authors, args)
+    book_folder, book_filename, book_m4b_filename = generate_names(
+        title, series, authors, args, logger
+    )
 
     # check early if a merged file is already saved
     if args.merge_output and os.path.isfile(
@@ -459,6 +462,7 @@ def process_odm(
                 genres=subjects,
                 languages=languages,
                 published_date=None,  # odm does not contain date info
+                series=series,
                 part_number=part_number,
                 total_parts=len(download_parts),
                 overdrive_id=overdrive_media_id,
@@ -605,6 +609,7 @@ def process_odm(
             genres=subjects,
             languages=languages,
             published_date=None,  # odm does not contain date info
+            series=series,
             part_number=0,
             total_parts=0,
             overdrive_id=overdrive_media_id,
@@ -801,6 +806,7 @@ def process_audiobook_loan(
     subjects = [subj["name"] for subj in loan.get("subjects", []) if subj.get("name")]
     publish_date = loan.get("publishDate", None)
     publisher = loan.get("publisherAccount", {}).get("name", "") or ""
+    series = loan.get("series", "")
     description = (
         openbook.get("description", {}).get("full", "")
         or openbook.get("description", {}).get("short")
@@ -839,7 +845,9 @@ def process_audiobook_loan(
         f"in {len(download_parts)} part(s)..."
     )
 
-    book_folder, book_filename, book_m4b_filename = generate_names(title, authors, args)
+    book_folder, book_filename, book_m4b_filename = generate_names(
+        title, series, authors, args, logger
+    )
 
     # check early if a merged file is already saved
     if args.merge_output and os.path.isfile(
@@ -943,6 +951,7 @@ def process_audiobook_loan(
                 genres=subjects,
                 languages=languages,
                 published_date=publish_date,
+                series=series,
                 part_number=part_number,
                 total_parts=len(download_parts),
                 overdrive_id=overdrive_media_id,
@@ -1029,6 +1038,7 @@ def process_audiobook_loan(
             genres=subjects,
             languages=languages,
             published_date=publish_date,
+            series=series,
             part_number=0,
             total_parts=0,
             overdrive_id=overdrive_media_id,

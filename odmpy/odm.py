@@ -116,6 +116,19 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         help="Keep downloaded mp3 files (after merging)",
     )
     parser_dl.add_argument(
+        "--bookfolderformat",
+        dest="book_folder_format",
+        type=str,
+        default="%(Title)s - %(Author)s",
+        help=(
+            'Book folder format string. Default "%%(Title)s - %%(Author)s"\n'
+            "Available fields:\n"
+            "  %%(Title)s : Title\n"
+            "  %%(Author)s: Comma-separated Author names\n"
+            "  %%(Series)s: Series\n"
+        ),
+    )
+    parser_dl.add_argument(
         "--nobookfolder",
         dest="no_book_folder",
         action="store_true",
@@ -139,8 +152,9 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         dest="overwrite_tags",
         action="store_true",
         help=(
-            "Always overwrite ID3 tags. By default odmpy tries to non-destructively "
-            "tag audiofiles. This option forces odmpy to overwrite tags where possible."
+            "Always overwrite ID3 tags. \n"
+            "By default odmpy tries to non-destructively tag audiofiles.\n"
+            "This option forces odmpy to overwrite tags where possible."
         ),
     )
     parser_dl.add_argument(
@@ -150,7 +164,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         type=str,
         default=";",
         help=(
-            "For ID3 tags with multiple values, this defines the delimiter. "
+            "For ID3 tags with multiple values, this defines the delimiter.\n"
             'For example, with the default delimiter ";", authors are written '
             'to the artist tag as "Author A;Author B;Author C".'
         ),
@@ -267,7 +281,10 @@ def run() -> None:
     parser_info.add_argument("odm_file", type=str, help="ODM file path")
 
     parser_dl = subparsers.add_parser(
-        "dl", description="Download from a loan file.", help="Download from a loan file"
+        "dl",
+        description="Download from a loan file.",
+        help="Download from a loan file",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     add_common_download_arguments(parser_dl)
     parser_dl.add_argument("odm_file", type=str, help="ODM file path")
@@ -281,6 +298,7 @@ def run() -> None:
         "libby",
         description="Interactive Libby Interface",
         help="Interact directly with Libby to download audiobooks",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser_libby.add_argument(
         "--settings",
@@ -323,9 +341,10 @@ def run() -> None:
         nargs="+",
         metavar="N",
         help=(
-            "Non-interactive mode that downloads loans by the index entered. "
-            'For example, "--selected 1 3 5" will download the first, third and fifth loans in '
-            "order of the checked out date. If the 5th loan does not exist, it will be skipped."
+            "Non-interactive mode that downloads loans by the index entered.\n"
+            'For example, "--selected 1 5" will download the first and fifth loans in '
+            "order of the checked out date.\n"
+            "If the 5th loan does not exist, it will be skipped."
         ),
     )
     parser_libby.add_argument(

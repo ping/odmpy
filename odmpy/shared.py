@@ -35,22 +35,29 @@ from .utils import slugify
 
 
 def generate_names(
-    title: str, authors: List[str], args: argparse.Namespace
+    title: str,
+    series: str,
+    authors: List[str],
+    args: argparse.Namespace,
+    logger: logging.Logger,
 ) -> Tuple[str, str, str]:
     """
     Creates the download folder if necessary and generates the merged book names
 
     :param title:
     :param authors:
+    :param series:
     :param args:
+    :param logger:
     :return:
     """
-
+    book_folder_name = args.book_folder_format % {
+        "Title": title.replace(os.sep, "-"),
+        "Author": ", ".join(authors).replace(os.sep, "-"),
+        "Series": (series or "").replace(os.sep, "-"),
+    }
     # declare book folder/file names here together, so that we can catch problems from too long names
-    book_folder = os.path.join(
-        args.download_dir,
-        f"{title.replace(os.sep, '-')} - {', '.join(authors).replace(os.sep, '-')}",
-    )
+    book_folder = os.path.join(args.download_dir, book_folder_name)
     if args.no_book_folder:
         book_folder = args.download_dir
 
@@ -74,12 +81,19 @@ def generate_names(
                 raise
 
             # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
-            # create book folder, file with just the title
-            book_folder = os.path.join(
-                args.download_dir, f"{title.replace(os.sep, '-')}"
+            # create book folder with just the title and first author
+            book_folder_name = args.book_folder_format % {
+                "Title": title.replace(os.sep, "-"),
+                "Author": ", ".join(authors[0]).replace(os.sep, "-"),
+                "Series": (series or "").replace(os.sep, "-"),
+            }
+            book_folder = os.path.join(args.download_dir, book_folder_name)
+            logger.warning(
+                f'Book folder name is too long. Files will be saved in "{book_folder}" instead.'
             )
-            os.makedirs(book_folder)
+            os.makedirs(book_folder, exist_ok=True)
 
+            # create merged book name with just the title
             book_filename = os.path.join(
                 book_folder, f"{title.replace(os.sep, '-')}.mp3"
             )
@@ -101,6 +115,7 @@ def write_tags(
     genres: Optional[List[str]],
     languages: Optional[List[str]],
     published_date: Optional[str],
+    series: Optional[str],
     part_number: int,
     total_parts: int,
     overdrive_id: str,
@@ -122,6 +137,7 @@ def write_tags(
     :param genres:
     :param languages:
     :param published_date:
+    :param series:
     :param part_number:
     :param total_parts:
     :param overdrive_id:
@@ -177,6 +193,8 @@ def write_tags(
             "image/jpeg",
             description="Cover",
         )
+    if series:
+        audiofile.tag.user_text_frames.set(series, "Series")
     # Output some OD identifiers in the mp3
     if overdrive_id:
         audiofile.tag.user_text_frames.set(
