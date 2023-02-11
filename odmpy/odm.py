@@ -185,7 +185,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
     )
 
 
-def extact_odm(
+def extract_odm(
     libby_client: LibbyClient, selected_loan: Dict, args: argparse.Namespace
 ) -> str:
     """
@@ -497,7 +497,7 @@ def run() -> None:
                     return
                 for selected_loan in selected_loans:
                     process_odm(
-                        extact_odm(libby_client, selected_loan, args),
+                        extract_odm(libby_client, selected_loan, args),
                         args,
                         logger,
                         cleanup_odm_license=not args.keepodm,
@@ -573,7 +573,7 @@ def run() -> None:
             for c in loan_choices:
                 selected_loan = audiobook_loans[int(c) - 1]
                 process_odm(
-                    extact_odm(libby_client, selected_loan, args),
+                    extract_odm(libby_client, selected_loan, args),
                     args,
                     logger,
                     cleanup_odm_license=not args.keepodm,
