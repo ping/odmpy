@@ -29,12 +29,13 @@ pip3 uninstall odmpy
 ## Usage
 
 ```
-usage: odmpy [-h] [-v] [-t TIMEOUT] {info,dl,ret,libby} ...
+usage: odmpy [-h] [--version] [-v] [-t TIMEOUT] {info,dl,ret,libby} ...
 
 Download/return an OverDrive loan audiobook
 
 options:
   -h, --help            show this help message and exit
+  --version             show program's version number and exit
   -v, --verbose         Enable more verbose messages for debugging
   -t TIMEOUT, --timeout TIMEOUT
                         Timeout (seconds) for network requests. Default 10.
@@ -50,8 +51,8 @@ Version 0.6.6. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy/
 ```
 
 ```
-usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder] [-j] [--opf] [--overwritetags] [--tagsdelimiter DELIMITER]
-                [-r RETRIES] [--hideprogress]
+usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k] [-f] [--bookfolderformat BOOK_FOLDER_FORMAT]
+                [--nobookfolder] [-j] [--opf] [--overwritetags] [--tagsdelimiter DELIMITER] [-r RETRIES] [--hideprogress]
                 odm_file
 
 Download from a loan file.
@@ -69,14 +70,21 @@ options:
                         Merged file format (m4b is slow, experimental, requires ffmpeg)
   -k, --keepcover       Always generate the cover image file (cover.jpg)
   -f, --keepmp3         Keep downloaded mp3 files (after merging)
+  --bookfolderformat BOOK_FOLDER_FORMAT
+                        Book folder format string. Default "%(Title)s - %(Author)s"
+                        Available fields:
+                          %(Title)s : Title
+                          %(Author)s: Comma-separated Author names
+                          %(Series)s: Series
   --nobookfolder        Don't create a book subfolder
   -j, --writejson       Generate a meta json file (for debugging)
   --opf                 Generate an OPF file for the book
-  --overwritetags       Always overwrite ID3 tags. By default odmpy tries to non-destructively tag audiofiles. This option forces odmpy to overwrite tags where
-                        possible.
+  --overwritetags       Always overwrite ID3 tags.
+                        By default odmpy tries to non-destructively tag audiofiles.
+                        This option forces odmpy to overwrite tags where possible.
   --tagsdelimiter DELIMITER
-                        For ID3 tags with multiple values, this defines the delimiter. For example, with the default delimiter ";", authors are written to the
-                        artist tag as "Author A;Author B;Author C".
+                        For ID3 tags with multiple values, this defines the delimiter.
+                        For example, with the default delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
   -r RETRIES, --retry RETRIES
                         Number of retries if download fails. Default 1.
   --hideprogress        Hide the download progress bar (e.g. during testing)
@@ -109,8 +117,9 @@ options:
 ```
 
 ```
-usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--reset] [--direct] [--keepodm] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k] [-f]
-                   [--nobookfolder] [-j] [--opf] [--overwritetags] [--tagsdelimiter DELIMITER] [-r RETRIES] [--hideprogress] [--latest N]
+usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--reset] [--direct] [--keepodm] [-d DOWNLOAD_DIR] [-c] [-m]
+                   [--mergeformat {mp3,m4b}] [-k] [-f] [--bookfolderformat BOOK_FOLDER_FORMAT] [--nobookfolder] [-j] [--opf]
+                   [--overwritetags] [--tagsdelimiter DELIMITER] [-r RETRIES] [--hideprogress] [--latest N] [--select N [N ...]]
                    [--exportloans LOAN_JSON_FILEPATH]
 
 Interactive Libby Interface
@@ -130,18 +139,28 @@ options:
                         Merged file format (m4b is slow, experimental, requires ffmpeg)
   -k, --keepcover       Always generate the cover image file (cover.jpg)
   -f, --keepmp3         Keep downloaded mp3 files (after merging)
+  --bookfolderformat BOOK_FOLDER_FORMAT
+                        Book folder format string. Default "%(Title)s - %(Author)s"
+                        Available fields:
+                          %(Title)s : Title
+                          %(Author)s: Comma-separated Author names
+                          %(Series)s: Series
   --nobookfolder        Don't create a book subfolder
   -j, --writejson       Generate a meta json file (for debugging)
   --opf                 Generate an OPF file for the book
-  --overwritetags       Always overwrite ID3 tags. By default odmpy tries to non-destructively tag audiofiles. This option forces odmpy to overwrite tags where
-                        possible.
+  --overwritetags       Always overwrite ID3 tags.
+                        By default odmpy tries to non-destructively tag audiofiles.
+                        This option forces odmpy to overwrite tags where possible.
   --tagsdelimiter DELIMITER
-                        For ID3 tags with multiple values, this defines the delimiter. For example, with the default delimiter ";", authors are written to the
-                        artist tag as "Author A;Author B;Author C".
+                        For ID3 tags with multiple values, this defines the delimiter.
+                        For example, with the default delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
   -r RETRIES, --retry RETRIES
                         Number of retries if download fails. Default 1.
   --hideprogress        Hide the download progress bar (e.g. during testing)
   --latest N            Non-interactive mode that downloads the latest N number of loans
+  --select N [N ...]    Non-interactive mode that downloads loans by the index entered.
+                        For example, "--select 1 5" will download the first and fifth loans in order of the checked out date.
+                        If the 5th loan does not exist, it will be skipped.
   --exportloans LOAN_JSON_FILEPATH
                         Non-interactive mode that exports audiobook loans information into a json file at the path specified
 ```
@@ -164,6 +183,9 @@ odmpy libby
 
 # Download via Libby without generating the odm file
 odmpy libby --direct
+
+# Download via Libby your latest loan non-interactively
+odmpy libby --direct --latest 1
 
 ```
 
