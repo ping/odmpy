@@ -17,7 +17,7 @@ Requires Python >=3.7.
 
 ```bash
 # Install / Update to specific version
-pip3 install git+https://git@github.com/ping/odmpy.git@0.6.6 --upgrade
+pip3 install git+https://git@github.com/ping/odmpy.git@0.6.7 --upgrade
 
 # Install / Update from latest source
 pip3 install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -47,7 +47,7 @@ Available commands:
     ret                 Return a loan file.
     libby               Interact directly with Libby to download audiobooks
 
-Version 0.6.6. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy/
+Version 0.6.7. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy/
 ```
 
 ```
