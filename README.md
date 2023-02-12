@@ -1,8 +1,8 @@
 # odmpy
 
-A simple console manager for OverDrive audiobook loans. A python port of [overdrive](https://github.com/chbrown/overdrive).
+A simple console manager for OverDrive/Libby audiobook loans. Originally a python port of [overdrive](https://github.com/chbrown/overdrive), it now supports additional features such as adding of metadata such as chapters, merging of files, and downloading via [Libby](https://help.libbyapp.com/en-us/6103.htm).
 
-Requires Python >=3.7.
+Requires Python >= 3.7.
 
 ## Features
 
@@ -28,6 +28,7 @@ pip3 uninstall odmpy
 
 ## Usage
 
+### General information
 ```
 usage: odmpy [-h] [--version] [-v] [-t TIMEOUT] {info,dl,ret,libby} ...
 
@@ -50,74 +51,11 @@ Available commands:
 Version 0.6.7. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy/
 ```
 
-```
-usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
-                [-k] [-f] [--nobookfolder]
-                [--bookfolderformat BOOK_FOLDER_FORMAT] [--overwritetags]
-                [--tagsdelimiter DELIMITER] [--opf] [-r RETRIES] [-j]
-                [--hideprogress]
-                odm_file
+### Download via Libby
 
-Download from a loan file.
+To download from Libby, you must already be using Libby on a [compatible](https://help.libbyapp.com/en-us/6105.htm) device. 
 
-positional arguments:
-  odm_file              ODM file path.
-
-options:
-  -h, --help            show this help message and exit
-  -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
-                        Download folder path.
-  -c, --chapters        Add chapter marks (experimental).
-  -m, --merge           Merge into 1 file (experimental, requires ffmpeg).
-  --mergeformat {mp3,m4b}
-                        Merged file format (m4b is slow, experimental, requires ffmpeg).
-  -k, --keepcover       Always generate the cover image file (cover.jpg).
-  -f, --keepmp3         Keep downloaded mp3 files (after merging).
-  --nobookfolder        Don't create a book subfolder.
-  --bookfolderformat BOOK_FOLDER_FORMAT
-                        Book folder format string. Default "%(Title)s - %(Author)s".
-                        Available fields:
-                          %(Title)s : Title
-                          %(Author)s: Comma-separated Author names
-                          %(Series)s: Series
-  --overwritetags       Always overwrite ID3 tags.
-                        By default odmpy tries to non-destructively tag audiofiles.
-                        This option forces odmpy to overwrite tags where possible.
-  --tagsdelimiter DELIMITER
-                        For ID3 tags with multiple values, this defines the delimiter.
-                        For example, with the default delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
-  --opf                 Generate an OPF file for the book.
-  -r RETRIES, --retry RETRIES
-                        Number of retries if download fails. Default 1.
-  -j, --writejson       Generate a meta json file (for debugging).
-  --hideprogress        Hide the download progress bar (e.g. during testing).
-```
-
-```
-usage: odmpy ret [-h] odm_file
-
-Return a loan file.
-
-positional arguments:
-  odm_file    ODM file path.
-
-options:
-  -h, --help  show this help message and exit
-```
-
-```
-usage: odmpy info [-h] [-f {text,json}] odm_file
-
-Get information about a loan file.
-
-positional arguments:
-  odm_file              ODM file path.
-
-options:
-  -h, --help            show this help message and exit
-  -f {text,json}, --format {text,json}
-                        Format for output.
-```
+You will be prompted for a Libby setup code the first time you run the `libby` command. To get a code, follow the instructions [here](https://help.libbyapp.com/en-us/6070.htm). You should only need to do this once.
 
 ```
 usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--reset] [--direct]
@@ -171,38 +109,54 @@ options:
   --hideprogress        Hide the download progress bar (e.g. during testing).
 ```
 
-### Examples
+### Download with an `.odm` loan file
 
-```bash
-
-# Download a book to MyLoans/
-odmpy dl -d "MyLoans/" "MyLoans/Book1.odm"
-
-# Return Book1.odm
-odmpy ret "MyLoans/Book1.odm"
-
-# Get information about a loan Book1.odm
-odmpy info "MyLoans/Book1.odm"
-
-# Start the Libby interface to select an audiobook loan to download
-odmpy libby
-
-# Download via Libby without generating the odm file
-odmpy libby --direct
-
-# Download via Libby your latest loan non-interactively
-odmpy libby --direct --latest 1
+[`.odm`](https://help.overdrive.com/en-us/0577.html) files are currently downloadable from your library's OverDrive site and are meant for use with OverDrive's [now legacy app](https://company.overdrive.com/2021/08/09/important-update-regarding-libby-and-the-overdrive-app/).
 
 ```
+usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
+                [-k] [-f] [--nobookfolder]
+                [--bookfolderformat BOOK_FOLDER_FORMAT] [--overwritetags]
+                [--tagsdelimiter DELIMITER] [--opf] [-r RETRIES] [-j]
+                [--hideprogress]
+                odm_file
 
-`odmpy` also supports the reading of command options from a file. For example:
+Download from a loan file.
 
-```bash
-odmpy dl @example.dl.conf MyLoans/MyBook.odm
+positional arguments:
+  odm_file              ODM file path.
+
+options:
+  -h, --help            show this help message and exit
+  -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
+                        Download folder path.
+  -c, --chapters        Add chapter marks (experimental).
+  -m, --merge           Merge into 1 file (experimental, requires ffmpeg).
+  --mergeformat {mp3,m4b}
+                        Merged file format (m4b is slow, experimental, requires ffmpeg).
+  -k, --keepcover       Always generate the cover image file (cover.jpg).
+  -f, --keepmp3         Keep downloaded mp3 files (after merging).
+  --nobookfolder        Don't create a book subfolder.
+  --bookfolderformat BOOK_FOLDER_FORMAT
+                        Book folder format string. Default "%(Title)s - %(Author)s".
+                        Available fields:
+                          %(Title)s : Title
+                          %(Author)s: Comma-separated Author names
+                          %(Series)s: Series
+  --overwritetags       Always overwrite ID3 tags.
+                        By default odmpy tries to non-destructively tag audiofiles.
+                        This option forces odmpy to overwrite tags where possible.
+  --tagsdelimiter DELIMITER
+                        For ID3 tags with multiple values, this defines the delimiter.
+                        For example, with the default delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
+  --opf                 Generate an OPF file for the book.
+  -r RETRIES, --retry RETRIES
+                        Number of retries if download fails. Default 1.
+  -j, --writejson       Generate a meta json file (for debugging).
+  --hideprogress        Hide the download progress bar (e.g. during testing).
 ```
-where [`example.dl.conf`](example.dl.conf) contains the command arguments for the `dl` command.
 
-### Unable to download odm files?
+#### Unable to download odm files?
 
 OverDrive no longer shows the odm download links for MacOS 10.15 (Catalina) and newer.
 There are many ways to get around this but the easiest for me was to use a 
@@ -217,6 +171,69 @@ supports direct from Libby downloads through the `libby` command.
 # view available options
 odmpy libby -h
 ```
+
+### Return an `.odm`
+```
+usage: odmpy ret [-h] odm_file
+
+Return a loan file.
+
+positional arguments:
+  odm_file    ODM file path.
+
+options:
+  -h, --help  show this help message and exit
+```
+
+### Information about an `.odm`
+```
+usage: odmpy info [-h] [-f {text,json}] odm_file
+
+Get information about a loan file.
+
+positional arguments:
+  odm_file              ODM file path.
+
+options:
+  -h, --help            show this help message and exit
+  -f {text,json}, --format {text,json}
+                        Format for output.
+```
+
+### Examples
+
+```bash
+
+# Start the Libby interface to select an audiobook loan to download
+# The `libby` command shares almost all of the download options as `dl`
+# Example, downloads will be saved in MyLoans/
+odmpy libby -d "MyLoans/"
+
+# Download via Libby without generating the odm file
+odmpy libby --direct
+
+# Download via Libby your latest loan non-interactively
+odmpy libby --direct --latest 1
+
+# Download a book via an odm file to MyLoans/
+odmpy dl -d "MyLoans/" "MyLoans/Book1.odm"
+
+# Return Book1.odm
+odmpy ret "MyLoans/Book1.odm"
+
+# Get information about a loan Book1.odm
+odmpy info "MyLoans/Book1.odm"
+
+```
+
+`odmpy` also supports the reading of command options from a file. For example:
+
+```bash
+odmpy libby @example.dl.conf
+
+odmpy dl @example.dl.conf MyLoans/MyBook.odm
+```
+where [`example.dl.conf`](example.dl.conf) contains the command arguments values
 
 ## Credits
 
