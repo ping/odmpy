@@ -310,7 +310,10 @@ class LibbyClient(object):
 
         :return:
         """
-        return bool(self.identity.get("__odmpy_sync_code"))
+        return bool(
+            self.identity.get("__libby_sync_code")
+            or self.identity.get("__odmpy_sync_code")  # for backwards compat
+        )
 
     def get_chip(self, auto_save: bool = True, authenticated: bool = False) -> Dict:
         """
@@ -345,7 +348,7 @@ class LibbyClient(object):
         res: Dict = self.make_request("chip/clone/code", data={"code": code})
         if auto_save:
             # persist to settings
-            self.save_settings({"__odmpy_sync_code": code})
+            self.save_settings({"__libby_sync_code": code})
         return res
 
     def sync(self) -> Dict:
