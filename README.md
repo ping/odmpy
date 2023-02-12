@@ -36,58 +36,61 @@ Download/return an OverDrive loan audiobook
 options:
   -h, --help            show this help message and exit
   --version             show program's version number and exit
-  -v, --verbose         Enable more verbose messages for debugging
+  -v, --verbose         Enable more verbose messages for debugging.
   -t TIMEOUT, --timeout TIMEOUT
                         Timeout (seconds) for network requests. Default 10.
 
 Available commands:
   {info,dl,ret,libby}   To get more help, use the -h option with the command.
     info                Get information about a loan file
-    dl                  Download from a loan file
+    dl                  Download from a loan odm file.
     ret                 Return a loan file.
-    libby               Interact directly with Libby to download audiobooks
+    libby               Interact directly with Libby to download audiobooks.
 
 Version 0.6.7. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy/
 ```
 
 ```
-usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k] [-f] [--bookfolderformat BOOK_FOLDER_FORMAT]
-                [--nobookfolder] [-j] [--opf] [--overwritetags] [--tagsdelimiter DELIMITER] [-r RETRIES] [--hideprogress]
+usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
+                [-k] [-f] [--nobookfolder]
+                [--bookfolderformat BOOK_FOLDER_FORMAT] [--overwritetags]
+                [--tagsdelimiter DELIMITER] [--opf] [-r RETRIES] [-j]
+                [--hideprogress]
                 odm_file
 
 Download from a loan file.
 
 positional arguments:
-  odm_file              ODM file path
+  odm_file              ODM file path.
 
 options:
   -h, --help            show this help message and exit
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
-                        Download folder path
-  -c, --chapters        Add chapter marks (experimental)
-  -m, --merge           Merge into 1 file (experimental, requires ffmpeg)
+                        Download folder path.
+  -c, --chapters        Add chapter marks (experimental).
+  -m, --merge           Merge into 1 file (experimental, requires ffmpeg).
   --mergeformat {mp3,m4b}
-                        Merged file format (m4b is slow, experimental, requires ffmpeg)
-  -k, --keepcover       Always generate the cover image file (cover.jpg)
-  -f, --keepmp3         Keep downloaded mp3 files (after merging)
+                        Merged file format (m4b is slow, experimental, requires ffmpeg).
+  -k, --keepcover       Always generate the cover image file (cover.jpg).
+  -f, --keepmp3         Keep downloaded mp3 files (after merging).
+  --nobookfolder        Don't create a book subfolder.
   --bookfolderformat BOOK_FOLDER_FORMAT
-                        Book folder format string. Default "%(Title)s - %(Author)s"
+                        Book folder format string. Default "%(Title)s - %(Author)s".
                         Available fields:
                           %(Title)s : Title
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
-  --nobookfolder        Don't create a book subfolder
-  -j, --writejson       Generate a meta json file (for debugging)
-  --opf                 Generate an OPF file for the book
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
                         This option forces odmpy to overwrite tags where possible.
   --tagsdelimiter DELIMITER
                         For ID3 tags with multiple values, this defines the delimiter.
                         For example, with the default delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
+  --opf                 Generate an OPF file for the book.
   -r RETRIES, --retry RETRIES
                         Number of retries if download fails. Default 1.
-  --hideprogress        Hide the download progress bar (e.g. during testing)
+  -j, --writejson       Generate a meta json file (for debugging).
+  --hideprogress        Hide the download progress bar (e.g. during testing).
 ```
 
 ```
@@ -96,7 +99,7 @@ usage: odmpy ret [-h] odm_file
 Return a loan file.
 
 positional arguments:
-  odm_file    ODM file path
+  odm_file    ODM file path.
 
 options:
   -h, --help  show this help message and exit
@@ -108,61 +111,64 @@ usage: odmpy info [-h] [-f {text,json}] odm_file
 Get information about a loan file.
 
 positional arguments:
-  odm_file              ODM file path
+  odm_file              ODM file path.
 
 options:
   -h, --help            show this help message and exit
   -f {text,json}, --format {text,json}
-                        Format for output
+                        Format for output.
 ```
 
 ```
-usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--reset] [--direct] [--keepodm] [-d DOWNLOAD_DIR] [-c] [-m]
-                   [--mergeformat {mp3,m4b}] [-k] [-f] [--bookfolderformat BOOK_FOLDER_FORMAT] [--nobookfolder] [-j] [--opf]
-                   [--overwritetags] [--tagsdelimiter DELIMITER] [-r RETRIES] [--hideprogress] [--latest N] [--select N [N ...]]
-                   [--exportloans LOAN_JSON_FILEPATH]
+usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--reset] [--direct]
+                   [--keepodm] [--latest N] [--select N [N ...]]
+                   [--exportloans LOANS_JSON_FILEPATH] [-d DOWNLOAD_DIR] [-c]
+                   [-m] [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder]
+                   [--bookfolderformat BOOK_FOLDER_FORMAT] [--overwritetags]
+                   [--tagsdelimiter DELIMITER] [--opf] [-r RETRIES] [-j]
+                   [--hideprogress]
 
 Interactive Libby Interface
 
 options:
   -h, --help            show this help message and exit
   --settings SETTINGS_FOLDER
-                        Settings folder to store odmpy required settings, e.g. Libby authentication
-  --reset               Remove previously saved odmpy Libby settings
-  --direct              Don't download the odm file from Libby but instead process the audiobook download directly
-  --keepodm             Keep the downloaded odm and license files
+                        Settings folder to store odmpy required settings, e.g. Libby authentication.
+  --reset               Remove previously saved odmpy Libby settings.
+  --direct              Don't download the odm file from Libby but instead process the audiobook download directly.
+  --keepodm             Keep the downloaded odm and license files.
+  --latest N            Non-interactive mode that downloads the latest N number of loans.
+  --select N [N ...]    Non-interactive mode that downloads loans by the index entered.
+                        For example, "--select 1 5" will download the first and fifth loans in order of the checked out date.
+                        If the 5th loan does not exist, it will be skipped.
+  --exportloans LOANS_JSON_FILEPATH
+                        Non-interactive mode that exports audiobook loans information into a json file at the path specified.
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
-                        Download folder path
-  -c, --chapters        Add chapter marks (experimental)
-  -m, --merge           Merge into 1 file (experimental, requires ffmpeg)
+                        Download folder path.
+  -c, --chapters        Add chapter marks (experimental).
+  -m, --merge           Merge into 1 file (experimental, requires ffmpeg).
   --mergeformat {mp3,m4b}
-                        Merged file format (m4b is slow, experimental, requires ffmpeg)
-  -k, --keepcover       Always generate the cover image file (cover.jpg)
-  -f, --keepmp3         Keep downloaded mp3 files (after merging)
+                        Merged file format (m4b is slow, experimental, requires ffmpeg).
+  -k, --keepcover       Always generate the cover image file (cover.jpg).
+  -f, --keepmp3         Keep downloaded mp3 files (after merging).
+  --nobookfolder        Don't create a book subfolder.
   --bookfolderformat BOOK_FOLDER_FORMAT
-                        Book folder format string. Default "%(Title)s - %(Author)s"
+                        Book folder format string. Default "%(Title)s - %(Author)s".
                         Available fields:
                           %(Title)s : Title
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
-  --nobookfolder        Don't create a book subfolder
-  -j, --writejson       Generate a meta json file (for debugging)
-  --opf                 Generate an OPF file for the book
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
                         This option forces odmpy to overwrite tags where possible.
   --tagsdelimiter DELIMITER
                         For ID3 tags with multiple values, this defines the delimiter.
                         For example, with the default delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
+  --opf                 Generate an OPF file for the book.
   -r RETRIES, --retry RETRIES
                         Number of retries if download fails. Default 1.
-  --hideprogress        Hide the download progress bar (e.g. during testing)
-  --latest N            Non-interactive mode that downloads the latest N number of loans
-  --select N [N ...]    Non-interactive mode that downloads loans by the index entered.
-                        For example, "--select 1 5" will download the first and fifth loans in order of the checked out date.
-                        If the 5th loan does not exist, it will be skipped.
-  --exportloans LOAN_JSON_FILEPATH
-                        Non-interactive mode that exports audiobook loans information into a json file at the path specified
+  -j, --writejson       Generate a meta json file (for debugging).
+  --hideprogress        Hide the download progress bar (e.g. during testing).
 ```
 
 ### Examples

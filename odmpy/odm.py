@@ -92,42 +92,48 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         "--downloaddir",
         dest="download_dir",
         default=".",
-        help="Download folder path",
+        help="Download folder path.",
     )
     parser_dl.add_argument(
         "-c",
         "--chapters",
         dest="add_chapters",
         action="store_true",
-        help="Add chapter marks (experimental)",
+        help="Add chapter marks (experimental).",
     )
     parser_dl.add_argument(
         "-m",
         "--merge",
         dest="merge_output",
         action="store_true",
-        help="Merge into 1 file (experimental, requires ffmpeg)",
+        help="Merge into 1 file (experimental, requires ffmpeg).",
     )
     parser_dl.add_argument(
         "--mergeformat",
         dest="merge_format",
         choices=["mp3", "m4b"],
         default="mp3",
-        help="Merged file format (m4b is slow, experimental, requires ffmpeg)",
+        help="Merged file format (m4b is slow, experimental, requires ffmpeg).",
     )
     parser_dl.add_argument(
         "-k",
         "--keepcover",
         dest="always_keep_cover",
         action="store_true",
-        help="Always generate the cover image file (cover.jpg)",
+        help="Always generate the cover image file (cover.jpg).",
     )
     parser_dl.add_argument(
         "-f",
         "--keepmp3",
         dest="keep_mp3",
         action="store_true",
-        help="Keep downloaded mp3 files (after merging)",
+        help="Keep downloaded mp3 files (after merging).",
+    )
+    parser_dl.add_argument(
+        "--nobookfolder",
+        dest="no_book_folder",
+        action="store_true",
+        help="Don't create a book subfolder.",
     )
     parser_dl.add_argument(
         "--bookfolderformat",
@@ -135,31 +141,12 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         type=valid_book_folder_format,
         default="%(Title)s - %(Author)s",
         help=(
-            'Book folder format string. Default "%%(Title)s - %%(Author)s"\n'
+            'Book folder format string. Default "%%(Title)s - %%(Author)s".\n'
             "Available fields:\n"
             "  %%(Title)s : Title\n"
             "  %%(Author)s: Comma-separated Author names\n"
             "  %%(Series)s: Series\n"
         ),
-    )
-    parser_dl.add_argument(
-        "--nobookfolder",
-        dest="no_book_folder",
-        action="store_true",
-        help="Don't create a book subfolder",
-    )
-    parser_dl.add_argument(
-        "-j",
-        "--writejson",
-        dest="write_json",
-        action="store_true",
-        help="Generate a meta json file (for debugging)",
-    )
-    parser_dl.add_argument(
-        "--opf",
-        dest="generate_opf",
-        action="store_true",
-        help="Generate an OPF file for the book",
     )
     parser_dl.add_argument(
         "--overwritetags",
@@ -184,6 +171,12 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         ),
     )
     parser_dl.add_argument(
+        "--opf",
+        dest="generate_opf",
+        action="store_true",
+        help="Generate an OPF file for the book.",
+    )
+    parser_dl.add_argument(
         "-r",
         "--retry",
         dest="retries",
@@ -192,10 +185,17 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         help="Number of retries if download fails. Default 1.",
     )
     parser_dl.add_argument(
+        "-j",
+        "--writejson",
+        dest="write_json",
+        action="store_true",
+        help="Generate a meta json file (for debugging).",
+    )
+    parser_dl.add_argument(
         "--hideprogress",
         dest="hide_progress",
         action="store_true",
-        help="Hide the download progress bar (e.g. during testing)",
+        help="Hide the download progress bar (e.g. during testing).",
     )
 
 
@@ -263,7 +263,7 @@ def run() -> None:
         "--verbose",
         dest="verbose",
         action="store_true",
-        help="Enable more verbose messages for debugging",
+        help="Enable more verbose messages for debugging.",
     )
     parser.add_argument(
         "-t",
@@ -290,28 +290,28 @@ def run() -> None:
         dest="format",
         choices=["text", "json"],
         default="text",
-        help="Format for output",
+        help="Format for output.",
     )
-    parser_info.add_argument("odm_file", type=str, help="ODM file path")
+    parser_info.add_argument("odm_file", type=str, help="ODM file path.")
 
     parser_dl = subparsers.add_parser(
         "dl",
         description="Download from a loan file.",
-        help="Download from a loan file",
+        help="Download from a loan odm file.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
+    parser_dl.add_argument("odm_file", type=str, help="ODM file path.")
     add_common_download_arguments(parser_dl)
-    parser_dl.add_argument("odm_file", type=str, help="ODM file path")
 
     parser_ret = subparsers.add_parser(
         "ret", description="Return a loan file.", help="Return a loan file."
     )
-    parser_ret.add_argument("odm_file", type=str, help="ODM file path")
+    parser_ret.add_argument("odm_file", type=str, help="ODM file path.")
 
     parser_libby = subparsers.add_parser(
         "libby",
         description="Interactive Libby Interface",
-        help="Interact directly with Libby to download audiobooks",
+        help="Interact directly with Libby to download audiobooks.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser_libby.add_argument(
@@ -320,33 +320,32 @@ def run() -> None:
         type=str,
         default="./odmpy_settings",
         metavar="SETTINGS_FOLDER",
-        help="Settings folder to store odmpy required settings, e.g. Libby authentication",
+        help="Settings folder to store odmpy required settings, e.g. Libby authentication.",
     )
     parser_libby.add_argument(
         "--reset",
         dest="reset_settings",
         action="store_true",
-        help="Remove previously saved odmpy Libby settings",
+        help="Remove previously saved odmpy Libby settings.",
     )
     parser_libby.add_argument(
         "--direct",
         dest="libby_direct",
         action="store_true",
-        help="Don't download the odm file from Libby but instead process the audiobook download directly",
+        help="Don't download the odm file from Libby but instead process the audiobook download directly.",
     )
     parser_libby.add_argument(
         "--keepodm",
         action="store_true",
-        help="Keep the downloaded odm and license files",
+        help="Keep the downloaded odm and license files.",
     )
-    add_common_download_arguments(parser_libby)
     parser_libby.add_argument(
         "--latest",
         dest="download_latest_n",
         type=positive_int,
         default=0,
         metavar="N",
-        help="Non-interactive mode that downloads the latest N number of loans",
+        help="Non-interactive mode that downloads the latest N number of loans.",
     )
     parser_libby.add_argument(
         "--select",
@@ -364,10 +363,11 @@ def run() -> None:
     parser_libby.add_argument(
         "--exportloans",
         dest="export_loans_path",
-        metavar="LOAN_JSON_FILEPATH",
+        metavar="LOANS_JSON_FILEPATH",
         type=str,
-        help="Non-interactive mode that exports audiobook loans information into a json file at the path specified",
+        help="Non-interactive mode that exports audiobook loans information into a json file at the path specified.",
     )
+    add_common_download_arguments(parser_libby)
 
     args = parser.parse_args()
     if args.verbose:
