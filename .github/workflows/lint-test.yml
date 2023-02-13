@@ -76,6 +76,8 @@ jobs:
     runs-on: windows-latest
     needs: lint
     steps:
+    - uses: FedericoCarboni/setup-ffmpeg@v2
+      id: setup-ffmpeg
     - uses: actions/checkout@v3
       with:
         submodules: true
