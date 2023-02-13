@@ -20,6 +20,7 @@
 
 import argparse
 import datetime
+import io
 import json
 import logging
 import os
@@ -42,7 +43,7 @@ from .utils import slugify, get_element_text
 
 logger = logging.getLogger(__file__)
 requests_logger = logging.getLogger("urllib3")
-ch = logging.StreamHandler(sys.stdout)
+ch = logging.StreamHandler(io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8"))
 ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
