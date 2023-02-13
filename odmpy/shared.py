@@ -319,7 +319,11 @@ def merge_into_mp3(
         logger.error(f"ffmpeg exited with the code: {exit_code!s}")
         logger.error(f"Command: {' '.join(cmd)!s}")
         sys.exit(exit_code)
-    os.rename(temp_book_filename, book_filename)
+
+    # Switch to using os.replace() instead of os.rename() to avoid
+    # issues with remnant files between tests
+    # Ref: https://github.com/ping/odmpy/issues/31
+    os.replace(temp_book_filename, book_filename)
 
 
 def convert_to_m4b(
