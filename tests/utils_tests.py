@@ -31,12 +31,10 @@ class UtilsTests(unittest.TestCase):
             "Español 中文 русский 한국어 日本語",
         )
 
+    @unittest.skipUnless(
+        os.name == "nt" or platform.system().lower() == "windows", "Not Windows"
+    )
     def test_sanitize_path_on_windows(self):
-        is_windows = os.name == "nt" or platform.system().lower() == "windows"
-        if not is_windows:
-            self.skipTest("Not Windows")
-            return
-
         # test if the folder can actually be created
         ts = int(datetime.utcnow().timestamp() * 1000)
         random_text = "".join(choices(string.ascii_lowercase, k=10))
