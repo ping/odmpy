@@ -25,7 +25,6 @@ import json
 import logging
 import os
 import sys
-
 import time
 import xml.etree.ElementTree
 from enum import Enum
