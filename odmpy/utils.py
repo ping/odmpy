@@ -33,6 +33,13 @@ ILLEGAL_WIN_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
 
 
 def sanitize_path(text: str, sub_text: str = "-") -> str:
+    """
+    Strips invalid characters from a local file path component.
+
+    :param text:
+    :param sub_text:
+    :return:
+    """
     if os.name == "nt" or platform.platform().lower() == "windows":
         # just replacing `os.sep` is not enough on Windows
         # ref https://github.com/ping/odmpy/issues/30
