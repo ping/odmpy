@@ -24,7 +24,8 @@ import json
 import logging
 import os
 import sys
-sys.stdout.reconfigure(encoding='utf-8')
+
+sys.stdout.reconfigure(encoding="utf-8")
 import time
 import xml.etree.ElementTree
 from enum import Enum
