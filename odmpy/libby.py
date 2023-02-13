@@ -221,6 +221,15 @@ class LibbyClient(object):
         if os.path.exists(self.identity_settings_file):
             with open(self.identity_settings_file, "r", encoding="utf-8") as f:
                 self.identity = json.load(f)
+
+        # migrate old sync code storage key
+        if self.identity.get("__odmpy_sync_code"):
+            if not self.identity.get("__libby_sync_code"):
+                self.identity["__libby_sync_code"] = self.identity["__odmpy_sync_code"]
+            del self.identity["__odmpy_sync_code"]
+            with open(self.identity_settings_file, "w", encoding="utf-8") as f:
+                json.dump(self.identity, f)
+
         libby_session = requests.Session()
         adapter = HTTPAdapter(max_retries=Retry(total=max_retries, backoff_factor=0.1))
         for prefix in ("http://", "https://"):
