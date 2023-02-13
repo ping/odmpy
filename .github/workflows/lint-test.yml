@@ -47,11 +47,11 @@ jobs:
         mypy --package odmpy
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10" , "3.11"]
-
+        os: [ubuntu-latest, windows-latest]
+        python-version: [ "3.7", "3.8", "3.9", "3.10" , "3.11" ]
     needs: lint
     steps:
     - uses: FedericoCarboni/setup-ffmpeg@v2
@@ -69,23 +69,8 @@ jobs:
         python -m pip install --upgrade pip
         pip -q install -r requirements.txt
         pip -q install -r requirements-dev.txt
-    - name: Run tests
-      run: sh run_tests.sh
-
-  tests-windows:
-    runs-on: windows-latest
-    needs: lint
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-        fetch-depth: 1
-    - name: Install dependencies
+    - name: Run tests on ${{ matrix.os }} with python ${{ matrix.python-version }}
       run: |
-        python -m pip install --upgrade pip
-        pip -q install -r requirements.txt
-        pip -q install -r requirements-dev.txt
-    - name: Run os-specific tests
-      run: |
-        python -m unittest -v tests.UtilsTests.test_sanitize_path_on_windows
-        python -m unittest -v tests.UtilsTests.test_sanitize_path
+        cd ${GITHUB_WORKSPACE}
+        sh run_tests.sh
+      shell: bash
