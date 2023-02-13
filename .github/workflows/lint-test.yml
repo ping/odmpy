@@ -86,5 +86,7 @@ jobs:
         pip -q install -r requirements.txt
         pip -q install -r requirements-dev.txt
     - name: Run tests
-      run: ${GITHUB_ACTION_PATH//\\//}/run_tests.sh
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        sh run_tests.sh
       shell: bash
