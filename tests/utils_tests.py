@@ -1,6 +1,9 @@
 import os
 import platform
+import string
 import unittest
+from datetime import datetime
+from random import choices
 
 from odmpy import utils
 
@@ -27,6 +30,22 @@ class UtilsTests(unittest.TestCase):
             utils.sanitize_path("Español 中文 русский 한국어 日本語"),
             "Español 中文 русский 한국어 日本語",
         )
+
+    def test_sanitize_path_on_windows(self):
+        is_windows = os.name == "nt" or platform.system().lower() == "windows"
+        if not is_windows:
+            self.skipTest("Not Windows")
+            return
+
+        # test if the folder can actually be created
+        ts = int(datetime.utcnow().timestamp() * 1000)
+        random_text = "".join(choices(string.ascii_lowercase, k=10))
+        sanitized_path = utils.sanitize_path(
+            rf'{random_text}_{ts}<>:"/\|?*', sub_text=""
+        )
+        self.assertEqual(sanitized_path, f"{random_text}_{ts}")
+        os.makedirs(sanitized_path)
+        os.rmdir(sanitized_path)
 
     def test_slugify(self):
         self.assertEqual(

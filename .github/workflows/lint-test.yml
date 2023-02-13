@@ -86,4 +86,6 @@ jobs:
         pip -q install -r requirements.txt
         pip -q install -r requirements-dev.txt
     - name: Run os-specific tests
-      run: python -m unittest -v tests.UtilsTests.test_sanitize_path
+      run: |
+        python -m unittest -v tests.UtilsTests.test_sanitize_path_on_windows
+        python -m unittest -v tests.UtilsTests.test_sanitize_path
