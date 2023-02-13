@@ -374,7 +374,7 @@ class OdmpyTests(unittest.TestCase):
         test_file = os.path.join(self.book_folder, "ceremonies-for-christmas.opf")
         self.assertTrue(os.path.isfile(test_file))
 
-        with open(test_file) as actual, open(
+        with open(test_file, encoding="utf-8") as actual, open(
             schema_file, "r", encoding="utf-8"
         ) as schema:
             actual_opf = etree.parse(actual)
