@@ -205,7 +205,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         dest="obsolete_retries",
         type=int,
         default=0,
-        help="Number of retries if download fails. Default 1.",
+        help="Obsolete. Do not use.",
     )
     parser_dl.add_argument(
         "-j",
