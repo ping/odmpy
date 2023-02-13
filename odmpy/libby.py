@@ -22,8 +22,15 @@ import os
 import re
 import sys
 from collections import OrderedDict
+from datetime import datetime, timezone
 from typing import Optional, NamedTuple, Dict, List, Tuple
 from typing import OrderedDict as OrderedDictType
+
+from odmpy.libby_errors import (
+    ClientConnectionError,
+    ClientTimeoutError,
+    ErrorHandler,
+)
 
 if sys.version_info >= (3, 8):
     from typing import TypedDict
@@ -160,7 +167,7 @@ def parse_toc(
 
 def merge_toc(toc: Dict) -> List[ChapterMarker]:
     """
-    Generates a list of ChapterMarker for the merged audiobook based on the parsed toc
+    Generates a list of ChapterMarker for the merged audiobook based on the parsed toc.
 
     :param toc: parsed toc
     :return:
@@ -189,7 +196,7 @@ def merge_toc(toc: Dict) -> List[ChapterMarker]:
 
 
 class LibbyClient(object):
-    # Reverse engineering of the libby endpoints is thanks to https://github.com/lullius/pylibby
+    # Original reverse engineering of the libby endpoints is thanks to https://github.com/lullius/pylibby
     def __init__(
         self,
         settings_folder: str,
@@ -228,7 +235,7 @@ class LibbyClient(object):
 
     def default_headers(self) -> Dict:
         """
-        Default HTTP headers
+        Default HTTP headers.
 
         :return:
         """
@@ -242,6 +249,7 @@ class LibbyClient(object):
         endpoint: str,
         params: Optional[Dict] = None,
         data: Optional[Dict] = None,
+        json_data: Optional[Dict] = None,
         headers: Optional[Dict] = None,
         method: Optional[str] = None,
         authenticated: bool = True,
@@ -261,23 +269,35 @@ class LibbyClient(object):
             headers["Authorization"] = f'Bearer {self.identity["identity"]}'
 
         req = requests.Request(
-            method, endpoint_url, headers=headers, params=params, data=data
+            method,
+            endpoint_url,
+            headers=headers,
+            params=params,
+            data=data,
+            json=json_data,
         )
         if not session:
             # default session
             session = self.libby_session
 
-        res = session.send(session.prepare_request(req), timeout=self.timeout)
-        self.logger.debug("body: %s", res.text)
+        try:
+            res = session.send(session.prepare_request(req), timeout=self.timeout)
+            self.logger.debug("body: %s", res.text)
 
-        res.raise_for_status()
-        if return_res:
-            return res
-        return res.json()
+            res.raise_for_status()
+            if return_res:
+                return res
+            return res.json()
+        except requests.ConnectionError as conn_err:
+            raise ClientConnectionError(str(conn_err)) from conn_err
+        except requests.Timeout as timeout_err:
+            raise ClientTimeoutError(str(timeout_err)) from timeout_err
+        except requests.HTTPError as http_err:
+            ErrorHandler.process(http_err)
 
     def save_settings(self, updates: Dict) -> None:
         """
-        Persist identity settings
+        Persist identity settings.
 
         :param updates:
         :return:
@@ -288,7 +308,7 @@ class LibbyClient(object):
 
     def clear_settings(self) -> None:
         """
-        Wipe previously saved settings
+        Wipe previously saved settings.
 
         :return:
         """
@@ -298,7 +318,7 @@ class LibbyClient(object):
 
     def has_chip(self) -> bool:
         """
-        Check if client has identity token
+        Check if client has identity token.
 
         :return:
         """
@@ -306,7 +326,7 @@ class LibbyClient(object):
 
     def has_sync_code(self) -> bool:
         """
-        Check if client has linked account
+        Check if client has linked account.
 
         :return:
         """
@@ -317,7 +337,7 @@ class LibbyClient(object):
 
     def get_chip(self, auto_save: bool = True, authenticated: bool = False) -> Dict:
         """
-        Get an identity chip (contains auth token)
+        Get an identity chip (contains auth token).
 
         :param auto_save:
         :param authenticated:
@@ -336,7 +356,7 @@ class LibbyClient(object):
 
     def clone_by_code(self, code: str, auto_save: bool = True) -> Dict:
         """
-        Link account to identy token retrieved in `get_chip()`
+        Link account to identy token retrieved in `get_chip()`.
 
         :param code:
         :param auto_save:
@@ -353,7 +373,7 @@ class LibbyClient(object):
 
     def sync(self) -> Dict:
         """
-        Get the user account state, which includes loans, holds, etc
+        Get the user account state, which includes loans, holds, etc.
 
         :return:
         """
@@ -362,7 +382,7 @@ class LibbyClient(object):
 
     def is_logged_in(self) -> bool:
         """
-        Check if successfully logged in
+        Check if successfully logged in.
 
         :return:
         """
@@ -374,16 +394,32 @@ class LibbyClient(object):
     @staticmethod
     def is_audiobook_loan(book: Dict) -> bool:
         """
-        Verify if book is a downloadable audiobook
+        Verify if book is a downloadable audiobook.
 
         :param book:
         :return:
         """
         return bool([f for f in book.get("formats", []) if f["id"] == "audiobook-mp3"])
 
+    @staticmethod
+    def is_renewable(loan: Dict) -> bool:
+        if not loan.get("renewableOn"):
+            raise ValueError("Unable to get renewable date")
+        # Example: 2023-02-23T07:33:55Z
+        renewable_on = datetime.strptime(
+            loan["renewableOn"], "%Y-%m-%dT%H:%M:%SZ"
+        ).replace(tzinfo=timezone.utc)
+        return renewable_on <= datetime.utcnow().replace(tzinfo=timezone.utc)
+
+    def get_loans(self) -> List[Dict]:
+        return self.sync().get("loans", [])
+
+    def get_holds(self) -> List[Dict]:
+        return self.sync().get("holds", [])
+
     def get_audiobook_loans(self) -> List[Dict]:
         """
-        Get audiobook loans
+        Get audiobook loans.
 
         :return:
         """
@@ -395,7 +431,7 @@ class LibbyClient(object):
 
     def fulfill(self, loan_id: str, card_id: str, format_id: str) -> Dict:
         """
-        Get the fulfillment details for a loan
+        Get the fulfillment details for a loan.
 
         :param loan_id:
         :param card_id:
@@ -410,7 +446,7 @@ class LibbyClient(object):
 
     def fulfill_odm(self, loan_id: str, card_id: str, format_id: str) -> bytes:
         """
-        Returns the odm contents directly
+        Returns the odm contents directly.
 
         :param loan_id:
         :param card_id:
@@ -428,7 +464,7 @@ class LibbyClient(object):
 
     def open_loan(self, loan_type: str, card_id: str, title_id: str) -> Dict:
         """
-        Gets the meta urls needed to fulfill a loan
+        Gets the meta urls needed to fulfill a loan.
 
         :param loan_type:
         :param card_id:
@@ -444,7 +480,7 @@ class LibbyClient(object):
         self, loan: Dict
     ) -> Tuple[Dict, OrderedDictType[str, PartMeta]]:
         """
-        Returns the data needed to download an audiobook
+        Returns the data needed to download an audiobook.
 
         :param loan:
         :return:
@@ -469,3 +505,92 @@ class LibbyClient(object):
         openbook = self.make_request(meta["urls"]["openbook"])
         toc = parse_toc(download_base, openbook["nav"]["toc"], openbook["spine"])
         return openbook, toc
+
+    def return_title(self, title_id: str, card_id: str) -> None:
+        """
+        Return book.
+        If `return_all` is True, all loans with the title_id will be returned
+        otherwise, only the oldest checked out loan is returned.
+
+        :param title_id:
+        :param card_id:
+        :return:
+        """
+        self.make_request(
+            f"card/{card_id}/loan/{title_id}", method="DELETE", return_res=True
+        )
+
+    def return_loan(self, loan: Dict) -> None:
+        """
+        Return a loan.
+
+        :param loan:
+        :return:
+        """
+        self.return_title(loan["id"], loan["cardId"])
+
+    def borrow_title(
+        self, title_id: str, title_format: str, card_id: str, days: int = 21
+    ) -> Dict:
+        """
+        Return a title.
+
+        :param title_id:
+        :param title_format: Type ID
+        :param card_id:
+        :param days:
+        :return:
+        """
+        data = {
+            "period": days,
+            "units": "days",
+            "lucky_day": None,
+            "title_format": title_format,
+        }
+
+        res: Dict = self.make_request(
+            f"card/{card_id}/loan/{title_id}", json_data=data, method="POST"
+        )
+        return res
+
+    def borrow_hold(self, hold: Dict) -> Dict:
+        """
+        Borrow a hold.
+
+        :param hold:
+        :return:
+        """
+        return self.borrow_title(hold["id"], hold["type"]["id"], hold["cardId"])
+
+    def renew_title(
+        self, title_id: str, title_format: str, card_id: str, days: int = 21
+    ) -> Dict:
+        """
+        Return a title.
+
+        :param title_id:
+        :param title_format: Type ID
+        :param card_id:
+        :param days:
+        :return:
+        """
+        data = {
+            "period": days,
+            "units": "days",
+            "lucky_day": None,
+            "title_format": title_format,
+        }
+
+        res: Dict = self.make_request(
+            f"card/{card_id}/loan/{title_id}", json_data=data, method="PUT"
+        )
+        return res
+
+    def renew_loan(self, loan: Dict) -> Dict:
+        """
+        Renew a loan.
+
+        :param loan:
+        :return:
+        """
+        return self.renew_title(loan["id"], loan["type"]["id"], loan["cardId"])

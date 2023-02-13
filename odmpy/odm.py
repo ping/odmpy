@@ -24,7 +24,9 @@ import json
 import logging
 import os
 import sys
+import time
 import xml.etree.ElementTree
+from enum import Enum
 from http.client import HTTPConnection
 from typing import Dict, List
 
@@ -34,6 +36,7 @@ from termcolor import colored
 
 from .constants import UA_LONG
 from .libby import LibbyClient
+from .libby_errors import ClientBadRequestError
 from .processing import process_odm, process_audiobook_loan
 from .utils import slugify, get_element_text
 
@@ -48,6 +51,15 @@ requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
 
 __version__ = "0.6.7"  # also update ../setup.py
+
+
+class OdmpyCommands(str, Enum):
+    Information = "info"
+    Download = "dl"
+    Return = "ret"
+    Libby = "libby"
+    LibbyReturn = "libbyreturn"
+    LibbyRenew = "libbyrenew"
 
 
 def positive_int(value: str) -> int:
@@ -78,6 +90,17 @@ def valid_book_folder_format(value: str) -> str:
             f'"{value}" is not a valid book folder name format: {err}'
         ) from err
     return value
+
+
+def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
+    parser_libby.add_argument(
+        "--settings",
+        dest="settings_folder",
+        type=str,
+        default="./odmpy_settings",
+        metavar="SETTINGS_FOLDER",
+        help="Settings folder to store odmpy required settings, e.g. Libby authentication.",
+    )
 
 
 def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
@@ -179,9 +202,9 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
     parser_dl.add_argument(
         "-r",
         "--retry",
-        dest="retries",
+        dest="obsolete_retries",
         type=int,
-        default=1,
+        default=0,
         help="Number of retries if download fails. Default 1.",
     )
     parser_dl.add_argument(
@@ -273,14 +296,24 @@ def run() -> None:
         default=10,
         help="Timeout (seconds) for network requests. Default 10.",
     )
+    parser.add_argument(
+        "-r",
+        "--retry",
+        dest="retries",
+        type=int,
+        default=1,
+        help="Number of retries if a network request fails. Default 1.",
+    )
 
     subparsers = parser.add_subparsers(
         title="Available commands",
         dest="command_name",
         help="To get more help, use the -h option with the command.",
     )
+
+    # odm info parser
     parser_info = subparsers.add_parser(
-        "info",
+        OdmpyCommands.Information.value,
         description="Get information about a loan file.",
         help="Get information about a loan file",
     )
@@ -294,8 +327,9 @@ def run() -> None:
     )
     parser_info.add_argument("odm_file", type=str, help="ODM file path.")
 
+    # odm download parser
     parser_dl = subparsers.add_parser(
-        "dl",
+        OdmpyCommands.Download.value,
         description="Download from a loan file.",
         help="Download from a loan odm file.",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -303,25 +337,22 @@ def run() -> None:
     parser_dl.add_argument("odm_file", type=str, help="ODM file path.")
     add_common_download_arguments(parser_dl)
 
+    # odm return parser
     parser_ret = subparsers.add_parser(
-        "ret", description="Return a loan file.", help="Return a loan file."
+        OdmpyCommands.Return.value,
+        description="Return a loan file.",
+        help="Return a loan file.",
     )
     parser_ret.add_argument("odm_file", type=str, help="ODM file path.")
 
+    # libby download parser
     parser_libby = subparsers.add_parser(
-        "libby",
-        description="Interactive Libby Interface",
-        help="Interact directly with Libby to download audiobooks.",
+        OdmpyCommands.Libby.value,
+        description="Interactive Libby Interface for downloading audiobook loans.",
+        help="Download audiobooks via Libby.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser_libby.add_argument(
-        "--settings",
-        dest="settings_folder",
-        type=str,
-        default="./odmpy_settings",
-        metavar="SETTINGS_FOLDER",
-        help="Settings folder to store odmpy required settings, e.g. Libby authentication.",
-    )
+    add_common_libby_arguments(parser_libby)
     parser_libby.add_argument(
         "--reset",
         dest="reset_settings",
@@ -369,6 +400,24 @@ def run() -> None:
     )
     add_common_download_arguments(parser_libby)
 
+    # libby return parser
+    parser_libby_return = subparsers.add_parser(
+        OdmpyCommands.LibbyReturn.value,
+        description="Interactive Libby Interface for returning audiobook loans.",
+        help="Return audiobook loans via Libby.",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    add_common_libby_arguments(parser_libby_return)
+
+    # libby renew parser
+    parser_libby_renew = subparsers.add_parser(
+        OdmpyCommands.LibbyRenew.value,
+        description="Interactive Libby Interface for renewing audiobook loans.",
+        help="Renew audiobook loans via Libby.",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    add_common_libby_arguments(parser_libby_renew)
+
     args = parser.parse_args()
     if args.verbose:
         logger.setLevel(logging.DEBUG)
@@ -387,15 +436,37 @@ def run() -> None:
         logging.WARNING if logger.level == logging.DEBUG else logging.ERROR
     )
 
-    if args.command_name == "libby":
+    if hasattr(args, "obsolete_retries") and args.obsolete_retries:
+        # retire --retry on the subcommands, after v0.6.7
+        logger.warning(
+            f"{'*' * 60}\n⚠️  The %s option for the %s command is no longer valid, and\n"
+            f"has been moved to the base odmpy command, example: 'odmpy --retry {args.obsolete_retries}'.\n"
+            f"Please change your command to '%s' instead\n{'*' * 60}",
+            colored("--retry/-r", "red"),
+            colored(args.command_name, "red"),
+            colored(
+                f"odmpy --retry {args.obsolete_retries} {args.command_name}",
+                attrs=["bold"],
+            ),
+        )
+        time.sleep(3)
+
+    if args.command_name in (
+        OdmpyCommands.Libby,
+        OdmpyCommands.LibbyReturn,
+        OdmpyCommands.LibbyRenew,
+    ):
         client_title = "Libby Interactive Client"
         logger.info(client_title)
         logger.info("-" * 70)
         try:
             libby_client = LibbyClient(
-                args.settings_folder, timeout=args.timeout, logger=logger
+                settings_folder=args.settings_folder,
+                max_retries=args.retries,
+                timeout=args.timeout,
+                logger=logger,
             )
-            if args.reset_settings:
+            if args.command_name == OdmpyCommands.Libby and args.reset_settings:
                 libby_client.clear_settings()
 
             if not libby_client.has_sync_code():
@@ -444,7 +515,7 @@ def run() -> None:
                 key=lambda ln: ln["checkoutDate"],  # type: ignore[no-any-return]
             )
 
-            if args.export_loans_path:
+            if args.command_name == OdmpyCommands.Libby and args.export_loans_path:
                 logger.info(
                     "Non-interactive mode. Exporting loans json to %s...",
                     colored(args.export_loans_path, "magenta"),
@@ -457,10 +528,20 @@ def run() -> None:
                     )
                 return
 
+            if args.command_name == OdmpyCommands.LibbyRenew:
+                audiobook_loans = [
+                    loan for loan in audiobook_loans if libby_client.is_renewable(loan)
+                ]
+                if not audiobook_loans:
+                    logger.info("No renewable audiobook loans found.")
+                    return
+
             if not audiobook_loans:
                 logger.info("No downloadable audiobook loans found.")
                 return
-            if args.selected_loans_indices or args.download_latest_n:
+            if args.command_name == OdmpyCommands.Libby and (
+                args.selected_loans_indices or args.download_latest_n
+            ):
                 selected_loans_indices = []
                 total_loans_count = len(audiobook_loans)
                 if args.selected_loans_indices:
@@ -520,7 +601,7 @@ def run() -> None:
 
             cards = synced_state.get("cards", [])
             logger.info(
-                "Found %s downloadable loans.",
+                "Found %s loans.",
                 colored(str(len(audiobook_loans)), "blue"),
             )
             for index, loan in enumerate(audiobook_loans, start=1):
@@ -532,7 +613,7 @@ def run() -> None:
                     colored(f"{index:2d}", attrs=["bold"]),
                     colored(loan["title"], attrs=["bold"]),
                     f'By: {loan["firstCreatorName"]}',
-                    f"Expires: {expiry_date:%Y-%m-%d}",
+                    f"Expires: {colored(f'{expiry_date:%Y-%m-%d}','blue' if libby_client.is_renewable(loan) else None)}",
                     next(
                         iter(
                             [
@@ -544,9 +625,16 @@ def run() -> None:
                     ),
                 )
             loan_choices: List[str] = []
+
+            libby_mode = "download"
+            if args.command_name == OdmpyCommands.LibbyReturn:
+                libby_mode = "return"
+            elif args.command_name == OdmpyCommands.LibbyRenew:
+                libby_mode = "renew"
             while True:
                 user_loan_choice_input = input(
-                    f'\nChoose from {colored(f"1-{len(audiobook_loans)}", attrs=["bold"])} '
+                    f'\n{colored(libby_mode.title(), "magenta", attrs=["bold"])}. '
+                    f'Choose from {colored(f"1-{len(audiobook_loans)}", attrs=["bold"])} '
                     "(separate choices with a space or leave blank to quit), \n"
                     "then press enter: "
                 ).strip()
@@ -567,31 +655,64 @@ def run() -> None:
                 if loan_choices_isvalid:
                     break
 
-            if args.libby_direct:
+            if args.command_name == OdmpyCommands.LibbyReturn:
+                # do returns
                 for c in loan_choices:
                     selected_loan = audiobook_loans[int(c) - 1]
                     logger.info(
-                        'Opening book "%s"...', colored(selected_loan["title"], "blue")
+                        'Returning loan "%s"...',
+                        colored(selected_loan["title"], "blue"),
                     )
-                    openbook, toc = libby_client.process_audiobook(selected_loan)
-                    process_audiobook_loan(
-                        selected_loan,
-                        openbook,
-                        toc,
-                        libby_client.libby_session,
-                        args,
-                        logger,
-                    )
+                    libby_client.return_loan(selected_loan)
                 return
 
-            for c in loan_choices:
-                selected_loan = audiobook_loans[int(c) - 1]
-                process_odm(
-                    extract_odm(libby_client, selected_loan, args),
-                    args,
-                    logger,
-                    cleanup_odm_license=not args.keepodm,
-                )
+            if args.command_name == OdmpyCommands.LibbyRenew:
+                # do renewals
+                for c in loan_choices:
+                    selected_loan = audiobook_loans[int(c) - 1]
+                    logger.info(
+                        'Renewing loan "%s"...',
+                        colored(selected_loan["title"], "blue"),
+                    )
+                    try:
+                        _ = libby_client.renew_loan(selected_loan)
+                    except ClientBadRequestError as badreq_err:
+                        logger.warning(
+                            'Error encountered while renewing "%s": %s',
+                            selected_loan["title"],
+                            colored(badreq_err.msg, "red"),
+                        )
+                return
+
+            if args.command_name == OdmpyCommands.Libby:
+                # do downloads
+                if args.libby_direct:
+                    for c in loan_choices:
+                        selected_loan = audiobook_loans[int(c) - 1]
+                        logger.info(
+                            'Opening book "%s"...',
+                            colored(selected_loan["title"], "blue"),
+                        )
+                        openbook, toc = libby_client.process_audiobook(selected_loan)
+                        process_audiobook_loan(
+                            selected_loan,
+                            openbook,
+                            toc,
+                            libby_client.libby_session,
+                            args,
+                            logger,
+                        )
+                    return
+
+                for c in loan_choices:
+                    selected_loan = audiobook_loans[int(c) - 1]
+                    process_odm(
+                        extract_odm(libby_client, selected_loan, args),
+                        args,
+                        logger,
+                        cleanup_odm_license=not args.keepodm,
+                    )
+                return
 
         except RuntimeError as run_err:
             logger.error(colored(str(run_err), "red"))
