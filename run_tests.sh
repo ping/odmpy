@@ -97,5 +97,8 @@ python -m unittest -v tests.OdmpyTests.test_opf
 echo "-=-=-=-=-=-=-=-=-=- RUNNING TESTS FOR LIBBY CLIENT ... -=-=-=-=-=-=-=-=-=-"
 python -m unittest -v tests.LibbyClientTests
 
+echo "-=-=-=-=-=-=-=-=-=- RUNNING TESTS FOR UTILS ... -=-=-=-=-=-=-=-=-=-"
+python -m unittest -v tests.UtilsTests
+
 # clean up
 clear_test_data

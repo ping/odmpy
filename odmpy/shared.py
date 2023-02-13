@@ -31,7 +31,7 @@ from termcolor import colored
 
 from .constants import PERFORMER_FID, LANGUAGE_FID
 from .libby import USER_AGENT
-from .utils import slugify
+from .utils import slugify, sanitize_path
 
 
 def generate_names(
@@ -52,9 +52,9 @@ def generate_names(
     :return:
     """
     book_folder_name = args.book_folder_format % {
-        "Title": title.replace(os.sep, "-"),
-        "Author": ", ".join(authors).replace(os.sep, "-"),
-        "Series": (series or "").replace(os.sep, "-"),
+        "Title": sanitize_path(title),
+        "Author": sanitize_path(", ".join(authors)),
+        "Series": sanitize_path(series or ""),
     }
     # declare book folder/file names here together, so that we can catch problems from too long names
     book_folder = os.path.join(args.download_dir, book_folder_name)
@@ -64,12 +64,12 @@ def generate_names(
     # for merged mp3
     book_filename = os.path.join(
         book_folder,
-        f"{title.replace(os.sep, '-')} - {', '.join(authors).replace(os.sep, '-')}.mp3",
+        f"{sanitize_path(title)} - {sanitize_path(', '.join(authors))}.mp3",
     )
     # for merged m4b
     book_m4b_filename = os.path.join(
         book_folder,
-        f"{title.replace(os.sep, '-')} - {', '.join(authors).replace(os.sep, '-')}.m4b",
+        f"{sanitize_path(title)} - {sanitize_path(', '.join(authors))}.m4b",
     )
 
     if not os.path.exists(book_folder):
@@ -83,9 +83,9 @@ def generate_names(
             # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
             # create book folder with just the title and first author
             book_folder_name = args.book_folder_format % {
-                "Title": title.replace(os.sep, "-"),
-                "Author": ", ".join(authors[0]).replace(os.sep, "-"),
-                "Series": (series or "").replace(os.sep, "-"),
+                "Title": sanitize_path(title),
+                "Author": sanitize_path(authors[0]),
+                "Series": sanitize_path(series or ""),
             }
             book_folder = os.path.join(args.download_dir, book_folder_name)
             logger.warning(
@@ -94,12 +94,8 @@ def generate_names(
             os.makedirs(book_folder, exist_ok=True)
 
             # create merged book name with just the title
-            book_filename = os.path.join(
-                book_folder, f"{title.replace(os.sep, '-')}.mp3"
-            )
-            book_m4b_filename = os.path.join(
-                book_folder, f"{title.replace(os.sep, '-')}.m4b"
-            )
+            book_filename = os.path.join(book_folder, f"{sanitize_path(title)}.mp3")
+            book_m4b_filename = os.path.join(book_folder, f"{sanitize_path(title)}.m4b")
     return book_folder, book_filename, book_m4b_filename
 
 
