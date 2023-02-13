@@ -18,6 +18,7 @@
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+import platform
 import re
 import unicodedata
 import xml.etree.ElementTree as ET
@@ -28,13 +29,16 @@ from mutagen.mp3 import MP3  # type: ignore[import]
 TIMESTAMP_RE = re.compile(
     r"^((?P<hr>[0-9]+):)?(?P<min>[0-9]+):(?P<sec>[0-9]+)(\.(?P<ms>[0-9]+))?$"
 )
-ILLEGAL_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
+ILLEGAL_WIN_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
 
 
 def sanitize_path(text: str, sub_text: str = "-") -> str:
-    # just replacing `os.sep` is not enough on Windows
-    # ref https://github.com/ping/odmpy/issues/30
-    text = ILLEGAL_PATH_CHARS_RE.sub(sub_text, text).replace(os.sep, sub_text)
+    if os.name == "nt" or platform.platform().lower() == "windows":
+        # just replacing `os.sep` is not enough on Windows
+        # ref https://github.com/ping/odmpy/issues/30
+        text = ILLEGAL_WIN_PATH_CHARS_RE.sub(sub_text, text)
+
+    text = text.replace(os.sep, sub_text)
     # also strip away non-printable chars just to be safe
     return "".join(c for c in text if c.isprintable())
 

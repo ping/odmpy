@@ -1,20 +1,27 @@
+import os
+import platform
+import sys
 import unittest
 from odmpy import utils
 
 
 class UtilsTests(unittest.TestCase):
     def test_sanitize_path(self):
+        is_windows = platform.platform().lower() == "windows" or os.name == "nt"
         self.assertEqual(
             utils.sanitize_path(r'a<b>c:d"e/f\g|h?i*j_a<b>c:d"e/f\g|h?i*j', ""),
-            "abcdefghij_abcdefghij",
+            "abcdefghij_abcdefghij"
+            if is_windows
+            else r'a<b>c:d"ef\g|h?i*j_a<b>c:d"ef\g|h?i*j',
         )
         self.assertEqual(
             utils.sanitize_path(r'a<b>c:d"e/f\g|h?i*j'),
-            "a-b-c-d-e-f-g-h-i-j",
+            "a-b-c-d-e-f-g-h-i-j" if is_windows else r'a<b>c:d"e-f\g|h?i*j',
         )
+
         self.assertEqual(
-            utils.sanitize_path("abc\ndef"),
-            "abcdef",
+            utils.sanitize_path("abc\ndef\tghi"),
+            "abcdefghi",
         )
         self.assertEqual(
             utils.sanitize_path("Español 中文 русский 한국어 日本語"),
