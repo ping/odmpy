@@ -167,7 +167,7 @@ class OdmpyTests(unittest.TestCase):
             self.test_data_dir, "{}.info.expected.txt".format(self.test_file)
         )
         test_file = os.path.join(self.test_data_dir, "test.odm.info.txt")
-        with open(expected_file) as expected, open(test_file) as actual:
+        with open(expected_file, encoding="utf-8") as expected, open(test_file, encoding="utf-8") as actual:
             expected_text = expected.read()
             actual_text = actual.read()
             self.assertEqual(expected_text, actual_text)
@@ -278,7 +278,7 @@ class OdmpyTests(unittest.TestCase):
         """
         json_file = os.path.join(self.test_data_dir, "output.mp3.json")
         last_end = 0
-        with open(json_file) as f:
+        with open(json_file, encoding="utf-8") as f:
             meta = json.load(f)
             self.assertEqual(len(meta.get("chapters", [])), self.total_chapters)
             for ch in meta["chapters"]:
@@ -317,7 +317,7 @@ class OdmpyTests(unittest.TestCase):
         """
         json_file = os.path.join(self.test_data_dir, "output.m4b.json")
         last_end = 0
-        with open(json_file) as f:
+        with open(json_file, encoding="utf-8") as f:
             meta = json.load(f)
             self.assertEqual(len(meta.get("chapters", [])), self.total_chapters)
             for ch in meta["chapters"]:
