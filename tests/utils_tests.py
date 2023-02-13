@@ -7,7 +7,7 @@ from odmpy import utils
 
 class UtilsTests(unittest.TestCase):
     def test_sanitize_path(self):
-        is_windows = platform.platform().lower() == "windows" or os.name == "nt"
+        is_windows = os.name == "nt" or platform.system().lower() == "windows"
         self.assertEqual(
             utils.sanitize_path(r'a<b>c:d"e/f\g|h?i*j_a<b>c:d"e/f\g|h?i*j', ""),
             "abcdefghij_abcdefghij"

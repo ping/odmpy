@@ -40,7 +40,7 @@ def sanitize_path(text: str, sub_text: str = "-") -> str:
     :param sub_text:
     :return:
     """
-    if os.name == "nt" or platform.platform().lower() == "windows":
+    if os.name == "nt" or platform.system().lower() == "windows":
         # just replacing `os.sep` is not enough on Windows
         # ref https://github.com/ping/odmpy/issues/30
         text = ILLEGAL_WIN_PATH_CHARS_RE.sub(sub_text, text)
