@@ -239,3 +239,20 @@ where [`example.dl.conf`](example.dl.conf) contains the command arguments values
 
 - [overdrive](https://github.com/chbrown/overdrive)
 - [pylibby](https://github.com/lullius/pylibby)
+
+## Contributing
+
+This repository uses [black](https://github.com/psf/black) to ensure consistent formatting.
+The [CI Actions](https://github.com/ping/odmpy/blob/master/.github/workflows/lint-test.yml)
+currently configured also include lint tests using [flake8](https://github.com/pycqa/flake8),
+[pylint](https://github.com/PyCQA/pylint) and [mypy](https://github.com/python/mypy).
+
+```bash
+# 1. Install requirements for dev
+pip3 install -r requirements-dev.txt --upgrade
+
+# 2. Make changes
+
+# 3. Check for linting errors
+sh dev-lint.sh
+```
