@@ -32,19 +32,19 @@ jobs:
         pip -q install -r requirements-dev.txt
     - name: Compile all
       run: |
-        python -m compileall odmpy
+        python -m compileall odmpy tests
     - name: Analysing the code with black
       run: |
-        black --check setup.py odmpy
+        black --check setup.py odmpy tests
     - name: Analysing the code with flake8
       run: |
-        flake8 setup.py odmpy
+        flake8 setup.py odmpy tests
     - name: Analysing the code with pylint
       run: |
-        pylint setup.py odmpy
+        pylint setup.py odmpy tests
     - name: Analysing the code with mypy
       run: |
-        mypy --package odmpy
+        mypy --package odmpy --package tests
 
   tests:
     runs-on: ${{ matrix.os }}
