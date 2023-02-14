@@ -63,6 +63,13 @@ class OdmpyCommands(str, Enum):
     LibbyRenew = "libbyrenew"
 
 
+# Non-interactive arguments
+class OdmpyNoninteractiveOptions(str, Enum):
+    DownloadLatestN = "download_latest_n"
+    DownloadSelectedN = "selected_loans_indices"
+    ExportLoans = "export_loans_path"
+
+
 def positive_int(value: str) -> int:
     """
     Ensure that argument is a postive integer
@@ -373,7 +380,7 @@ def run() -> None:
     )
     parser_libby.add_argument(
         "--latest",
-        dest="download_latest_n",
+        dest=OdmpyNoninteractiveOptions.DownloadLatestN,
         type=positive_int,
         default=0,
         metavar="N",
@@ -381,7 +388,7 @@ def run() -> None:
     )
     parser_libby.add_argument(
         "--select",
-        dest="selected_loans_indices",
+        dest=OdmpyNoninteractiveOptions.DownloadSelectedN,
         type=positive_int,
         nargs="+",
         metavar="N",
@@ -394,7 +401,7 @@ def run() -> None:
     )
     parser_libby.add_argument(
         "--exportloans",
-        dest="export_loans_path",
+        dest=OdmpyNoninteractiveOptions.ExportLoans,
         metavar="LOANS_JSON_FILEPATH",
         type=str,
         help="Non-interactive mode that exports audiobook loans information into a json file at the path specified.",
@@ -469,6 +476,17 @@ def run() -> None:
             )
             if args.command_name == OdmpyCommands.Libby and args.reset_settings:
                 libby_client.clear_settings()
+
+            # detect if non-interactive command options are selected before setup
+            if not libby_client.has_sync_code():
+                if [
+                    opt_name
+                    for opt_name in OdmpyNoninteractiveOptions
+                    if hasattr(args, opt_name) and getattr(args, opt_name)
+                ]:
+                    raise RuntimeError(
+                        'Libby has not been setup. Please run "odmpy libby" first.'
+                    )
 
             if not libby_client.has_sync_code():
                 instructions = (
