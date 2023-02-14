@@ -23,7 +23,6 @@ eyed3_log.setLevel(logging.ERROR)
 
 
 class OdmpyTests(unittest.TestCase):
-
     book_folders = {
         "test1.odm": os.path.join(
             "downloads", "Ceremonies For Christmas - Robert Herrick"
@@ -167,7 +166,9 @@ class OdmpyTests(unittest.TestCase):
             self.test_data_dir, "{}.info.expected.txt".format(self.test_file)
         )
         test_file = os.path.join(self.test_data_dir, "test.odm.info.txt")
-        with open(expected_file, encoding="utf-8") as expected, open(test_file, encoding="utf-8") as actual:
+        with open(expected_file, encoding="utf-8") as expected, open(
+            test_file, encoding="utf-8"
+        ) as actual:
             expected_text = expected.read()
             actual_text = actual.read()
             self.assertEqual(expected_text, actual_text)
@@ -180,7 +181,7 @@ class OdmpyTests(unittest.TestCase):
         ```
         """
         test_file = os.path.join(self.test_data_dir, "test.odm.info.json")
-        with open(test_file, "r") as f:
+        with open(test_file, "r", encoding="utf-8") as f:
             info = json.load(f)
             for tag in [
                 "title",
@@ -377,6 +378,7 @@ class OdmpyTests(unittest.TestCase):
         with open(test_file, encoding="utf-8") as actual, open(
             schema_file, "r", encoding="utf-8"
         ) as schema:
+            # pylint: disable=c-extension-no-member
             actual_opf = etree.parse(actual)
             relaxng = etree.RelaxNG(etree.parse(schema))
             self.assertTrue(relaxng.validate(actual_opf))
