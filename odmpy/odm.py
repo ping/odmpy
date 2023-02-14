@@ -683,6 +683,10 @@ def run() -> None:
                         colored(selected_loan["title"], "blue"),
                     )
                     libby_client.return_loan(selected_loan)
+                    logger.info(
+                        'Returned "%s".',
+                        colored(selected_loan["title"], "blue"),
+                    )
                 return
 
             if args.command_name == OdmpyCommands.LibbyRenew:
@@ -695,6 +699,10 @@ def run() -> None:
                     )
                     try:
                         _ = libby_client.renew_loan(selected_loan)
+                        logger.info(
+                            'Renewed "%s".',
+                            colored(selected_loan["title"], "blue"),
+                        )
                     except ClientBadRequestError as badreq_err:
                         logger.warning(
                             'Error encountered while renewing "%s": %s',
