@@ -183,7 +183,7 @@ class OdmpyDlTests(unittest.TestCase):
             mp3_file,
         ]
         cmd_result = subprocess.run(
-            ffprobe_cmd, capture_output=True, text=True, check=True
+            ffprobe_cmd, capture_output=True, text=True, check=True, encoding="utf-8"
         )
         meta = json.loads(str(cmd_result.stdout))
 
@@ -244,7 +244,7 @@ class OdmpyDlTests(unittest.TestCase):
             m4b_file,
         ]
         cmd_result = subprocess.run(
-            ffprobe_cmd, capture_output=True, text=True, check=True
+            ffprobe_cmd, capture_output=True, text=True, check=True, encoding="utf-8"
         )
 
         last_end = 0
