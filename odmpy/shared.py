@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 import argparse
 import logging
 import os
@@ -30,7 +31,7 @@ from termcolor import colored
 
 from .constants import PERFORMER_FID, LANGUAGE_FID
 from .libby import USER_AGENT
-from .utils import slugify, sanitize_path
+from .utils import slugify, sanitize_path, set_ele_attributes
 
 
 def generate_names(
@@ -446,18 +447,6 @@ def remux_mp3(
     except Exception as ffmpeg_ex:  # pylint: disable=broad-except
         logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
         os.rename(part_tmp_filename, part_filename)
-
-
-def set_ele_attributes(ele: ET.Element, attributes: Dict) -> None:
-    """
-    Set multiple attributes on an Element
-
-    :param ele: Element
-    :param attributes:
-    :return:
-    """
-    for k, v in attributes.items():
-        ele.set(k, v)
 
 
 def create_opf(

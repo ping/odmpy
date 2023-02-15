@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright (C) 2021 github.com/ping
 #
 # This file is part of odmpy.
@@ -17,12 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 import os
 import platform
 import re
 import unicodedata
 import xml.etree.ElementTree as ET
-from typing import Optional
+from typing import Optional, Dict
 
 from mutagen.mp3 import MP3  # type: ignore[import]
 
@@ -60,6 +59,18 @@ def get_element_text(ele: Optional[ET.Element]) -> str:
     if (ele is not None) and ele.text:
         return ele.text or ""
     return ""
+
+
+def set_ele_attributes(ele: ET.Element, attributes: Dict) -> None:
+    """
+    Set multiple attributes on an Element
+
+    :param ele: Element
+    :param attributes:
+    :return:
+    """
+    for k, v in attributes.items():
+        ele.set(k, v)
 
 
 def parse_duration_to_milliseconds(text: str) -> int:
