@@ -1,3 +1,4 @@
+import glob
 import json
 import os.path
 import shutil
@@ -59,17 +60,25 @@ class OdmpyLibbyTests(unittest.TestCase):
         with open(loans_file_name, "r", encoding="utf-8") as f:
             loans = json.load(f)
         if not loans:
-            return
-        run(
-            [
-                "libby",
-                "--downloaddir",
-                download_folder,
-                "--select",
-                str(len(loans)),
-            ],
-            be_quiet=True,
-        )
+            self.skipTest("No loans.")
+
+        try:
+            run(
+                [
+                    "libby",
+                    "--direct",
+                    "--downloaddir",
+                    download_folder,
+                    "--select",
+                    str(len(loans)),
+                    "--hideprogress",
+                ],
+                be_quiet=True,
+            )
+        except KeyboardInterrupt:
+            self.fail("Test aborted")
+
+        self.assertTrue(glob.glob(f"{download_folder}/*/*.mp3"))
 
     @unittest.skip("Takes too long")  # turn off at will
     def test_libby_download_latest(self):
@@ -77,13 +86,31 @@ class OdmpyLibbyTests(unittest.TestCase):
             run(["libby", "--check"], be_quiet=True)
         except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
-
-        download_folder = os.path.join(
-            self.test_downloads_dir,
-            f"test_downloads_{int(datetime.utcnow().timestamp() * 1000)}",
-        )
+        ts = int(datetime.utcnow().timestamp() * 1000)
+        loans_file_name = os.path.join(self.test_downloads_dir, f"test_loans_{ts}.json")
+        download_folder = os.path.join(self.test_downloads_dir, f"test_downloads_{ts}")
         os.makedirs(download_folder)
-        run(
-            ["libby", "--downloaddir", download_folder, "--latest", "1"],
-            be_quiet=True,
-        )
+        run(["libby", "--exportloans", loans_file_name], be_quiet=True)
+        self.assertTrue(os.path.exists(loans_file_name))
+        with open(loans_file_name, "r", encoding="utf-8") as f:
+            loans = json.load(f)
+        if not loans:
+            self.skipTest("No loans.")
+
+        try:
+            run(
+                [
+                    "libby",
+                    "--direct",
+                    "--downloaddir",
+                    download_folder,
+                    "--latest",
+                    "1",
+                    "--hideprogress",
+                ],
+                be_quiet=True,
+            )
+        except KeyboardInterrupt:
+            self.fail("Test aborted")
+
+        self.assertTrue(glob.glob(f"{download_folder}/*/*.mp3"))
