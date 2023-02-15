@@ -6,6 +6,7 @@ import warnings
 from datetime import datetime
 
 from odmpy.odm import run
+from odmpy.cli_utils import LibbyNotConfiguredError
 
 
 # Test non-interactive options
@@ -26,7 +27,9 @@ class OdmpyLibbyTests(unittest.TestCase):
             shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
 
     def test_libby_export(self):
-        if run(["libby", "--check"], be_quiet=True):
+        try:
+            run(["libby", "--check"], be_quiet=True)
+        except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
 
         loans_file_name = os.path.join(
@@ -42,7 +45,9 @@ class OdmpyLibbyTests(unittest.TestCase):
 
     @unittest.skip("Takes too long")  # turn off at will
     def test_libby_download_select(self):
-        if run(["libby", "--check"], be_quiet=True):
+        try:
+            run(["libby", "--check"], be_quiet=True)
+        except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
 
         ts = int(datetime.utcnow().timestamp() * 1000)
@@ -68,7 +73,9 @@ class OdmpyLibbyTests(unittest.TestCase):
 
     @unittest.skip("Takes too long")  # turn off at will
     def test_libby_download_latest(self):
-        if run(["libby", "--check"], be_quiet=True):
+        try:
+            run(["libby", "--check"], be_quiet=True)
+        except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
 
         download_folder = os.path.join(
