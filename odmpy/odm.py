@@ -409,7 +409,6 @@ def run(
     if be_quiet:
         # in test mode
         ch.setLevel(logging.ERROR)
-        requests_logger.setLevel(logging.ERROR)
     elif args.verbose:
         logger.setLevel(logging.DEBUG)
         requests_logger.setLevel(logging.DEBUG)
