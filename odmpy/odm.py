@@ -27,14 +27,20 @@ import os
 import sys
 import time
 import xml.etree.ElementTree
-from enum import Enum
 from http.client import HTTPConnection
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import requests
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 
+from .cli_utils import (
+    OdmpyCommands,
+    OdmpyNoninteractiveOptions,
+    positive_int,
+    valid_book_folder_format,
+    LibbyNotConfiguredError,
+)
 from .constants import UA_LONG
 from .libby import LibbyClient
 from .libby_errors import ClientBadRequestError
@@ -52,52 +58,6 @@ requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
 
 __version__ = "0.6.7"  # also update ../setup.py
-
-
-class OdmpyCommands(str, Enum):
-    Information = "info"
-    Download = "dl"
-    Return = "ret"
-    Libby = "libby"
-    LibbyReturn = "libbyreturn"
-    LibbyRenew = "libbyrenew"
-
-
-# Non-interactive arguments
-class OdmpyNoninteractiveOptions(str, Enum):
-    DownloadLatestN = "download_latest_n"
-    DownloadSelectedN = "selected_loans_indices"
-    ExportLoans = "export_loans_path"
-
-
-def positive_int(value: str) -> int:
-    """
-    Ensure that argument is a postive integer
-
-    :param value:
-    :return:
-    """
-    try:
-        int_value = int(value)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f'"{value}" is not a positive integer value')
-    if int_value <= 0:
-        raise argparse.ArgumentTypeError(f'"{value}" is not a positive integer value')
-    return int_value
-
-
-def valid_book_folder_format(value: str) -> str:
-    try:
-        value % {"Title": "", "Author": "", "Series": ""}
-    except KeyError as err:
-        raise argparse.ArgumentTypeError(
-            f'"{value}" is not a valid book folder name format: Invalid field {err}'
-        ) from err
-    except Exception as err:
-        raise argparse.ArgumentTypeError(
-            f'"{value}" is not a valid book folder name format: {err}'
-        ) from err
-    return value
 
 
 def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
@@ -270,7 +230,13 @@ def extract_odm(
     return odm_file_path
 
 
-def run() -> None:
+def run(custom_args: Optional[List[str]] = None, be_quiet=False) -> None:
+    """
+
+    :param custom_args: Used by unittests
+    :param be_quiet: Used by unittests
+    :return:
+    """
     parser = argparse.ArgumentParser(
         prog="odmpy",
         description="Download/return an OverDrive loan audiobook",
@@ -321,7 +287,7 @@ def run() -> None:
 
     # odm info parser
     parser_info = subparsers.add_parser(
-        OdmpyCommands.Information.value,
+        OdmpyCommands.Information,
         description="Get information about a loan file.",
         help="Get information about a loan file",
     )
@@ -337,7 +303,7 @@ def run() -> None:
 
     # odm download parser
     parser_dl = subparsers.add_parser(
-        OdmpyCommands.Download.value,
+        OdmpyCommands.Download,
         description="Download from a loan file.",
         help="Download from a loan odm file.",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -347,7 +313,7 @@ def run() -> None:
 
     # odm return parser
     parser_ret = subparsers.add_parser(
-        OdmpyCommands.Return.value,
+        OdmpyCommands.Return,
         description="Return a loan file.",
         help="Return a loan file.",
     )
@@ -355,18 +321,13 @@ def run() -> None:
 
     # libby download parser
     parser_libby = subparsers.add_parser(
-        OdmpyCommands.Libby.value,
+        OdmpyCommands.Libby,
         description="Interactive Libby Interface for downloading audiobook loans.",
         help="Download audiobooks via Libby.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     add_common_libby_arguments(parser_libby)
-    parser_libby.add_argument(
-        "--reset",
-        dest="reset_settings",
-        action="store_true",
-        help="Remove previously saved odmpy Libby settings.",
-    )
+    add_common_download_arguments(parser_libby)
     parser_libby.add_argument(
         "--direct",
         dest="libby_direct",
@@ -406,11 +367,22 @@ def run() -> None:
         type=str,
         help="Non-interactive mode that exports audiobook loans information into a json file at the path specified.",
     )
-    add_common_download_arguments(parser_libby)
+    parser_libby.add_argument(
+        "--reset",
+        dest="reset_settings",
+        action="store_true",
+        help="Remove previously saved odmpy Libby settings.",
+    )
+    parser_libby.add_argument(
+        "--check",
+        dest=OdmpyNoninteractiveOptions.Check,
+        action="store_true",
+        help="Non-interactive mode that displays Libby signed-in status.",
+    )
 
     # libby return parser
     parser_libby_return = subparsers.add_parser(
-        OdmpyCommands.LibbyReturn.value,
+        OdmpyCommands.LibbyReturn,
         description="Interactive Libby Interface for returning audiobook loans.",
         help="Return audiobook loans via Libby.",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -419,15 +391,20 @@ def run() -> None:
 
     # libby renew parser
     parser_libby_renew = subparsers.add_parser(
-        OdmpyCommands.LibbyRenew.value,
+        OdmpyCommands.LibbyRenew,
         description="Interactive Libby Interface for renewing audiobook loans.",
         help="Renew audiobook loans via Libby.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     add_common_libby_arguments(parser_libby_renew)
 
-    args = parser.parse_args()
-    if args.verbose:
+    args = parser.parse_args(custom_args)
+
+    if be_quiet:
+        # in test mode
+        logger.setLevel(logging.ERROR)
+        requests_logger.setLevel(logging.ERROR)
+    elif args.verbose:
         logger.setLevel(logging.DEBUG)
         requests_logger.setLevel(logging.DEBUG)
         HTTPConnection.debuglevel = 1
@@ -459,23 +436,36 @@ def run() -> None:
         )
         time.sleep(3)
 
-    if args.command_name in (
-        OdmpyCommands.Libby,
-        OdmpyCommands.LibbyReturn,
-        OdmpyCommands.LibbyRenew,
-    ):
-        client_title = "Libby Interactive Client"
-        logger.info(client_title)
-        logger.info("-" * 70)
-        try:
+    try:
+        # Libby-based commands
+        if args.command_name in (
+            OdmpyCommands.Libby,
+            OdmpyCommands.LibbyReturn,
+            OdmpyCommands.LibbyRenew,
+        ):
+            client_title = "Libby Interactive Client"
+            logger.info(client_title)
+            logger.info("-" * 70)
+
             libby_client = LibbyClient(
                 settings_folder=args.settings_folder,
                 max_retries=args.retries,
                 timeout=args.timeout,
                 logger=logger,
             )
+
             if args.command_name == OdmpyCommands.Libby and args.reset_settings:
                 libby_client.clear_settings()
+                logger.info("Cleared settings.")
+                return
+
+            if args.command_name == OdmpyCommands.Libby and args.check_signed_in:
+                if not libby_client.has_sync_code():
+                    raise LibbyNotConfiguredError("Libby has not been setup.")
+                if not libby_client.is_logged_in():
+                    raise LibbyNotConfiguredError("Libby is not signed-in.")
+                logger.info("Libby is signed-in.")
+                return
 
             # detect if non-interactive command options are selected before setup
             if not libby_client.has_sync_code():
@@ -558,6 +548,7 @@ def run() -> None:
             if not audiobook_loans:
                 logger.info("No downloadable audiobook loans found.")
                 return
+
             if args.command_name == OdmpyCommands.Libby and (
                 args.selected_loans_indices or args.download_latest_n
             ):
@@ -608,7 +599,7 @@ def run() -> None:
                             args,
                             logger,
                         )
-                    return
+
                 for selected_loan in selected_loans:
                     process_odm(
                         extract_odm(libby_client, selected_loan, args),
@@ -658,6 +649,7 @@ def run() -> None:
                     "then press enter: "
                 ).strip()
                 if not user_loan_choice_input:
+                    # abort choice if user enters blank
                     break
 
                 loan_choices = list(set(user_loan_choice_input.split(" ")))
@@ -673,6 +665,10 @@ def run() -> None:
                         continue
                 if loan_choices_isvalid:
                     break
+
+            if not loan_choices:
+                # abort if no choices made
+                return
 
             if args.command_name == OdmpyCommands.LibbyReturn:
                 # do returns
@@ -741,55 +737,57 @@ def run() -> None:
                     )
                 return
 
-        except RuntimeError as run_err:
-            logger.error(colored(str(run_err), "red"))
-        except Exception:  # noqa, pylint: disable=broad-except
-            logger.exception(colored("An unexpected error has occured", "red"))
+            return  # end libby commands
 
-        return  # end libby command
+        # ODM-based commands from here on
 
-    # because py<=3.6 does not support `add_subparsers(required=True)`
-    try:
-        # test for odm file
-        args.odm_file
-    except AttributeError:
-        parser.print_help()
-        sys.exit()
-
-    xml_doc = xml.etree.ElementTree.parse(args.odm_file)
-    root = xml_doc.getroot()
-
-    # Return Book
-    if args.command_name == "ret":
-        logger.info(f"Returning {args.odm_file} ...")
-        early_return_url = get_element_text(root.find("EarlyReturnURL"))
-        if not early_return_url:
-            raise RuntimeError("Unable to get EarlyReturnURL")
+        # because py<=3.6 does not support `add_subparsers(required=True)`
         try:
-            early_return_res = requests.get(
-                early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
-            )
-            early_return_res.raise_for_status()
-            logger.info(f"Loan returned successfully: {args.odm_file}")
-        except HTTPError as he:
-            if he.response.status_code == 403:
-                logger.warning("Loan is probably already returned.")
-                sys.exit()
-            logger.error(
-                f"Unexpected HTTPError while trying to return loan {args.odm_file}"
-            )
-            logger.error(f"HTTPError: {str(he)}")
-            logger.debug(he.response.content)
-            sys.exit(1)
-        except ConnectionError as ce:
-            logger.error(f"ConnectionError: {str(ce)}")
-            sys.exit(1)
+            # test for odm file
+            args.odm_file
+        except AttributeError:
+            parser.print_help()
+            return
 
-        sys.exit()
+        xml_doc = xml.etree.ElementTree.parse(args.odm_file)
+        root = xml_doc.getroot()
 
-    if args.command_name in ("dl", "info"):
-        process_odm(args.odm_file, args, logger)
-        return
+        # Return Book
+        if args.command_name == "ret":
+            logger.info(f"Returning {args.odm_file} ...")
+            early_return_url = get_element_text(root.find("EarlyReturnURL"))
+            if not early_return_url:
+                raise RuntimeError("Unable to get EarlyReturnURL")
+            try:
+                early_return_res = requests.get(
+                    early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
+                )
+                early_return_res.raise_for_status()
+                logger.info(f"Loan returned successfully: {args.odm_file}")
+            except HTTPError as he:
+                if he.response.status_code == 403:
+                    logger.warning("Loan is probably already returned.")
+                    return
+                logger.error(f"HTTPError: {str(he)}")
+                logger.debug(he.response.content)
+                raise RuntimeError(f"HTTP error returning odm {args.odm_file}")
+            except ConnectionError as ce:
+                logger.error(f"ConnectionError: {str(ce)}")
+                raise RuntimeError(f"Connection error returning odm {args.odm_file}")
+
+            return
+
+        if args.command_name in ("dl", "info"):
+            process_odm(args.odm_file, args, logger)
+            return
+
+    except RuntimeError as run_err:
+        logger.error(colored(str(run_err), "red"))
+        raise
+
+    except Exception:  # noqa, pylint: disable=broad-except
+        logger.exception(colored("An unexpected error has occured", "red"))
+        raise
 
     # we shouldn't get this error
     logger.error("Unknown command: %s", colored(args.command_name, "red"))

@@ -25,7 +25,6 @@ import math
 import os
 import re
 import shutil
-import sys
 import uuid
 import xml.etree.ElementTree
 from collections import OrderedDict
@@ -236,7 +235,7 @@ def process_odm(
 
             logger.info(json.dumps(result))
 
-        sys.exit()
+        return
 
     session = requests.Session()
     custom_adapter = HTTPAdapter(
@@ -287,7 +286,7 @@ def process_odm(
                 os.remove(odm_file)
             except Exception as e:  # pylint: disable=broad-except
                 logger.warning(f'Error deleting "{odm_file}": {str(e)}')
-        sys.exit()
+        return
 
     debug_filename = os.path.join(book_folder, "debug.json")
 
@@ -354,10 +353,10 @@ def process_odm(
                 )
             else:
                 logger.error(he.response.content)
-            sys.exit(1)
+            raise RuntimeError("HTTP Error while downloading license.")
         except ConnectionError as ce:
             logger.error(f"ConnectionError: {str(ce)}")
-            sys.exit(1)
+            raise RuntimeError("Connection Error while downloading license.")
 
     license_xml_doc = xml.etree.ElementTree.parse(license_file)
     license_root = license_xml_doc.getroot()
@@ -439,11 +438,11 @@ def process_odm(
             except HTTPError as he:
                 logger.error(f"HTTPError: {str(he)}")
                 logger.debug(he.response.content)
-                sys.exit(1)
+                raise RuntimeError("HTTP Error while downloading part file.")
 
             except ConnectionError as ce:
                 logger.error(f"ConnectionError: {str(ce)}")
-                sys.exit(1)
+                raise RuntimeError("Connection Error while downloading part file.")
 
         try:
             # Fill id3 info for mp3 part
@@ -860,7 +859,7 @@ def process_audiobook_loan(
                 "magenta",
             ),
         )
-        sys.exit()
+        return
 
     debug_filename = os.path.join(book_folder, "debug.json")
 
@@ -926,11 +925,11 @@ def process_audiobook_loan(
             except HTTPError as he:
                 logger.error(f"HTTPError: {str(he)}")
                 logger.debug(he.response.content)
-                sys.exit(1)
+                raise RuntimeError("HTTP Error while downloading part file.")
 
             except ConnectionError as ce:
                 logger.error(f"ConnectionError: {str(ce)}")
-                sys.exit(1)
+                raise RuntimeError("Connection Error while downloading part file.")
 
         try:
             # Fill id3 info for mp3 part

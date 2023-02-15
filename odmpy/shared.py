@@ -19,7 +19,6 @@ import argparse
 import logging
 import os
 import subprocess
-import sys
 import xml.etree.ElementTree as ET
 from typing import Optional, Dict, List, Tuple
 from urllib.parse import urlparse
@@ -318,7 +317,7 @@ def merge_into_mp3(
     if exit_code:
         logger.error(f"ffmpeg exited with the code: {exit_code!s}")
         logger.error(f"Command: {' '.join(cmd)!s}")
-        sys.exit(exit_code)
+        raise RuntimeError("ffmpeg exited with a non-zero code")
 
     # Switch to using os.replace() instead of os.rename() to avoid
     # issues with remnant files between tests
@@ -396,7 +395,7 @@ def convert_to_m4b(
     if exit_code:
         logger.error(f"ffmpeg exited with the code: {exit_code!s}")
         logger.error(f"Command: {' '.join(cmd)!s}")
-        sys.exit(exit_code)
+        raise RuntimeError("ffmpeg exited with a non-zero code")
 
     os.rename(temp_book_m4b_filename, book_m4b_filename)
     logger.info('Merged files into "%s"', colored(book_m4b_filename, "magenta"))
