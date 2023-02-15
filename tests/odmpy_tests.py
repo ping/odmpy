@@ -6,14 +6,16 @@
 import json
 import logging
 import os
+import re
 import shutil
 import unittest
 import warnings
+from io import StringIO
 
 from lxml import etree  # type: ignore[import]
 
-from odmpy.overdrive import OverDriveClient
 from odmpy.odm import run
+from odmpy.overdrive import OverDriveClient
 from .data import (
     get_expected_result,
 )
@@ -23,6 +25,8 @@ eyed3_log.setLevel(logging.ERROR)
 
 
 # [i] USE run_tests.sh
+
+strip_color_codes_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 
 class OdmpyTests(unittest.TestCase):
@@ -39,6 +43,8 @@ class OdmpyTests(unittest.TestCase):
             os.path.dirname(os.path.abspath(__file__)), "data"
         )
         self.test_downloads_dir = os.path.join(self.test_data_dir, "downloads")
+        if not os.path.exists(self.test_downloads_dir):
+            os.makedirs(self.test_downloads_dir)
 
     def tearDown(self) -> None:
         if os.path.isdir(self.test_downloads_dir):
@@ -54,13 +60,18 @@ class OdmpyTests(unittest.TestCase):
         expected_file = os.path.join(
             self.test_data_dir, "{}.info.expected.txt".format(self.test_file)
         )
-        test_file = os.path.join(self.test_downloads_dir, "test.odm.info.txt")
-        with open(expected_file, encoding="utf-8") as expected, open(
-            test_file, encoding="utf-8"
-        ) as actual:
+        with open(expected_file, encoding="utf-8") as expected, StringIO() as out:
+            stream_handler = logging.StreamHandler(out)
+            stream_handler.setLevel(logging.DEBUG)
+            run(
+                ["info", os.path.join(self.test_data_dir, self.test_file)],
+                be_quiet=True,
+                injected_stream_handler=stream_handler,
+            )
             expected_text = expected.read()
-            actual_text = actual.read()
-            self.assertEqual(expected_text, actual_text)
+            self.assertEqual(
+                strip_color_codes_re.sub("", out.getvalue()), expected_text
+            )
 
     def test_info_json(self):
         """
@@ -69,9 +80,20 @@ class OdmpyTests(unittest.TestCase):
         python -m odmpy info -f json test_data/test.odm > test_data/test.odm.info.json
         ```
         """
-        test_file = os.path.join(self.test_downloads_dir, "test.odm.info.json")
-        with open(test_file, "r", encoding="utf-8") as f:
-            info = json.load(f)
+        with StringIO() as out:
+            stream_handler = logging.StreamHandler(out)
+            stream_handler.setLevel(logging.DEBUG)
+            run(
+                [
+                    "info",
+                    os.path.join(self.test_data_dir, self.test_file),
+                    "--format",
+                    "json",
+                ],
+                be_quiet=True,
+                injected_stream_handler=stream_handler,
+            )
+            info = json.loads(strip_color_codes_re.sub("", out.getvalue()))
             for tag in [
                 "title",
                 "creators",

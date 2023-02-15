@@ -228,11 +228,16 @@ def extract_odm(
     return odm_file_path
 
 
-def run(custom_args: Optional[List[str]] = None, be_quiet=False) -> None:
+def run(
+    custom_args: Optional[List[str]] = None,
+    be_quiet: bool = False,
+    injected_stream_handler: Optional[logging.StreamHandler] = None,
+) -> None:
     """
 
     :param custom_args: Used by unittests
     :param be_quiet: Used by unittests
+    :param injected_stream_handler: Used by unittests
     :return:
     """
     parser = argparse.ArgumentParser(
@@ -398,9 +403,12 @@ def run(custom_args: Optional[List[str]] = None, be_quiet=False) -> None:
 
     args = parser.parse_args(custom_args)
 
+    if injected_stream_handler:
+        # in test mode
+        logger.addHandler(injected_stream_handler)
     if be_quiet:
         # in test mode
-        logger.setLevel(logging.ERROR)
+        ch.setLevel(logging.ERROR)
         requests_logger.setLevel(logging.ERROR)
     elif args.verbose:
         logger.setLevel(logging.DEBUG)
