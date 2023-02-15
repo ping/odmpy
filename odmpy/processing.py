@@ -85,7 +85,7 @@ def process_odm(
     :param cleanup_odm_license:
     :return:
     """
-    ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "error"
+    ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "fatal"
     xml_doc = xml.etree.ElementTree.parse(odm_file)
     root = xml_doc.getroot()
     overdrive_media_id = root.attrib.get("id", "")
@@ -772,7 +772,7 @@ def process_audiobook_loan(
     :return:
     """
 
-    ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "error"
+    ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "fatal"
 
     title = loan["title"]
     overdrive_media_id = loan["id"]
