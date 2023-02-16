@@ -44,6 +44,7 @@ from termcolor import colored
 from tqdm import tqdm
 import eyed3  # type: ignore[import]
 
+from .cli_utils import OdmpyCommands
 from .utils import (
     unescape_html,
     slugify,
@@ -61,7 +62,7 @@ from .shared import (
     convert_to_m4b,
     create_opf,
 )
-from .constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES
+from .constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES, UA_LONG
 from .libby import USER_AGENT, merge_toc, PartMeta
 from .overdrive import OverDriveClient
 
@@ -166,7 +167,7 @@ def process_odm(
     }
 
     # View Book Info
-    if args.command_name == "info":
+    if args.command_name == OdmpyCommands.Information:
         if args.format == "text":
             logger.info(f'{"Title:":10} {colored(title, "blue")}')
             logger.info(
@@ -1148,3 +1149,36 @@ def process_audiobook_loan(
     if args.write_json:
         with open(debug_filename, "w", encoding="utf-8") as outfile:
             json.dump(debug_meta, outfile, indent=2)
+
+
+def process_odm_return(odm_file: str, logger: logging.Logger) -> None:
+    """
+    Return the audiobook loan using the specified odm file
+
+    :param odm_file:
+    :param logger:
+    :return:
+    """
+    xml_doc = xml.etree.ElementTree.parse(odm_file)
+    root = xml_doc.getroot()
+
+    logger.info(f"Returning {odm_file} ...")
+    early_return_url = get_element_text(root.find("EarlyReturnURL"))
+    if not early_return_url:
+        raise RuntimeError("Unable to get EarlyReturnURL")
+    try:
+        early_return_res = requests.get(
+            early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
+        )
+        early_return_res.raise_for_status()
+        logger.info(f"Loan returned successfully: {odm_file}")
+    except HTTPError as he:
+        if he.response.status_code == 403:
+            logger.warning("Loan is probably already returned.")
+            return
+        logger.error(f"HTTPError: {str(he)}")
+        logger.debug(he.response.content)
+        raise RuntimeError(f"HTTP error returning odm {odm_file}")
+    except ConnectionError as ce:
+        logger.error(f"ConnectionError: {str(ce)}")
+        raise RuntimeError(f"Connection error returning odm {odm_file}")

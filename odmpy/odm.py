@@ -24,12 +24,10 @@ import logging
 import os
 import sys
 import time
-import xml.etree.ElementTree
 from http.client import HTTPConnection
 from typing import Dict, List, Optional
 
 import requests
-from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 
 from .cli_utils import (
@@ -39,11 +37,10 @@ from .cli_utils import (
     valid_book_folder_format,
     LibbyNotConfiguredError,
 )
-from .constants import UA_LONG
 from .libby import LibbyClient
 from .libby_errors import ClientBadRequestError
-from .processing import process_odm, process_audiobook_loan
-from .utils import slugify, get_element_text
+from .processing import process_odm, process_audiobook_loan, process_odm_return
+from .utils import slugify
 
 #
 # Orchestrates the interaction between the CLI, APIs and the processing bits
@@ -561,6 +558,7 @@ def run(
             if args.command_name == OdmpyCommands.Libby and (
                 args.selected_loans_indices or args.download_latest_n
             ):
+                # Non-interactive selection
                 selected_loans_indices = []
                 total_loans_count = len(audiobook_loans)
                 if args.selected_loans_indices:
@@ -618,6 +616,7 @@ def run(
                     )
                 return
 
+            # Interactive mode
             cards = synced_state.get("cards", [])
             logger.info(
                 "Found %s loans.",
@@ -748,7 +747,7 @@ def run(
 
             return  # end libby commands
 
-        # ODM-based commands from here on
+        # Legacy ODM-based commands from here on
 
         # because py<=3.6 does not support `add_subparsers(required=True)`
         try:
@@ -758,35 +757,12 @@ def run(
             parser.print_help()
             return
 
-        xml_doc = xml.etree.ElementTree.parse(args.odm_file)
-        root = xml_doc.getroot()
-
         # Return Book
-        if args.command_name == "ret":
-            logger.info(f"Returning {args.odm_file} ...")
-            early_return_url = get_element_text(root.find("EarlyReturnURL"))
-            if not early_return_url:
-                raise RuntimeError("Unable to get EarlyReturnURL")
-            try:
-                early_return_res = requests.get(
-                    early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
-                )
-                early_return_res.raise_for_status()
-                logger.info(f"Loan returned successfully: {args.odm_file}")
-            except HTTPError as he:
-                if he.response.status_code == 403:
-                    logger.warning("Loan is probably already returned.")
-                    return
-                logger.error(f"HTTPError: {str(he)}")
-                logger.debug(he.response.content)
-                raise RuntimeError(f"HTTP error returning odm {args.odm_file}")
-            except ConnectionError as ce:
-                logger.error(f"ConnectionError: {str(ce)}")
-                raise RuntimeError(f"Connection error returning odm {args.odm_file}")
-
+        if args.command_name == OdmpyCommands.Return:
+            process_odm_return(args.odm_file, logger)
             return
 
-        if args.command_name in ("dl", "info"):
+        if args.command_name in (OdmpyCommands.Download, OdmpyCommands.Information):
             process_odm(args.odm_file, args, logger)
             return
 
