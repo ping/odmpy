@@ -18,6 +18,10 @@
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+#
+# Constants mainly for use with the legacy ODM processing
+#
+
 OMC = "1.2.0"
 OS = "10.11.6"
 UA = "OverDrive Media Console"

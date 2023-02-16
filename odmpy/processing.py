@@ -65,6 +65,11 @@ from .constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES
 from .libby import USER_AGENT, merge_toc, PartMeta
 from .overdrive import OverDriveClient
 
+#
+# Main processing work like downloading, tagging, merging
+# for both odm files and libby direct loans
+#
+
 RESERVE_ID_RE = re.compile(
     r"(?P<reserve_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
 )

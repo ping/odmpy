@@ -41,6 +41,11 @@ from urllib.parse import urljoin
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
+#
+# Client for the Libby web API, and helper functions to make sense
+# of the stuff returned
+#
+
 
 class ChapterMarker(NamedTuple):
     title: str

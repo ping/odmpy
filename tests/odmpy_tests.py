@@ -52,10 +52,7 @@ class OdmpyTests(unittest.TestCase):
 
     def test_info(self):
         """
-        Test info with no arguments
-        ```
-        python -m odmpy info test_data/test.odm > test_data/test.odm.info.txt
-        ```
+        `odmpy info test.odm`
         """
         expected_file = os.path.join(
             self.test_data_dir, "{}.info.expected.txt".format(self.test_file)
@@ -75,10 +72,7 @@ class OdmpyTests(unittest.TestCase):
 
     def test_info_json(self):
         """
-        Test info with --format json argument
-        ```
-        python -m odmpy info -f json test_data/test.odm > test_data/test.odm.info.json
-        ```
+        `odmpy info test.odm` --format json`
         """
         with StringIO() as out:
             stream_handler = logging.StreamHandler(out)
@@ -107,7 +101,7 @@ class OdmpyTests(unittest.TestCase):
 
     def test_cover_fail_ref24(self):
         """
-        Test with error downloading cover
+        Test for error downloading cover
         """
         run(
             [
@@ -133,10 +127,7 @@ class OdmpyTests(unittest.TestCase):
 
     def test_opf(self):
         """
-        Test OPF generation
-        ```
-        python -m odmpy dl test_data/test.odm -d test_data/downloads/ -k --opf
-        ```
+        `odmpy dl test.odm --opf`
         """
         run(
             [
@@ -290,7 +281,3 @@ class OdmpyTests(unittest.TestCase):
             finally:
                 # close this to prevent "ResourceWarning: unclosed socket" error
                 od.session.close()
-
-
-if __name__ == "__main__":
-    unittest.main()

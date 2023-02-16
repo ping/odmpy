@@ -28,6 +28,9 @@ class OdmpyLibbyTests(unittest.TestCase):
             shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
 
     def test_libby_export(self):
+        """
+        `odmpy libby --exportloans`
+        """
         try:
             run(["libby", "--check"], be_quiet=True)
         except LibbyNotConfiguredError:
@@ -46,6 +49,9 @@ class OdmpyLibbyTests(unittest.TestCase):
 
     @unittest.skip("Takes too long")  # turn off at will
     def test_libby_download_select(self):
+        """
+        `odmpy libby --select N`
+        """
         try:
             run(["libby", "--check"], be_quiet=True)
         except LibbyNotConfiguredError:
@@ -82,6 +88,9 @@ class OdmpyLibbyTests(unittest.TestCase):
 
     @unittest.skip("Takes too long")  # turn off at will
     def test_libby_download_latest(self):
+        """
+        `odmpy libby --latest N`
+        """
         try:
             run(["libby", "--check"], be_quiet=True)
         except LibbyNotConfiguredError:

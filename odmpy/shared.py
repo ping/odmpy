@@ -33,6 +33,10 @@ from .constants import PERFORMER_FID, LANGUAGE_FID
 from .libby import USER_AGENT
 from .utils import slugify, sanitize_path, set_ele_attributes
 
+#
+# Shared functions across process_odm() and process_audiobook_loan()
+#
+
 
 def generate_names(
     title: str,

@@ -45,6 +45,10 @@ from .libby_errors import ClientBadRequestError
 from .processing import process_odm, process_audiobook_loan
 from .utils import slugify, get_element_text
 
+#
+# Orchestrates the interaction between the CLI, APIs and the processing bits
+#
+
 logger = logging.getLogger(__file__)
 requests_logger = logging.getLogger("urllib3")
 ch = logging.StreamHandler(io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8"))

@@ -38,6 +38,9 @@ class OdmpyDlTests(unittest.TestCase):
             shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
 
     def test_standard_download(self):
+        """
+        `odmpy dl test.odm --keepcover`
+        """
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
@@ -64,6 +67,9 @@ class OdmpyDlTests(unittest.TestCase):
         )
 
     def test_add_chapters(self):
+        """
+        `odmpy dl test.odm --chapters`
+        """
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
@@ -109,6 +115,9 @@ class OdmpyDlTests(unittest.TestCase):
                 marker_count += 1
 
     def test_merge_formats(self):
+        """
+        `odmpy dl test.odm --merge`
+        """
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
@@ -150,6 +159,9 @@ class OdmpyDlTests(unittest.TestCase):
         self.assertTrue(os.path.isfile(m4b_file))
 
     def test_merge_formats_add_chapters(self):
+        """
+        `odmpy dl test.odm --merge --chapters`
+        """
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
@@ -268,6 +280,9 @@ class OdmpyDlTests(unittest.TestCase):
             last_end = end
 
     def test_nobook_folder(self):
+        """
+        `odmpy dl test.odm --nobookfolder`
+        """
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)

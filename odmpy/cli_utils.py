@@ -18,6 +18,10 @@
 import argparse
 from enum import Enum
 
+#
+# Stuff for the CLI
+#
+
 
 class OdmpyCommands(str, Enum):
     """

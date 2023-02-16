@@ -25,6 +25,10 @@ from typing import Optional, Dict
 
 from mutagen.mp3 import MP3  # type: ignore[import]
 
+#
+# Small utility type functions used across the board
+#
+
 TIMESTAMP_RE = re.compile(
     r"^((?P<hr>[0-9]+):)?(?P<min>[0-9]+):(?P<sec>[0-9]+)(\.(?P<ms>[0-9]+))?$"
 )

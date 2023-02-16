@@ -22,6 +22,10 @@ from urllib.parse import urljoin
 
 import requests
 
+#
+# Basic skeletal client for the OverDrive Thunder API
+#
+
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "  # noqa
     "Version/14.0.2 Safari/605.1.15"

@@ -21,6 +21,10 @@ from http import HTTPStatus
 
 import requests as requests
 
+#
+# For use with LibbyClient
+#
+
 
 class ClientError(Exception):
     """Generic error class, catch-all for most client issues."""

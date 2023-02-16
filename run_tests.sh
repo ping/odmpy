@@ -8,6 +8,7 @@ set -e
 for test_index in '1' '2' '3' '4'
 do
   export TEST_ODM="test${test_index}.odm"
+  echo "======================= Testing with ${TEST_ODM} ======================="
 
   # Tests for `odmpy info` command
   python -m unittest -v tests.OdmpyTests.test_info
@@ -16,7 +17,9 @@ do
   # Tests for `odmpy dl` command
   python -m unittest -v tests.OdmpyDlTests
 
+  unset TEST_ODM
 done
+echo '======================================================================'
 
 # Misc Tests
 # test fix for #24 cover download fail
