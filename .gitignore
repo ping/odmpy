@@ -2,6 +2,8 @@ odmpy_settings/
 *.mp3
 *.odm
 *.license
+*.conf
+*.json
 
 .vscode/
 venv/
