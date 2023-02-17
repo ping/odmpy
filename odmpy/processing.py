@@ -38,7 +38,6 @@ except ImportError:
     pass
 
 import requests
-from requests.adapters import HTTPAdapter, Retry
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 from tqdm import tqdm
@@ -61,6 +60,8 @@ from .shared import (
     merge_into_mp3,
     convert_to_m4b,
     create_opf,
+    get_best_cover_url,
+    init_session,
 )
 from .constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES, UA_LONG
 from .libby import USER_AGENT, merge_toc, PartMeta
@@ -91,6 +92,10 @@ def process_odm(
     :param cleanup_odm_license:
     :return:
     """
+    if not odm_file:
+        logger.warning("No odm file specified.")
+        return
+
     ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "fatal"
     xml_doc = xml.etree.ElementTree.parse(odm_file)
     root = xml_doc.getroot()
@@ -244,12 +249,7 @@ def process_odm(
 
         return
 
-    session = requests.Session()
-    custom_adapter = HTTPAdapter(
-        max_retries=Retry(total=args.retries, backoff_factor=0.1)
-    )
-    for prefix in ("http://", "https://"):
-        session.mount(prefix, custom_adapter)
+    session = init_session(max_retries=args.retries)
 
     # Download Book
     download_baseurl = ""
@@ -298,7 +298,11 @@ def process_odm(
     debug_filename = os.path.join(book_folder, "debug.json")
 
     cover_filename, cover_bytes = generate_cover(
-        book_folder, cover_url, session, args.timeout, logger
+        book_folder=book_folder,
+        cover_url=cover_url,
+        session=session,
+        timeout=args.timeout,
+        logger=logger,
     )
 
     license_ele = root.find("License")
@@ -785,13 +789,7 @@ def process_audiobook_loan(
     title = loan["title"]
     overdrive_media_id = loan["id"]
     sub_title = loan.get("subtitle", None)
-    covers: List[Dict] = sorted(
-        list(loan.get("covers", []).values()),
-        key=lambda c: c.get("width", 0),
-        reverse=True,
-    )
-    cover_highest_res: Optional[Dict] = next(iter(covers), None)
-    cover_url = cover_highest_res["href"] if cover_highest_res else None
+    cover_url = get_best_cover_url(loan)
     authors = [
         c["name"] for c in openbook.get("creator", []) if c.get("role", "") == "author"
     ]
@@ -873,7 +871,11 @@ def process_audiobook_loan(
     debug_filename = os.path.join(book_folder, "debug.json")
 
     cover_filename, cover_bytes = generate_cover(
-        book_folder, cover_url, session, args.timeout, logger
+        book_folder=book_folder,
+        cover_url=cover_url,
+        session=session,
+        timeout=args.timeout,
+        logger=logger,
     )
 
     keep_cover = args.always_keep_cover

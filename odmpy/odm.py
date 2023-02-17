@@ -37,9 +37,14 @@ from .cli_utils import (
     valid_book_folder_format,
     LibbyNotConfiguredError,
 )
-from .libby import LibbyClient
-from .libby_errors import ClientBadRequestError
+from .libby import (
+    LibbyClient,
+    EBOOK_EPUB_ADOBE_FORMAT,
+    EBOOK_EPUB_OPEN_FORMAT,
+)
+from .libby_errors import ClientBadRequestError, ClientError
 from .processing import process_odm, process_audiobook_loan, process_odm_return
+from .shared import generate_names, generate_cover, get_best_cover_url, init_session
 from .utils import slugify
 
 #
@@ -67,6 +72,22 @@ def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
         default="./odmpy_settings",
         metavar="SETTINGS_FOLDER",
         help="Settings folder to store odmpy required settings, e.g. Libby authentication.",
+    )
+    parser_libby.add_argument(
+        "--ebooks",
+        dest="include_ebooks",
+        default=False,
+        action="store_true",
+        help=(
+            "Include ebook (EPUB) loans. An EPUB (DRM) loan will be downloaded as an .acsm file"
+            "\nwhich can be opened in Adobe Digital Editions for offline reading."
+            "\nRefer to https://help.overdrive.com/en-us/0577.html and "
+            "\nhttps://help.overdrive.com/en-us/0005.html for more information."
+            "\nAn open EPUB (no DRM) loan will be downloaded as an .epub file which can be opened"
+            "\nin any EPUB-compatible reader."
+            if parser_libby.prog == f"odmpy {OdmpyCommands.Libby}"
+            else "Include ebook (EPUB) loans."
+        ),
     )
 
 
@@ -189,44 +210,88 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
     )
 
 
-def extract_odm(
+def extract_loan_file(
     libby_client: LibbyClient, selected_loan: Dict, args: argparse.Namespace
 ) -> str:
     """
-    Extracts the ODM file for processing
+    Extracts the ODM / ACSM / EPUB(open) file
 
     :param libby_client:
     :param selected_loan:
     :param args:
     :return: The path to the ODM file
     """
+    try:
+        format_id = LibbyClient.get_loan_format(selected_loan)
+    except ValueError as err:
+        err_msg = str(err)
+        if "kindle" in str(err):
+            logger.error(
+                "You may have already sent the loan to your Kindle device: %s",
+                colored(err_msg, "red"),
+            )
+        else:
+            logger.error(colored(err_msg, "red"))
+        return ""
+
+    file_ext = "odm"
     file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
-    odm_file_path = os.path.join(
+    loan_file_path = os.path.join(
         args.download_dir,
-        f"{slugify(file_name, allow_unicode=True)}.odm",
+        f"{slugify(file_name, allow_unicode=True)}.{file_ext}",
     )
+    if format_id in (EBOOK_EPUB_ADOBE_FORMAT, EBOOK_EPUB_OPEN_FORMAT):
+        file_ext = "acsm" if format_id == EBOOK_EPUB_ADOBE_FORMAT else "epub"
+        book_folder, book_file_name, _ = generate_names(
+            selected_loan["title"],
+            selected_loan.get("series") or "",
+            [selected_loan["firstCreatorName"]],
+            args,
+            logger,
+        )
+        book_basename, _ = os.path.splitext(book_file_name)
+        loan_file_path = f"{book_basename}.{file_ext}"
+        if args.always_keep_cover:
+            cover_path, _ = generate_cover(
+                book_folder=book_folder,
+                cover_url=get_best_cover_url(selected_loan),
+                session=init_session(args.retries),
+                timeout=args.timeout,
+                logger=logger,
+                force_square=False,
+            )
+            if cover_path:
+                logger.info("Downloaded cover to %s", colored(cover_path, "magenta"))
+
     # don't re-download odm if it already exists so that we don't
     # needlessly use up the fulfillment limits
-    if not os.path.exists(odm_file_path):
-        logger.info(
-            'Opening book "%s"...',
-            colored(selected_loan["title"], "blue"),
-        )
-        odm_res_content = libby_client.fulfill_odm(
-            selected_loan["id"],
-            selected_loan["cardId"],
-            "audiobook-mp3",
-        )
-        with open(odm_file_path, "wb") as f:
-            f.write(odm_res_content)
-            logger.info(
-                "Downloaded odm to %s",
-                colored(odm_file_path, "magenta"),
+    if not os.path.exists(loan_file_path):
+        try:
+            odm_res_content = libby_client.fulfill_loan_file(
+                selected_loan["id"], selected_loan["cardId"], format_id
             )
+            with open(loan_file_path, "wb") as f:
+                f.write(odm_res_content)
+                logger.info(
+                    "Downloaded %s to %s",
+                    file_ext,
+                    colored(loan_file_path, "magenta"),
+                )
+        except ClientError as ce:
+            if ce.http_status == 400 and libby_client.is_downloadble_ebook_loan(
+                selected_loan
+            ):
+                logger.error(
+                    "%s %s",
+                    colored(f"Unable to download {file_ext}.", "red", attrs=["bold"]),
+                    colored("You may have sent the loan to a Kindle.", "red"),
+                )
+                return ""
+            raise
     else:
-        logger.info("Already downloaded odm file: %s", odm_file_path)
+        logger.info('Already downloaded %s file: "%s"', file_ext, loan_file_path)
 
-    return odm_file_path
+    return loan_file_path
 
 
 def run(
@@ -336,7 +401,7 @@ def run(
         "--direct",
         dest="libby_direct",
         action="store_true",
-        help="Don't download the odm file from Libby but instead process the audiobook download directly.",
+        help="Process the audiobook download directly from Libby without downloading an odm file.",
     )
     parser_libby.add_argument(
         "--keepodm",
@@ -369,7 +434,7 @@ def run(
         dest=OdmpyNoninteractiveOptions.ExportLoans,
         metavar="LOANS_JSON_FILEPATH",
         type=str,
-        help="Non-interactive mode that exports audiobook loans information into a json file at the path specified.",
+        help="Non-interactive mode that exports loan information into a json file at the path specified.",
     )
     parser_libby.add_argument(
         "--reset",
@@ -387,8 +452,8 @@ def run(
     # libby return parser
     parser_libby_return = subparsers.add_parser(
         OdmpyCommands.LibbyReturn,
-        description="Interactive Libby Interface for returning audiobook loans.",
-        help="Return audiobook loans via Libby.",
+        description="Interactive Libby Interface for returning loans.",
+        help="Return loans via Libby.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     add_common_libby_arguments(parser_libby_return)
@@ -396,8 +461,8 @@ def run(
     # libby renew parser
     parser_libby_renew = subparsers.add_parser(
         OdmpyCommands.LibbyRenew,
-        description="Interactive Libby Interface for renewing audiobook loans.",
-        help="Renew audiobook loans via Libby.",
+        description="Interactive Libby Interface for renewing loans.",
+        help="Renew loans via Libby.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     add_common_libby_arguments(parser_libby_renew)
@@ -518,14 +583,18 @@ def run(
                         "Could not log in with code.\n"
                         "Make sure that you have entered the right code and within the time limit."
                     ) from he
-            synced_state = libby_client.sync()
 
+            synced_state = libby_client.sync()
             # sort by checkout date so that recent most is at the bottom
             audiobook_loans = sorted(
                 [
                     book
                     for book in synced_state.get("loans", [])
-                    if libby_client.is_audiobook_loan(book)
+                    if libby_client.is_downloadable_audiobook_loan(book)
+                    or (
+                        args.include_ebooks
+                        and libby_client.is_downloadble_ebook_loan(book)
+                    )
                 ],
                 key=lambda ln: ln["checkoutDate"],  # type: ignore[no-any-return]
             )
@@ -548,11 +617,11 @@ def run(
                     loan for loan in audiobook_loans if libby_client.is_renewable(loan)
                 ]
                 if not audiobook_loans:
-                    logger.info("No renewable audiobook loans found.")
+                    logger.info("No renewable loans found.")
                     return
 
             if not audiobook_loans:
-                logger.info("No downloadable audiobook loans found.")
+                logger.info("No downloadable loans found.")
                 return
 
             if args.command_name == OdmpyCommands.Libby and (
@@ -594,27 +663,44 @@ def run(
                 if args.libby_direct:
                     for selected_loan in selected_loans:
                         logger.info(
-                            'Opening book "%s"...',
+                            'Opening %s "%s"...',
+                            selected_loan.get("type", {}).get("id"),
                             colored(selected_loan["title"], "blue"),
                         )
-                        openbook, toc = libby_client.process_audiobook(selected_loan)
-                        process_audiobook_loan(
-                            selected_loan,
-                            openbook,
-                            toc,
-                            libby_client.libby_session,
-                            args,
-                            logger,
-                        )
+                        if libby_client.is_downloadable_audiobook_loan(selected_loan):
+                            openbook, toc = libby_client.process_audiobook(
+                                selected_loan
+                            )
+                            process_audiobook_loan(
+                                selected_loan,
+                                openbook,
+                                toc,
+                                libby_client.libby_session,
+                                args,
+                                logger,
+                            )
+                            continue
+                        elif libby_client.is_downloadble_ebook_loan(selected_loan):
+                            extract_loan_file(libby_client, selected_loan, args)
+                            continue
 
                 for selected_loan in selected_loans:
-                    process_odm(
-                        extract_odm(libby_client, selected_loan, args),
-                        args,
-                        logger,
-                        cleanup_odm_license=not args.keepodm,
+                    logger.info(
+                        'Opening %s "%s"...',
+                        selected_loan.get("type", {}).get("id"),
+                        colored(selected_loan["title"], "blue"),
                     )
-                return
+                    if libby_client.is_downloadable_audiobook_loan(selected_loan):
+                        process_odm(
+                            extract_loan_file(libby_client, selected_loan, args),
+                            args,
+                            logger,
+                            cleanup_odm_license=not args.keepodm,
+                        )
+                    elif libby_client.is_downloadble_ebook_loan(selected_loan):
+                        extract_loan_file(libby_client, selected_loan, args)
+                        continue
+                return  # non-interactive libby downloads
 
             # Interactive mode
             cards = synced_state.get("cards", [])
@@ -627,9 +713,14 @@ def run(
                     loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
                 )
                 logger.info(
-                    "%s: %-55s  %-25s  \n    * %s  %s",
+                    "%s: %-55s  %s %-25s  \n    * %s  %s",
                     colored(f"{index:2d}", attrs=["bold"]),
                     colored(loan["title"], attrs=["bold"]),
+                    "📖"
+                    if libby_client.is_downloadble_ebook_loan(loan)
+                    else "🔊"
+                    if args.include_ebooks
+                    else "",
                     f'By: {loan["firstCreatorName"]}',
                     f"Expires: {colored(f'{expiry_date:%Y-%m-%d}','blue' if libby_client.is_renewable(loan) else None)}",
                     next(
@@ -644,6 +735,7 @@ def run(
                 )
             loan_choices: List[str] = []
 
+            # Loans display and user choice prompt
             libby_mode = "download"
             if args.command_name == OdmpyCommands.LibbyReturn:
                 libby_mode = "return"
@@ -691,7 +783,7 @@ def run(
                         'Returned "%s".',
                         colored(selected_loan["title"], "blue"),
                     )
-                return
+                return  # end libby return command
 
             if args.command_name == OdmpyCommands.LibbyRenew:
                 # do renewals
@@ -713,7 +805,7 @@ def run(
                             selected_loan["title"],
                             colored(badreq_err.msg, "red"),
                         )
-                return
+                return  # end libby renew command
 
             if args.command_name == OdmpyCommands.Libby:
                 # do downloads
@@ -721,28 +813,47 @@ def run(
                     for c in loan_choices:
                         selected_loan = audiobook_loans[int(c) - 1]
                         logger.info(
-                            'Opening book "%s"...',
+                            'Opening %s "%s"...',
+                            selected_loan.get("type", {}).get("id"),
                             colored(selected_loan["title"], "blue"),
                         )
-                        openbook, toc = libby_client.process_audiobook(selected_loan)
-                        process_audiobook_loan(
-                            selected_loan,
-                            openbook,
-                            toc,
-                            libby_client.libby_session,
-                            args,
-                            logger,
-                        )
+                        if libby_client.is_downloadable_audiobook_loan(selected_loan):
+                            openbook, toc = libby_client.process_audiobook(
+                                selected_loan
+                            )
+                            process_audiobook_loan(
+                                selected_loan,
+                                openbook,
+                                toc,
+                                libby_client.libby_session,
+                                args,
+                                logger,
+                            )
+                            continue
+                        elif libby_client.is_downloadble_ebook_loan(selected_loan):
+                            extract_loan_file(libby_client, selected_loan, args)
+                            continue
+
                     return
 
                 for c in loan_choices:
                     selected_loan = audiobook_loans[int(c) - 1]
-                    process_odm(
-                        extract_odm(libby_client, selected_loan, args),
-                        args,
-                        logger,
-                        cleanup_odm_license=not args.keepodm,
+                    logger.info(
+                        'Opening %s "%s"...',
+                        selected_loan.get("type", {}).get("id"),
+                        colored(selected_loan["title"], "blue"),
                     )
+                    if libby_client.is_downloadable_audiobook_loan(selected_loan):
+                        process_odm(
+                            extract_loan_file(libby_client, selected_loan, args),
+                            args,
+                            logger,
+                            cleanup_odm_license=not args.keepodm,
+                        )
+                        continue
+                    elif libby_client.is_downloadble_ebook_loan(selected_loan):
+                        extract_loan_file(libby_client, selected_loan, args)
+                        continue
                 return
 
             return  # end libby commands
@@ -763,6 +874,11 @@ def run(
             return
 
         if args.command_name in (OdmpyCommands.Download, OdmpyCommands.Information):
+            if args.command_name == OdmpyCommands.Download:
+                logger.info(
+                    'Opening odm "%s"...',
+                    colored(args.odm_file, "blue"),
+                )
             process_odm(args.odm_file, args, logger)
             return
 

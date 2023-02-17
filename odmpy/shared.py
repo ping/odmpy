@@ -27,15 +27,27 @@ from urllib.parse import urlparse
 import eyed3  # type: ignore[import]
 import requests
 from eyed3.utils import art  # type: ignore[import]
+from requests.adapters import HTTPAdapter, Retry
 from termcolor import colored
 
 from .constants import PERFORMER_FID, LANGUAGE_FID
 from .libby import USER_AGENT
 from .utils import slugify, sanitize_path, set_ele_attributes
 
+
 #
 # Shared functions across process_odm() and process_audiobook_loan()
 #
+
+
+def init_session(max_retries: int = 0) -> requests.Session:
+    session = requests.Session()
+    custom_adapter = HTTPAdapter(
+        max_retries=Retry(total=max_retries, backoff_factor=0.1)
+    )
+    for prefix in ("http://", "https://"):
+        session.mount(prefix, custom_adapter)
+    return session
 
 
 def generate_names(
@@ -203,12 +215,23 @@ def write_tags(
         )
 
 
+def get_best_cover_url(loan: Dict) -> Optional[str]:
+    covers: List[Dict] = sorted(
+        list(loan.get("covers", []).values()),
+        key=lambda c: c.get("width", 0),
+        reverse=True,
+    )
+    cover_highest_res: Optional[Dict] = next(iter(covers), None)
+    return cover_highest_res["href"] if cover_highest_res else None
+
+
 def generate_cover(
     book_folder: str,
     cover_url: Optional[str],
     session: requests.Session,
     timeout: int,
     logger: logging.Logger,
+    force_square: bool = True,
 ) -> Tuple[str, Optional[bytes]]:
     """
     Get the book cover
@@ -218,50 +241,62 @@ def generate_cover(
     :param session:
     :param timeout:
     :param logger:
+    :param force_square:
     :return:
     """
     cover_filename = os.path.join(book_folder, "cover.jpg")
     if not os.path.isfile(cover_filename) and cover_url:
         try:
-            square_cover_url_params = {
-                "type": "auto",
-                "width": str(510),
-                "height": str(510),
-                "force": "true",
-                "quality": str(80),
-                "url": urlparse(cover_url).path,
-            }
-            # credit: https://github.com/lullius/pylibby/pull/18
-            # this endpoint produces a resized version of the cover
-            cover_res = session.get(
-                "https://ic.od-cdn.com/resize",
-                params=square_cover_url_params,
-                headers={"User-Agent": USER_AGENT},
-                timeout=timeout,
-            )
+            if force_square:
+                square_cover_url_params = {
+                    "type": "auto",
+                    "width": str(510),
+                    "height": str(510),
+                    "force": "true",
+                    "quality": str(80),
+                    "url": urlparse(cover_url).path,
+                }
+                # credit: https://github.com/lullius/pylibby/pull/18
+                # this endpoint produces a resized version of the cover
+                cover_res = session.get(
+                    "https://ic.od-cdn.com/resize",
+                    params=square_cover_url_params,
+                    headers={"User-Agent": USER_AGENT},
+                    timeout=timeout,
+                )
+            else:
+                cover_res = session.get(
+                    cover_url, headers={"User-Agent": USER_AGENT}, timeout=timeout
+                )
             cover_res.raise_for_status()
             with open(cover_filename, "wb") as outfile:
                 outfile.write(cover_res.content)
         except requests.exceptions.HTTPError as he:
-            logger.warning(
-                "Error downloading square cover: %s",
-                colored(str(he), "red", attrs=["bold"]),
-            )
-            # fallback to original cover url
-            try:
-                cover_res = session.get(
-                    cover_url,
-                    headers={"User-Agent": USER_AGENT},
-                    timeout=timeout,
-                )
-                cover_res.raise_for_status()
-                with open(cover_filename, "wb") as outfile:
-                    outfile.write(cover_res.content)
-            except requests.exceptions.HTTPError as he2:
+            if not force_square:
                 logger.warning(
                     "Error downloading cover: %s",
-                    colored(str(he2), "red", attrs=["bold"]),
+                    colored(str(he), "red", attrs=["bold"]),
                 )
+            else:
+                logger.warning(
+                    "Error downloading square cover: %s",
+                    colored(str(he), "red", attrs=["bold"]),
+                )
+                # fallback to original cover url
+                try:
+                    cover_res = session.get(
+                        cover_url,
+                        headers={"User-Agent": USER_AGENT},
+                        timeout=timeout,
+                    )
+                    cover_res.raise_for_status()
+                    with open(cover_filename, "wb") as outfile:
+                        outfile.write(cover_res.content)
+                except requests.exceptions.HTTPError as he2:
+                    logger.warning(
+                        "Error downloading cover: %s",
+                        colored(str(he2), "red", attrs=["bold"]),
+                    )
 
     cover_bytes: Optional[bytes] = None
     if os.path.isfile(cover_filename):

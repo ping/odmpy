@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with odmpy.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import json
 import logging
 import os
@@ -25,6 +24,7 @@ from collections import OrderedDict
 from datetime import datetime, timezone
 from typing import Optional, NamedTuple, Dict, List, Tuple
 from typing import OrderedDict as OrderedDictType
+from urllib import request
 
 from odmpy.libby_errors import (
     ClientConnectionError,
@@ -72,6 +72,21 @@ FILE_PART_RE = re.compile(
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "
     "Version/14.0.2 Safari/605.1.15"
+)
+AUDIOBOOK_MP3_FORMAT = "audiobook-mp3"
+EBOOK_EPUB_ADOBE_FORMAT = "ebook-epub-adobe"
+EBOOK_EPUB_OPEN_FORMAT = "ebook-epub-open"
+EBOOK_OVERDRIVE_FORMAT = "ebook-overdrive"
+EBOOK_EPUB_FORMATS = (
+    EBOOK_EPUB_ADOBE_FORMAT,
+    EBOOK_EPUB_OPEN_FORMAT,
+    EBOOK_OVERDRIVE_FORMAT,
+)
+DOWNLOADABLE_FORMATS = (
+    AUDIOBOOK_MP3_FORMAT,
+    EBOOK_EPUB_ADOBE_FORMAT,
+    EBOOK_EPUB_OPEN_FORMAT,
+    EBOOK_OVERDRIVE_FORMAT,
 )
 
 
@@ -235,6 +250,7 @@ class LibbyClient(object):
             with open(self.identity_settings_file, "w", encoding="utf-8") as f:
                 json.dump(self.identity, f)
 
+        self.max_retries = max_retries
         libby_session = requests.Session()
         adapter = HTTPAdapter(max_retries=Retry(total=max_retries, backoff_factor=0.1))
         for prefix in ("http://", "https://"):
@@ -269,6 +285,7 @@ class LibbyClient(object):
         authenticated: bool = True,
         session: Optional[requests.sessions.Session] = None,
         return_res: bool = False,
+        allow_redirects: bool = True,
     ):
         endpoint_url = urljoin(self.api_base, endpoint)
         if not method:
@@ -277,7 +294,7 @@ class LibbyClient(object):
                 method = "POST"
             else:
                 method = "GET"
-        if not headers:
+        if headers is None:
             headers = self.default_headers()
         if authenticated and self.has_chip():
             headers["Authorization"] = f'Bearer {self.identity["identity"]}'
@@ -295,7 +312,11 @@ class LibbyClient(object):
             session = self.libby_session
 
         try:
-            res = session.send(session.prepare_request(req), timeout=self.timeout)
+            res = session.send(
+                session.prepare_request(req),
+                timeout=self.timeout,
+                allow_redirects=allow_redirects,
+            )
             self.logger.debug("body: %s", res.text)
 
             res.raise_for_status()
@@ -406,17 +427,83 @@ class LibbyClient(object):
         )
 
     @staticmethod
-    def is_audiobook_loan(book: Dict) -> bool:
+    def is_downloadable_audiobook_loan(book: Dict) -> bool:
         """
         Verify if book is a downloadable audiobook.
 
         :param book:
         :return:
         """
-        return bool([f for f in book.get("formats", []) if f["id"] == "audiobook-mp3"])
+        return bool(
+            [f for f in book.get("formats", []) if f["id"] == AUDIOBOOK_MP3_FORMAT]
+        )
+
+    @staticmethod
+    def is_downloadble_ebook_loan(book: Dict) -> bool:
+        """
+        Verify if book is a downloadable ebook.
+
+        :param book:
+        :return:
+        """
+        return bool(
+            [f for f in book.get("formats", []) if f["id"] in EBOOK_EPUB_FORMATS]
+        )
+
+    @staticmethod
+    def has_format(loan: Dict, format_id: str) -> bool:
+        return bool(
+            next(iter([f["id"] for f in loan["formats"] if f["id"] == format_id]), None)
+        )
+
+    @staticmethod
+    def get_loan_format(loan: Dict) -> str:
+        locked_in_format = next(
+            iter([f["id"] for f in loan["formats"] if f["isLockedIn"]]), None
+        )
+        if locked_in_format:
+            if locked_in_format in DOWNLOADABLE_FORMATS:
+                return locked_in_format
+            raise ValueError(
+                f'Loan is locked to a non-downloadable format "{locked_in_format}"'
+            )
+
+        if not locked_in_format:
+            if LibbyClient.is_open_ebook_loan(loan) and LibbyClient.has_format(
+                loan, EBOOK_EPUB_OPEN_FORMAT
+            ):
+                return EBOOK_EPUB_OPEN_FORMAT
+            elif LibbyClient.is_downloadble_ebook_loan(loan) and LibbyClient.has_format(
+                loan, EBOOK_EPUB_ADOBE_FORMAT
+            ):
+                return EBOOK_EPUB_ADOBE_FORMAT
+            elif LibbyClient.is_downloadable_audiobook_loan(
+                loan
+            ) and LibbyClient.has_format(loan, AUDIOBOOK_MP3_FORMAT):
+                return AUDIOBOOK_MP3_FORMAT
+
+        raise ValueError("Unable to find a downloadable format")
+
+    @staticmethod
+    def is_open_ebook_loan(book: Dict) -> bool:
+        """
+        Verify if book is an open epub.
+
+        :param book:
+        :return:
+        """
+        return bool(
+            [f for f in book.get("formats", []) if f["id"] == EBOOK_EPUB_OPEN_FORMAT]
+        )
 
     @staticmethod
     def is_renewable(loan: Dict) -> bool:
+        """
+        Check if loan can be renewed.
+
+        :param loan:
+        :return:
+        """
         if not loan.get("renewableOn"):
             raise ValueError("Unable to get renewable date")
         # Example: 2023-02-23T07:33:55Z
@@ -426,21 +513,31 @@ class LibbyClient(object):
         return renewable_on <= datetime.utcnow().replace(tzinfo=timezone.utc)
 
     def get_loans(self) -> List[Dict]:
+        """
+        Get loans
+
+        :return:
+        """
         return self.sync().get("loans", [])
 
     def get_holds(self) -> List[Dict]:
+        """
+        Get holds
+
+        :return:
+        """
         return self.sync().get("holds", [])
 
-    def get_audiobook_loans(self) -> List[Dict]:
+    def get_downloadable_audiobook_loans(self) -> List[Dict]:
         """
-        Get audiobook loans.
+        Get downloadable audiobook loans.
 
         :return:
         """
         return [
             book
             for book in self.sync().get("loans", [])
-            if self.is_audiobook_loan(book)
+            if self.is_downloadable_audiobook_loan(book)
         ]
 
     def fulfill(self, loan_id: str, card_id: str, format_id: str) -> Dict:
@@ -452,23 +549,79 @@ class LibbyClient(object):
         :param format_id:
         :return:
         """
+        if format_id not in DOWNLOADABLE_FORMATS:
+            raise ValueError(f"Invalid format_id: {format_id}")
         res: Dict = self.make_request(
             f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
             return_res=True,
         )
         return res
 
-    def fulfill_odm(self, loan_id: str, card_id: str, format_id: str) -> bytes:
+    @staticmethod
+    def _urlretrieve(
+        endpoint: str, headers: Optional[Dict] = None, timeout: int = 15
+    ) -> bytes:
         """
-        Returns the odm contents directly.
+        Workaround for downloading an open (non-drm) epub.
+
+        The fulfillment url 403s when using requests but
+        works in curl, request.urlretrieve, etc.
+
+        GET API fulfill endpoint -> 302 https://fulfill.contentreserve.com (fulfillment url)
+        GET https://fulfill.contentreserve.com -> 302 https://openepub-gk.cdn.overdrive.com
+        GET https://openepub-gk.cdn.overdrive.com 403
+
+        Fresh session doesn't work either, headers doesn't seem to
+        matter.
+
+        .. code-block:: python
+            sess = requests.Session()
+            sess.headers.update({"User-Agent": USER_AGENT})
+            res = sess.get(res_redirect.headers["Location"], timeout=self.timeout)
+            res.raise_for_status()
+            return res.content
+
+        :param endpoint: fulfillment url
+        :param headers:
+        :param timeout:
+        :return:
+        """
+        if not headers:
+            headers = {}
+
+        opener = request.build_opener()
+        req = request.Request(endpoint, headers=headers)
+        res = opener.open(req, timeout=timeout)
+        return res.read()
+
+    def fulfill_loan_file(self, loan_id: str, card_id: str, format_id: str) -> bytes:
+        """
+        Returns the loan file contents directly for MP3 audiobooks (.odm)
+        and DRM epub (.acsm) loans.
+        For open epub loans, the actual epub contents are returned.
 
         :param loan_id:
         :param card_id:
         :param format_id:
         :return:
         """
+        if format_id not in DOWNLOADABLE_FORMATS:
+            raise ValueError(f"Unsupported format_id: {format_id}")
+
         headers = self.default_headers()
         headers["Accept"] = "*/*"
+
+        if format_id == EBOOK_EPUB_OPEN_FORMAT:
+            res_redirect: requests.Response = self.make_request(
+                f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
+                headers=headers,
+                return_res=True,
+                allow_redirects=False,
+            )
+            return self._urlretrieve(
+                res_redirect.headers["Location"], headers=headers, timeout=self.timeout
+            )
+
         res: requests.Response = self.make_request(
             f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
             headers=headers,
