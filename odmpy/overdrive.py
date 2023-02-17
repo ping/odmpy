@@ -21,6 +21,7 @@ from typing import Optional, Dict
 from urllib.parse import urljoin
 
 import requests
+from requests.adapters import HTTPAdapter, Retry
 
 #
 # Basic skeletal client for the OverDrive Thunder API
@@ -41,10 +42,25 @@ class OverDriveClient(object):
     """
 
     def __init__(self, **kwargs) -> None:
+        """
+        Constructor.
+
+        :param kwargs:
+            - user_agent: User Agent string for requests
+            - timeout: The timeout interval for a network request. Default 15 (seconds).
+            - retries: The number of times to retry a network request on failure. Default 0.
+        """
         self.logger = logging.getLogger(__name__)
         self.user_agent = kwargs.pop("user_agent", USER_AGENT)
-        self.timeout = kwargs.pop("timeout", 10)
-        self.session = kwargs.pop("session", None) or requests.Session()
+        self.timeout = int(kwargs.pop("timeout", 15))
+        self.retries = int(kwargs.pop("retry", 0))
+
+        session = requests.Session()
+        adapter = HTTPAdapter(max_retries=Retry(total=self.retries, backoff_factor=0.1))
+        # noinspection HttpUrlsUsage
+        for prefix in ("http://", "https://"):
+            session.mount(prefix, adapter)
+        self.session = kwargs.pop("session", None) or session
 
     def default_headers(self) -> Dict:
         """

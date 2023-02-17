@@ -732,7 +732,9 @@ def process_odm(
                 )
             else:
                 reserve_id = mobj.group("reserve_id")
-                od_client = OverDriveClient(user_agent=USER_AGENT, timeout=args.timeout)
+                od_client = OverDriveClient(
+                    user_agent=USER_AGENT, timeout=args.timeout, retry=args.retries
+                )
                 media_info = od_client.media(reserve_id)
                 create_opf(
                     media_info,
@@ -1126,7 +1128,9 @@ def process_audiobook_loan(
             book_folder, f"{slugify(title, allow_unicode=True)}.opf"
         )
         if not os.path.exists(opf_file_path):
-            od_client = OverDriveClient(user_agent=USER_AGENT, timeout=args.timeout)
+            od_client = OverDriveClient(
+                user_agent=USER_AGENT, timeout=args.timeout, retry=args.retries
+            )
             media_info = od_client.media(loan["id"])
             create_opf(
                 media_info,
