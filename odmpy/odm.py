@@ -61,7 +61,7 @@ requests_logger.addHandler(ch)
 requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
 
-__version__ = "0.6.7"  # also update ../setup.py
+__version__ = "0.7.0"  # also update ../setup.py
 
 
 def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
