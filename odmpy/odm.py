@@ -687,6 +687,7 @@ def run(
                         elif libby_client.is_downloadble_ebook_loan(selected_loan):
                             extract_loan_file(libby_client, selected_loan, args)
                             continue
+                    return
 
                 for selected_loan in selected_loans:
                     logger.info(
