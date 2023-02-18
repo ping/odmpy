@@ -1,7 +1,9 @@
 import logging
+import sys
 import unittest
 from collections import OrderedDict
 from datetime import datetime, timezone, timedelta
+from http.client import HTTPConnection
 
 from odmpy.libby import (
     LibbyClient,
@@ -11,11 +13,26 @@ from odmpy.libby import (
     parse_part_path,
 )
 
+test_logger = logging.getLogger(__name__)
+test_logger.setLevel(logging.WARNING)
+requests_logger = logging.getLogger("urllib3")
+requests_logger.setLevel(logging.WARNING)
+requests_logger.propagate = True
+
 
 class LibbyClientTests(unittest.TestCase):
     def setUp(self):
+        self.logger = test_logger
+        # hijack unittest -v arg to toggle log verbosity in test
+        is_verbose = "-vv" in sys.argv
+        if is_verbose:
+            self.logger.setLevel(logging.DEBUG)
+            requests_logger.setLevel(logging.DEBUG)
+            HTTPConnection.debuglevel = 1
+            logging.basicConfig(stream=sys.stdout)
+
         self.client = LibbyClient(
-            settings_folder="./odmpy_settings", logger=logging.getLogger(__name__)
+            settings_folder="./odmpy_settings", logger=self.logger
         )
 
     def tearDown(self) -> None:
