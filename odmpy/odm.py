@@ -289,7 +289,11 @@ def extract_loan_file(
                 return ""
             raise
     else:
-        logger.info('Already downloaded %s file: "%s"', file_ext, loan_file_path)
+        logger.info(
+            "Already downloaded %s file %s",
+            file_ext,
+            colored(loan_file_path, "magenta"),
+        )
 
     return loan_file_path
 
