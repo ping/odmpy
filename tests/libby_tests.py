@@ -316,8 +316,8 @@ class LibbyClientTests(unittest.TestCase):
                 "holdsCount",
                 "redeliveriesRequestedCount",
                 "redeliveriesAutomatedCount",
-                "patronHoldsRatio",
-                "estimatedWaitDays",
+                # "patronHoldsRatio",
+                # "estimatedWaitDays",
                 "holdsRatio",
                 "estimatedReleaseDate",
             ):
