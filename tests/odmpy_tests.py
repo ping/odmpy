@@ -61,7 +61,11 @@ class OdmpyTests(unittest.TestCase):
             stream_handler = logging.StreamHandler(out)
             stream_handler.setLevel(logging.DEBUG)
             run(
-                ["info", os.path.join(self.test_data_dir, self.test_file)],
+                [
+                    "--noversioncheck",
+                    "info",
+                    os.path.join(self.test_data_dir, self.test_file),
+                ],
                 be_quiet=True,
                 injected_stream_handler=stream_handler,
             )
@@ -79,6 +83,7 @@ class OdmpyTests(unittest.TestCase):
             stream_handler.setLevel(logging.DEBUG)
             run(
                 [
+                    "--noversioncheck",
                     "info",
                     os.path.join(self.test_data_dir, self.test_file),
                     "--format",
@@ -105,6 +110,7 @@ class OdmpyTests(unittest.TestCase):
         """
         run(
             [
+                "--noversioncheck",
                 "dl",
                 os.path.join(self.test_data_dir, self.test_file),
                 "--downloaddir",
@@ -131,6 +137,7 @@ class OdmpyTests(unittest.TestCase):
         """
         run(
             [
+                "--noversioncheck",
                 "dl",
                 os.path.join(self.test_data_dir, self.test_file),
                 "--downloaddir",

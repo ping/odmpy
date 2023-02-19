@@ -62,6 +62,23 @@ requests_logger.setLevel(logging.ERROR)
 requests_logger.propagate = True
 
 __version__ = "0.7.0"  # also update ../setup.py
+TAGS_ENDPOINT = "https://api.github.com/repos/ping/odmpy/tags"
+REPOSITORY_URL = "https://github.com/ping/odmpy"
+
+
+def check_version(timeout: int, max_retries: int) -> None:
+    sess = init_session(max_retries)
+    # noinspection PyBroadException
+    try:
+        res = sess.get(TAGS_ENDPOINT, timeout=timeout)
+        res.raise_for_status()
+        curr_version = res.json()[0].get("name", "")
+        if curr_version and curr_version != __version__:
+            logger.warning(
+                f"⚠️  A new version {curr_version} is available at {REPOSITORY_URL}."
+            )
+    except:  # noqa: E722, pylint: disable=bare-except
+        pass
 
 
 def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
@@ -351,6 +368,13 @@ def run(
         default=1,
         help="Number of retries if a network request fails. Default 1.",
     )
+    parser.add_argument(
+        "--noversioncheck",
+        dest="dont_check_version",
+        default=False,
+        action="store_true",
+        help="Do not check if newer version is available.",
+    )
 
     subparsers = parser.add_subparsers(
         title="Available commands",
@@ -495,6 +519,9 @@ def run(
     logging.getLogger("eyed3").setLevel(
         logging.WARNING if logger.level == logging.DEBUG else logging.ERROR
     )
+
+    if not args.dont_check_version:
+        check_version(args.timeout, args.retries)
 
     if hasattr(args, "obsolete_retries") and args.obsolete_retries:
         # retire --retry on the subcommands, after v0.6.7

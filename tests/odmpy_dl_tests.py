@@ -47,6 +47,7 @@ class OdmpyDlTests(unittest.TestCase):
 
         run(
             [
+                "--noversioncheck",
                 "dl",
                 os.path.join(self.test_data_dir, self.test_file),
                 "--downloaddir",
@@ -76,6 +77,7 @@ class OdmpyDlTests(unittest.TestCase):
 
         run(
             [
+                "--noversioncheck",
                 "dl",
                 os.path.join(self.test_data_dir, self.test_file),
                 "--downloaddir",
@@ -124,6 +126,7 @@ class OdmpyDlTests(unittest.TestCase):
 
         run(
             [
+                "--noversioncheck",
                 "dl",
                 os.path.join(self.test_data_dir, self.test_file),
                 "--downloaddir",
@@ -141,6 +144,7 @@ class OdmpyDlTests(unittest.TestCase):
 
         run(
             [
+                "--noversioncheck",
                 "dl",
                 os.path.join(self.test_data_dir, self.test_file),
                 "--downloaddir",
@@ -168,6 +172,7 @@ class OdmpyDlTests(unittest.TestCase):
 
         run(
             [
+                "--noversioncheck",
                 "dl",
                 os.path.join(self.test_data_dir, self.test_file),
                 "--downloaddir",
@@ -227,6 +232,7 @@ class OdmpyDlTests(unittest.TestCase):
 
         run(
             [
+                "--noversioncheck",
                 "dl",
                 os.path.join(self.test_data_dir, self.test_file),
                 "--downloaddir",
@@ -288,6 +294,7 @@ class OdmpyDlTests(unittest.TestCase):
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
         run(
             [
+                "--noversioncheck",
                 "dl",
                 os.path.join(self.test_data_dir, self.test_file),
                 "--downloaddir",

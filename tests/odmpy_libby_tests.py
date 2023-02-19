@@ -71,6 +71,7 @@ class OdmpyLibbyTests(unittest.TestCase):
         try:
             run(
                 [
+                    "--noversioncheck",
                     "libby",
                     "--direct",
                     "--downloaddir",
@@ -109,6 +110,7 @@ class OdmpyLibbyTests(unittest.TestCase):
         try:
             run(
                 [
+                    "--noversioncheck",
                     "libby",
                     "--direct",
                     "--downloaddir",
