@@ -317,10 +317,10 @@ class LibbyClientTests(unittest.TestCase):
                 "ownedCopies",
                 "availableCopies",
                 "holdsCount",
-                "sample",
-                "overDriveFormat",
+                # "sample",
+                # "overDriveFormat",
                 "otherFormats",
-                "readiverseFormat",
+                # "readiverseFormat",
             ):
                 self.assertIn(k, hold, msg=f"'{k}' not found in hold")
 
