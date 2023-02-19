@@ -32,7 +32,10 @@ class LibbyClientTests(unittest.TestCase):
             logging.basicConfig(stream=sys.stdout)
 
         self.client = LibbyClient(
-            settings_folder="./odmpy_settings", logger=self.logger
+            settings_folder="./odmpy_settings",
+            logger=self.logger,
+            max_retries=1,
+            timeout=15,
         )
 
     def tearDown(self) -> None:
