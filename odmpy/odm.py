@@ -58,7 +58,7 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
 requests_logger.addHandler(ch)
-requests_logger.setLevel(logging.WARNING)
+requests_logger.setLevel(logging.ERROR)
 requests_logger.propagate = True
 
 __version__ = "0.7.0"  # also update ../setup.py
