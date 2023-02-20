@@ -669,9 +669,7 @@ class LibbyClient(object):
 
     def return_title(self, title_id: str, card_id: str) -> None:
         """
-        Return book.
-        If `return_all` is True, all loans with the title_id will be returned
-        otherwise, only the oldest checked out loan is returned.
+        Return a title.
 
         :param title_id:
         :param card_id:
