@@ -17,13 +17,13 @@ Requires Python >= 3.7.
 
 ```bash
 # Install / Update to specific version
-pip3 install git+https://git@github.com/ping/odmpy.git@0.7.0 --upgrade
+python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.0 --upgrade
 
 # Install / Update from latest source
-pip3 install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
+python3 -m pip install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
 
 # Uninstall
-pip3 uninstall odmpy
+python3 -m pip uninstall odmpy
 ```
 
 ## Usage
