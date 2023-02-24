@@ -843,13 +843,13 @@ def run(
                     "📰"
                     if args.include_magazines
                     and libby_client.is_downloadable_magazine_loan(loan)
-                    else "📖"
+                    else "📕"
                     if args.include_ebooks
                     and libby_client.is_downloadable_ebook_loan(loan)
-                    else "🔊"
+                    else "🎧"
                     if args.include_ebooks or args.include_magazines
                     else "",
-                    f'By: {loan["firstCreatorName"]}'
+                    loan["firstCreatorName"]
                     if loan.get("firstCreatorName")
                     else loan.get("edition", ""),
                     f"Expires: {colored(f'{expiry_date:%Y-%m-%d}','blue' if libby_client.is_renewable(loan) else None)}",
