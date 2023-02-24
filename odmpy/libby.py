@@ -828,3 +828,18 @@ class LibbyClient(object):
         :return:
         """
         return self.renew_title(loan["id"], loan["type"]["id"], loan["cardId"])
+
+    def create_hold(self, title_id: str, card_id: str) -> Dict:
+        """
+        Create a hold on the title.
+
+        :param title_id:
+        :param card_id:
+        :return:
+        """
+        res: Dict = self.make_request(
+            f"card/{card_id}/hold/{title_id}",
+            json_data={"days_to_suspend": 0, "email_address": ""},
+            method="POST",
+        )
+        return res

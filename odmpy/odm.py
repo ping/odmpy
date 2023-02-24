@@ -53,6 +53,7 @@ from .processing.shared import (
     extract_authors_from_openbook,
 )
 from .utils import slugify
+from .utils import plural_or_singular_noun as ps
 
 #
 # Orchestrates the interaction between the CLI, APIs and the processing bits
@@ -757,7 +758,8 @@ def run(
                         ]
                     )
                     logger.info(
-                        "Non-interactive mode. Downloading selected loan(s) %s...",
+                        "Non-interactive mode. Downloading selected %s %s...",
+                        ps(len(selected_loans_indices), "loan"),
                         colored(
                             ", ".join([str(i) for i in selected_loans_indices]),
                             "blue",
@@ -766,8 +768,9 @@ def run(
                     )
                 if args.download_latest_n:
                     logger.info(
-                        "Non-interactive mode. Downloading latest %s loan(s)...",
+                        "Non-interactive mode. Downloading latest %s %s...",
                         colored(str(args.download_latest_n), "blue"),
+                        ps(args.download_latest_n, "loan"),
                     )
                     selected_loans_indices.extend(
                         list(range(1, len(audiobook_loans) + 1))[
@@ -828,16 +831,36 @@ def run(
 
             # Interactive mode
             cards = synced_state.get("cards", [])
+            holds = synced_state.get("holds", [])
             logger.info(
-                "Found %s loans.",
+                "Found %s %s.",
                 colored(str(len(audiobook_loans)), "blue"),
+                ps(len(audiobook_loans), "loan"),
             )
             for index, loan in enumerate(audiobook_loans, start=1):
                 expiry_date = datetime.datetime.strptime(
                     loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
                 )
+                hold = next(
+                    iter(
+                        [
+                            h
+                            for h in holds
+                            if h["cardId"] == loan["cardId"] and h["id"] == loan["id"]
+                        ]
+                    ),
+                    None,
+                )
+                hold_date = (
+                    datetime.datetime.strptime(
+                        hold["placedDate"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                    )
+                    if hold
+                    else None
+                )
+
                 logger.info(
-                    "%s: %-55s  %s %-25s  \n    * %s  %s",
+                    "%s: %-55s  %s %-25s  \n    * %s  %s%s",
                     colored(f"{index:2d}", attrs=["bold"]),
                     colored(loan["title"], attrs=["bold"]),
                     "📰"
@@ -862,6 +885,13 @@ def run(
                             ]
                         )
                     ),
+                    ""
+                    if not libby_client.is_renewable(loan)
+                    else (
+                        f'\n    * {loan.get("availableCopies", 0)} '
+                        f'{ps(loan.get("availableCopies", 0), "copy", "copies")} available'
+                    )
+                    + (f" (hold placed: {hold_date:%Y-%m-%d})" if hold else ""),
                 )
             loan_choices: List[str] = []
 
@@ -935,6 +965,30 @@ def run(
                             selected_loan["title"],
                             colored(badreq_err.msg, "red"),
                         )
+                        if selected_loan.get("availableCopies") == 0 and not [
+                            h
+                            for h in holds
+                            if h["cardId"] == selected_loan["cardId"]
+                            and h["id"] == selected_loan["id"]
+                        ]:
+                            # offer to make a hold
+                            make_hold = input(
+                                "Do you wish to place a hold instead? (y/n): "
+                            ).strip()
+                            if make_hold == "y":
+                                hold = libby_client.create_hold(
+                                    selected_loan["id"], selected_loan["cardId"]
+                                )
+                                logger.info(
+                                    "Hold successfully created for %s. You are #%s in line. %s %s in use. Available in ~%s %s.",
+                                    colored(hold["title"], attrs=["bold"]),
+                                    hold.get("holdListPosition", 0),
+                                    hold.get("ownedCopies"),
+                                    ps(hold.get("ownedCopies", 0), "copy", "copies"),
+                                    hold.get("estimatedWaitDays", 0),
+                                    ps(hold.get("estimatedWaitDays", 0), "day"),
+                                )
+
                 return  # end libby renew command
 
             if args.command_name == OdmpyCommands.Libby:

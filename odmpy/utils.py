@@ -35,6 +35,22 @@ TIMESTAMP_RE = re.compile(
 ILLEGAL_WIN_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
 
 
+def plural_or_singular_noun(
+    value: float, singular_noun: str, plural_noun: str = ""
+) -> str:
+    """
+    Returns the appropriate noun based on the value provided.
+
+    :param value:
+    :param singular_noun:
+    :param plural_noun:
+    :return:
+    """
+    if not plural_noun:
+        plural_noun = singular_noun + "s"
+    return plural_noun if value != 1 else singular_noun
+
+
 def sanitize_path(text: str, sub_text: str = "-") -> str:
     """
     Strips invalid characters from a local file path component.
