@@ -35,3 +35,6 @@ python -m unittest -v tests.LibbyClientTests
 
 # Tests for odmpy.utils
 python -m unittest -v tests.UtilsTests
+
+# Tests for odmpy.processing.shared
+python -m unittest tests.ProcessingSharedTests

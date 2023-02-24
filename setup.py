@@ -34,6 +34,7 @@ install_requires = [
     "mutagen>=1.46.0",
     "termcolor",
     "tqdm",
+    "beautifulsoup4",
 ]
 if sys.version_info < (3, 8):
     install_requires.append("typing_extensions")

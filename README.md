@@ -44,9 +44,10 @@ python3 -m pip uninstall odmpy
 ### General information
 ```
 usage: odmpy [-h] [--version] [-v] [-t TIMEOUT] [-r RETRIES]
+             [--noversioncheck]
              {info,dl,ret,libby,libbyreturn,libbyrenew} ...
 
-Download/return an OverDrive loan audiobook
+Manage your OverDrive loans
 
 options:
   -h, --help            show this help message and exit
@@ -57,6 +58,7 @@ options:
   -r RETRIES, --retry RETRIES
                         Number of retries if a network request fails. Default
                         1.
+  --noversioncheck      Do not check if newer version is available.
 
 Available commands:
   {info,dl,ret,libby,libbyreturn,libbyrenew}
@@ -65,10 +67,10 @@ Available commands:
     dl                  Download from a loan odm file.
     ret                 Return a loan file.
     libby               Download audiobooks via Libby.
-    libbyreturn         Return audiobook loans via Libby.
-    libbyrenew          Renew audiobook loans via Libby.
+    libbyreturn         Return loans via Libby.
+    libbyrenew          Renew loans via Libby.
 
-Version 0.7.0. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy/
+Version 0.7.0. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
 ```
 
 ### Download via Libby
@@ -78,14 +80,15 @@ To download from Libby, you must already be using Libby on a [compatible](https:
 You will be prompted for a Libby setup code the first time you run the `libby` command. To get a code, follow the instructions [here](https://help.libbyapp.com/en-us/6070.htm). You should only need to do this once.
 
 ```
-usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--ebooks]
+usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--ebooks] [--magazines]
                    [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k]
                    [-f] [--nobookfolder]
-                   [--bookfolderformat BOOK_FOLDER_FORMAT] [--overwritetags]
+                   [--bookfolderformat BOOK_FOLDER_FORMAT]
+                   [--bookfileformat BOOK_FILE_FORMAT] [--overwritetags]
                    [--tagsdelimiter DELIMITER] [--opf] [-r OBSOLETE_RETRIES]
                    [-j] [--hideprogress] [--direct] [--keepodm] [--latest N]
                    [--select N [N ...]] [--exportloans LOANS_JSON_FILEPATH]
-                   [--reset] [--check]
+                   [--reset] [--check] [--debug]
 
 Interactive Libby Interface for downloading audiobook loans.
 
@@ -93,12 +96,13 @@ options:
   -h, --help            show this help message and exit
   --settings SETTINGS_FOLDER
                         Settings folder to store odmpy required settings, e.g. Libby authentication.
-  --ebooks              Include ebook (EPUB) loans. An EPUB (DRM) loan will be downloaded as an .acsm file
+  --ebooks              Include ebook (EPUB) loans (experimental). An EPUB (DRM) loan will be downloaded as an .acsm file
                         which can be opened in Adobe Digital Editions for offline reading.
                         Refer to https://help.overdrive.com/en-us/0577.html and 
                         https://help.overdrive.com/en-us/0005.html for more information.
                         An open EPUB (no DRM) loan will be downloaded as an .epub file which can be opened
                         in any EPUB-compatible reader.
+  --magazines           Include magazines loans (experimental).
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
                         Download folder path.
   -c, --chapters        Add chapter marks (experimental).
@@ -114,6 +118,15 @@ options:
                           %(Title)s : Title
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
+                          %(Edition)s: Edition
+  --bookfileformat BOOK_FILE_FORMAT
+                        Book file format string (without extension). Default "%(Title)s - %(Author)s".
+                        This applies to only merged audiobooks, ebooks, and magazines.
+                        Available fields:
+                          %(Title)s : Title
+                          %(Author)s: Comma-separated Author names
+                          %(Series)s: Series
+                          %(Edition)s: Edition
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
                         This option forces odmpy to overwrite tags where possible.
@@ -125,7 +138,7 @@ options:
                         Obsolete. Do not use.
   -j, --writejson       Generate a meta json file (for debugging).
   --hideprogress        Hide the download progress bar (e.g. during testing).
-  --direct              Process the audiobook download directly from Libby without downloading an odm file.
+  --direct              Process the download directly from Libby without downloading an odm/acsm file.
   --keepodm             Keep the downloaded odm and license files.
   --latest N            Non-interactive mode that downloads the latest N number of loans.
   --select N [N ...]    Non-interactive mode that downloads loans by the index entered.
@@ -135,6 +148,7 @@ options:
                         Non-interactive mode that exports loan information into a json file at the path specified.
   --reset               Remove previously saved odmpy Libby settings.
   --check               Non-interactive mode that displays Libby signed-in status.
+  --debug               Debug switch for use during development. Please do not use.
 ```
 
 There are non-interactive options available:
@@ -155,9 +169,42 @@ There are non-interactive options available:
    odmpy libby --select 3 5
    ```
 
+#### eBooks
+
+_Experimental Feature_
+
+Using the `--ebooks` option will allow you to download/return/renew EPUB eBook loans. Information about the different eBook formats available can be found [here](https://help.overdrive.com/en-us/0012.html).
+
+For EPUB DRM loans, `odmpy` will download an [`.acsm` file](https://help.overdrive.com/en-us/0577.html) for use with [Adobe Digital Editions (ADE)](https://help.overdrive.com/en-us/0005.html) by default.
+
+For loans available as an "Open EPUB", the actual DRM-free `.epub` book file will be downloaded. There is no option to download the `.acsm` file for this format.
+
+##### The `--direct` option
+
+Using the `--direct` option with EPUB DRM loans will download the web Libby version of the eBook as an `.epub`. This is _different_ from the `.epub` that you get when you use an `.acsm` loan file with ADE.
+
+This option is not recommended because the `.epub` downloaded may not work well with your reader. Use this as an alternative if you cannot use the `.acsm` file for whatever reason.
+
+#### Magazines
+
+_Experimental Feature_
+
+Using the `--magazines` option will allow you to download/return/renew magazine loans.
+
+When downloading, `odmpy` will download the web Libby version of the magazine as an `.epub`. This is _different_ from the Libby app downloaded copy (for offline reading) and is usually smaller in file size.
+
+While the magazine `.epub` has been tested to work reasonably well on an eInk Kindle (after conversion), Moon+ Reader (Android), iBooks (macOS), and [calibre viewer](https://manual.calibre-ebook.com/viewer.html), how well the `.epub` works will depend on your reading device and the magazine contents.
+
+It is recommended that you use a different book folder and file format for magazine. For example:
+```bash
+# file will be downloaded as './National Geographic/National Geographic-Jan 01 2023.epub"
+odmpy libby --magazines --downloaddir "./" --bookfolderformat "%(Title)s" --bookfileformat "%(Title)s-%(Edition)s"
+```
+
 ### Return via Libby
 ```
 usage: odmpy libbyreturn [-h] [--settings SETTINGS_FOLDER] [--ebooks]
+                         [--magazines]
 
 Interactive Libby Interface for returning loans.
 
@@ -166,11 +213,13 @@ options:
   --settings SETTINGS_FOLDER
                         Settings folder to store odmpy required settings, e.g. Libby authentication.
   --ebooks              Include ebook (EPUB) loans.
+  --magazines           Include magazines loans.
 ```
 
 ### Renew via Libby
 ```
 usage: odmpy libbyrenew [-h] [--settings SETTINGS_FOLDER] [--ebooks]
+                        [--magazines]
 
 Interactive Libby Interface for renewing loans.
 
@@ -179,6 +228,7 @@ options:
   --settings SETTINGS_FOLDER
                         Settings folder to store odmpy required settings, e.g. Libby authentication.
   --ebooks              Include ebook (EPUB) loans.
+  --magazines           Include magazines loans.
 ```
 ### Download with an `.odm` loan file
 
@@ -187,7 +237,8 @@ options:
 ```
 usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
                 [-k] [-f] [--nobookfolder]
-                [--bookfolderformat BOOK_FOLDER_FORMAT] [--overwritetags]
+                [--bookfolderformat BOOK_FOLDER_FORMAT]
+                [--bookfileformat BOOK_FILE_FORMAT] [--overwritetags]
                 [--tagsdelimiter DELIMITER] [--opf] [-r OBSOLETE_RETRIES] [-j]
                 [--hideprogress]
                 odm_file
@@ -214,6 +265,15 @@ options:
                           %(Title)s : Title
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
+                          %(Edition)s: Edition
+  --bookfileformat BOOK_FILE_FORMAT
+                        Book file format string (without extension). Default "%(Title)s - %(Author)s".
+                        This applies to only merged audiobooks, ebooks, and magazines.
+                        Available fields:
+                          %(Title)s : Title
+                          %(Author)s: Comma-separated Author names
+                          %(Series)s: Series
+                          %(Edition)s: Edition
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
                         This option forces odmpy to overwrite tags where possible.

@@ -214,7 +214,8 @@ class OdmpyTests(unittest.TestCase):
                 # book ID, isbn
                 self.assertEqual(
                     metadata.xpath(
-                        "//dc:identifier[@id='BookId']", namespaces=metadata_nsmap
+                        "//dc:identifier[@id='publication-id']",
+                        namespaces=metadata_nsmap,
                     )[0].text,
                     [f for f in media_info["formats"] if f["id"] == "audiobook-mp3"][0][
                         "isbn"

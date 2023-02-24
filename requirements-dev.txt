@@ -4,5 +4,6 @@ black
 mypy
 types-requests
 types-tqdm
+types-beautifulsoup4
 # for tests: to validate opf
 lxml

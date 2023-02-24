@@ -34,17 +34,24 @@ from .cli_utils import (
     OdmpyCommands,
     OdmpyNoninteractiveOptions,
     positive_int,
-    valid_book_folder_format,
+    valid_book_folder_file_format,
     LibbyNotConfiguredError,
 )
-from .libby import (
-    LibbyClient,
-    EBOOK_EPUB_ADOBE_FORMAT,
-    EBOOK_EPUB_OPEN_FORMAT,
-)
+from .libby import LibbyClient, LibbyFormats
 from .libby_errors import ClientBadRequestError, ClientError
-from .processing import process_odm, process_audiobook_loan, process_odm_return
-from .shared import generate_names, generate_cover, get_best_cover_url, init_session
+from .processing import (
+    process_odm,
+    process_audiobook_loan,
+    process_odm_return,
+    process_ebook_loan,
+)
+from .processing.shared import (
+    generate_names,
+    generate_cover,
+    get_best_cover_url,
+    init_session,
+    extract_authors_from_openbook,
+)
 from .utils import slugify
 
 #
@@ -96,7 +103,7 @@ def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
         default=False,
         action="store_true",
         help=(
-            "Include ebook (EPUB) loans. An EPUB (DRM) loan will be downloaded as an .acsm file"
+            "Include ebook (EPUB) loans (experimental). An EPUB (DRM) loan will be downloaded as an .acsm file"
             "\nwhich can be opened in Adobe Digital Editions for offline reading."
             "\nRefer to https://help.overdrive.com/en-us/0577.html and "
             "\nhttps://help.overdrive.com/en-us/0005.html for more information."
@@ -104,6 +111,17 @@ def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
             "\nin any EPUB-compatible reader."
             if parser_libby.prog == f"odmpy {OdmpyCommands.Libby}"
             else "Include ebook (EPUB) loans."
+        ),
+    )
+    parser_libby.add_argument(
+        "--magazines",
+        dest="include_magazines",
+        default=False,
+        action="store_true",
+        help=(
+            "Include magazines loans (experimental)."
+            if parser_libby.prog == f"odmpy {OdmpyCommands.Libby}"
+            else "Include magazines loans."
         ),
     )
 
@@ -166,7 +184,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
     parser_dl.add_argument(
         "--bookfolderformat",
         dest="book_folder_format",
-        type=valid_book_folder_format,
+        type=valid_book_folder_file_format,
         default="%(Title)s - %(Author)s",
         help=(
             'Book folder format string. Default "%%(Title)s - %%(Author)s".\n'
@@ -174,6 +192,22 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
             "  %%(Title)s : Title\n"
             "  %%(Author)s: Comma-separated Author names\n"
             "  %%(Series)s: Series\n"
+            "  %%(Edition)s: Edition\n"
+        ),
+    )
+    parser_dl.add_argument(
+        "--bookfileformat",
+        dest="book_file_format",
+        type=valid_book_folder_file_format,
+        default="%(Title)s - %(Author)s",
+        help=(
+            'Book file format string (without extension). Default "%%(Title)s - %%(Author)s".\n'
+            "This applies to only merged audiobooks, ebooks, and magazines.\n"
+            "Available fields:\n"
+            "  %%(Title)s : Title\n"
+            "  %%(Author)s: Comma-separated Author names\n"
+            "  %%(Series)s: Series\n"
+            "  %%(Edition)s: Edition\n"
         ),
     )
     parser_dl.add_argument(
@@ -257,18 +291,43 @@ def extract_loan_file(
         args.download_dir,
         f"{slugify(file_name, allow_unicode=True)}.{file_ext}",
     )
-    if format_id in (EBOOK_EPUB_ADOBE_FORMAT, EBOOK_EPUB_OPEN_FORMAT):
-        file_ext = "acsm" if format_id == EBOOK_EPUB_ADOBE_FORMAT else "epub"
+    if args.libby_direct and libby_client.has_format(
+        selected_loan, LibbyFormats.EBookOverdrive
+    ):
+        format_id = LibbyFormats.EBookOverdrive
+
+    openbook: Dict = {}
+    rosters: List[Dict] = []
+    # pre-extract openbook first so that we can use it to create the book folder
+    # with the creator names (needed to place the cover.jpg download)
+    if format_id in (LibbyFormats.EBookOverdrive, LibbyFormats.MagazineOverDrive):
+        _, openbook, rosters = libby_client.process_ebook(selected_loan)
+
+    cover_path = ""
+    if format_id in (
+        LibbyFormats.EBookEPubAdobe,
+        LibbyFormats.EBookEPubOpen,
+        LibbyFormats.EBookOverdrive,
+        LibbyFormats.MagazineOverDrive,
+    ):
+        file_ext = "acsm" if format_id == LibbyFormats.EBookEPubAdobe else "epub"
         book_folder, book_file_name, _ = generate_names(
-            selected_loan["title"],
-            selected_loan.get("series") or "",
-            [selected_loan["firstCreatorName"]],
-            args,
-            logger,
+            title=selected_loan["title"],
+            series=selected_loan.get("series") or "",
+            authors=extract_authors_from_openbook(
+                openbook
+            ),  # same logic in ebook.process_ebook_loan()
+            edition=selected_loan.get("edition") or "",
+            args=args,
+            logger=logger,
         )
         book_basename, _ = os.path.splitext(book_file_name)
         loan_file_path = f"{book_basename}.{file_ext}"
-        if args.always_keep_cover:
+        if format_id in (
+            LibbyFormats.EBookOverdrive,
+            LibbyFormats.MagazineOverDrive,
+        ) and not os.path.exists(loan_file_path):
+            # we need the cover for embedding
             cover_path, _ = generate_cover(
                 book_folder=book_folder,
                 cover_url=get_best_cover_url(selected_loan),
@@ -283,34 +342,52 @@ def extract_loan_file(
     # don't re-download odm if it already exists so that we don't
     # needlessly use up the fulfillment limits
     if not os.path.exists(loan_file_path):
-        try:
-            odm_res_content = libby_client.fulfill_loan_file(
-                selected_loan["id"], selected_loan["cardId"], format_id
+        if format_id in (LibbyFormats.EBookOverdrive, LibbyFormats.MagazineOverDrive):
+            process_ebook_loan(
+                loan=selected_loan,
+                cover_path=cover_path,
+                openbook=openbook,
+                rosters=rosters,
+                libby_client=libby_client,
+                args=args,
+                logger=logger,
             )
-            with open(loan_file_path, "wb") as f:
-                f.write(odm_res_content)
-                logger.info(
-                    "Downloaded %s to %s",
-                    file_ext,
-                    colored(loan_file_path, "magenta"),
+        else:
+            # formats: odm, acsm
+            try:
+                odm_res_content = libby_client.fulfill_loan_file(
+                    selected_loan["id"], selected_loan["cardId"], format_id
                 )
-        except ClientError as ce:
-            if ce.http_status == 400 and libby_client.is_downloadble_ebook_loan(
-                selected_loan
-            ):
-                logger.error(
-                    "%s %s",
-                    colored(f"Unable to download {file_ext}.", "red", attrs=["bold"]),
-                    colored("You may have sent the loan to a Kindle.", "red"),
-                )
-                return ""
-            raise
+                with open(loan_file_path, "wb") as f:
+                    f.write(odm_res_content)
+                    logger.info(
+                        "Downloaded %s to %s",
+                        file_ext,
+                        colored(loan_file_path, "magenta"),
+                    )
+            except ClientError as ce:
+                if ce.http_status == 400 and libby_client.is_downloadable_ebook_loan(
+                    selected_loan
+                ):
+                    logger.error(
+                        "%s %s",
+                        colored(
+                            f"Unable to download {file_ext}.", "red", attrs=["bold"]
+                        ),
+                        colored("You may have sent the loan to a Kindle.", "red"),
+                    )
+                    return ""
+                raise
     else:
         logger.info(
             "Already downloaded %s file %s",
             file_ext,
             colored(loan_file_path, "magenta"),
         )
+
+    if os.path.exists(cover_path) and not args.always_keep_cover:
+        # clean up
+        os.remove(cover_path)
 
     return loan_file_path
 
@@ -329,11 +406,11 @@ def run(
     """
     parser = argparse.ArgumentParser(
         prog="odmpy",
-        description="Download/return an OverDrive loan audiobook",
+        description="Manage your OverDrive loans",
         epilog=(
             f"Version {__version__}. "
             f"[Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}-{sys.platform}] "
-            "Source at https://github.com/ping/odmpy/"
+            f"Source at {REPOSITORY_URL}"
         ),
         fromfile_prefix_chars="@",
     )
@@ -429,7 +506,7 @@ def run(
         "--direct",
         dest="libby_direct",
         action="store_true",
-        help="Process the audiobook download directly from Libby without downloading an odm file.",
+        help="Process the download directly from Libby without downloading an odm/acsm file.",
     )
     parser_libby.add_argument(
         "--keepodm",
@@ -475,6 +552,12 @@ def run(
         dest=OdmpyNoninteractiveOptions.Check,
         action="store_true",
         help="Non-interactive mode that displays Libby signed-in status.",
+    )
+    parser_libby.add_argument(
+        "--debug",
+        dest="is_debug_mode",
+        action="store_true",
+        help="Debug switch for use during development. Please do not use.",
     )
 
     # libby return parser
@@ -624,7 +707,11 @@ def run(
                     if libby_client.is_downloadable_audiobook_loan(book)
                     or (
                         args.include_ebooks
-                        and libby_client.is_downloadble_ebook_loan(book)
+                        and libby_client.is_downloadable_ebook_loan(book)
+                    )
+                    or (
+                        args.include_magazines
+                        and libby_client.is_downloadable_magazine_loan(book)
                     )
                 ],
                 key=lambda ln: ln["checkoutDate"],  # type: ignore[no-any-return]
@@ -711,7 +798,9 @@ def run(
                                 logger,
                             )
                             continue
-                        elif libby_client.is_downloadble_ebook_loan(selected_loan):
+                        elif libby_client.is_downloadable_ebook_loan(
+                            selected_loan
+                        ) or libby_client.is_downloadable_magazine_loan(selected_loan):
                             extract_loan_file(libby_client, selected_loan, args)
                             continue
                     return
@@ -729,9 +818,12 @@ def run(
                             logger,
                             cleanup_odm_license=not args.keepodm,
                         )
-                    elif libby_client.is_downloadble_ebook_loan(selected_loan):
+                    elif libby_client.is_downloadable_ebook_loan(
+                        selected_loan
+                    ) or libby_client.is_downloadable_magazine_loan(selected_loan):
                         extract_loan_file(libby_client, selected_loan, args)
                         continue
+
                 return  # non-interactive libby downloads
 
             # Interactive mode
@@ -748,12 +840,18 @@ def run(
                     "%s: %-55s  %s %-25s  \n    * %s  %s",
                     colored(f"{index:2d}", attrs=["bold"]),
                     colored(loan["title"], attrs=["bold"]),
-                    "📖"
-                    if libby_client.is_downloadble_ebook_loan(loan)
-                    else "🔊"
+                    "📰"
+                    if args.include_magazines
+                    and libby_client.is_downloadable_magazine_loan(loan)
+                    else "📖"
                     if args.include_ebooks
+                    and libby_client.is_downloadable_ebook_loan(loan)
+                    else "🔊"
+                    if args.include_ebooks or args.include_magazines
                     else "",
-                    f'By: {loan["firstCreatorName"]}',
+                    f'By: {loan["firstCreatorName"]}'
+                    if loan.get("firstCreatorName")
+                    else loan.get("edition", ""),
                     f"Expires: {colored(f'{expiry_date:%Y-%m-%d}','blue' if libby_client.is_renewable(loan) else None)}",
                     next(
                         iter(
@@ -862,7 +960,9 @@ def run(
                                 logger,
                             )
                             continue
-                        elif libby_client.is_downloadble_ebook_loan(selected_loan):
+                        elif libby_client.is_downloadable_ebook_loan(
+                            selected_loan
+                        ) or libby_client.is_downloadable_magazine_loan(selected_loan):
                             extract_loan_file(libby_client, selected_loan, args)
                             continue
 
@@ -883,7 +983,9 @@ def run(
                             cleanup_odm_license=not args.keepodm,
                         )
                         continue
-                    elif libby_client.is_downloadble_ebook_loan(selected_loan):
+                    elif libby_client.is_downloadable_ebook_loan(
+                        selected_loan
+                    ) or libby_client.is_downloadable_magazine_loan(selected_loan):
                         extract_loan_file(libby_client, selected_loan, args)
                         continue
                 return

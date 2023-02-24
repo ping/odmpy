@@ -74,7 +74,7 @@ def positive_int(value: str) -> int:
     return int_value
 
 
-def valid_book_folder_format(value: str) -> str:
+def valid_book_folder_file_format(value: str) -> str:
     """
     Ensure that the book folder format is valid
 
@@ -82,13 +82,13 @@ def valid_book_folder_format(value: str) -> str:
     :return:
     """
     try:
-        value % {"Title": "", "Author": "", "Series": ""}
+        value % {"Title": "", "Author": "", "Series": "", "Edition": ""}
     except KeyError as err:
         raise argparse.ArgumentTypeError(
-            f'"{value}" is not a valid book folder name format: Invalid field {err}'
+            f'"{value}" is not a valid book folder/file name format: Invalid field {err}'
         ) from err
     except Exception as err:
         raise argparse.ArgumentTypeError(
-            f'"{value}" is not a valid book folder name format: {err}'
+            f'"{value}" is not a valid book folder/file name format: {err}'
         ) from err
     return value

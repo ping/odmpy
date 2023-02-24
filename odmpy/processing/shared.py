@@ -30,13 +30,13 @@ from eyed3.utils import art  # type: ignore[import]
 from requests.adapters import HTTPAdapter, Retry
 from termcolor import colored
 
-from .constants import PERFORMER_FID, LANGUAGE_FID
-from .libby import USER_AGENT
-from .utils import slugify, sanitize_path, set_ele_attributes
+from ..constants import PERFORMER_FID, LANGUAGE_FID
+from ..libby import USER_AGENT, LibbyFormats
+from ..utils import slugify, sanitize_path, set_ele_attributes
 
 
 #
-# Shared functions across process_odm() and process_audiobook_loan()
+# Shared functions across processing for diff loan types
 #
 
 
@@ -54,6 +54,7 @@ def generate_names(
     title: str,
     series: str,
     authors: List[str],
+    edition: str,
     args: argparse.Namespace,
     logger: logging.Logger,
 ) -> Tuple[str, str, str]:
@@ -62,6 +63,7 @@ def generate_names(
 
     :param title:
     :param authors:
+    :param edition:
     :param series:
     :param args:
     :param logger:
@@ -71,7 +73,20 @@ def generate_names(
         "Title": sanitize_path(title),
         "Author": sanitize_path(", ".join(authors)),
         "Series": sanitize_path(series or ""),
+        "Edition": sanitize_path(edition),
     }
+    # unlike book_folder_name, we sanitize the entire book file format
+    # because it is expected to be a single name and `os.sep` will be
+    # stripped
+    book_file_format = sanitize_path(
+        args.book_file_format
+        % {
+            "Title": title,
+            "Author": ", ".join(authors),
+            "Series": series or "",
+            "Edition": edition,
+        }
+    )
     # declare book folder/file names here together, so that we can catch problems from too long names
     book_folder = os.path.join(args.download_dir, book_folder_name)
     if args.no_book_folder:
@@ -80,12 +95,12 @@ def generate_names(
     # for merged mp3
     book_filename = os.path.join(
         book_folder,
-        f"{sanitize_path(title)} - {sanitize_path(', '.join(authors))}.mp3",
+        f"{book_file_format}.mp3",
     )
     # for merged m4b
     book_m4b_filename = os.path.join(
         book_folder,
-        f"{sanitize_path(title)} - {sanitize_path(', '.join(authors))}.m4b",
+        f"{book_file_format}.m4b",
     )
 
     if not os.path.exists(book_folder):
@@ -100,7 +115,7 @@ def generate_names(
             # create book folder with just the title and first author
             book_folder_name = args.book_folder_format % {
                 "Title": sanitize_path(title),
-                "Author": sanitize_path(authors[0]),
+                "Author": sanitize_path(authors[0]) if authors else "",
                 "Series": sanitize_path(series or ""),
             }
             book_folder = os.path.join(args.download_dir, book_folder_name)
@@ -109,9 +124,18 @@ def generate_names(
             )
             os.makedirs(book_folder, exist_ok=True)
 
-            # create merged book name with just the title
-            book_filename = os.path.join(book_folder, f"{sanitize_path(title)}.mp3")
-            book_m4b_filename = os.path.join(book_folder, f"{sanitize_path(title)}.m4b")
+            # create book name with just one author
+            book_file_format = sanitize_path(
+                args.book_file_format
+                % {
+                    "Title": title,
+                    "Author": authors[0] if authors else "",
+                    "Series": series or "",
+                    "Edition": edition,
+                }
+            )
+            book_filename = os.path.join(book_folder, f"{book_file_format}.mp3")
+            book_m4b_filename = os.path.join(book_folder, f"{book_file_format}.m4b")
     return book_folder, book_filename, book_m4b_filename
 
 
@@ -488,6 +512,332 @@ def remux_mp3(
         os.rename(part_tmp_filename, part_filename)
 
 
+def extract_authors_from_openbook(openbook: Dict) -> List[str]:
+    """
+    Extract list of author names from openbook
+
+    :param openbook:
+    :return:
+    """
+    creators = openbook.get("creator", [])
+    return (
+        [c["name"] for c in creators if c.get("role", "") == "author"]
+        or [c["name"] for c in creators if c.get("role", "") == "editor"]
+        or [c["name"] for c in creators]
+    )
+
+
+def extract_isbn(formats: List[Dict], format_types: List[str]) -> str:
+    """
+    Extract ISBN from media_info["formats"]
+
+    :param formats:
+    :param format_types:
+    :return:
+    """
+    # a format can contain 2 different "ISBN"s.. one type "ISBN", and another "LibraryISBN"
+    # in format["identifiers"]
+    # format["isbn"] reflects the "LibraryISBN" value
+
+    isbn = next(
+        iter([f["isbn"] for f in formats if f["id"] in format_types and f.get("isbn")]),
+        "",
+    )
+    if isbn:
+        return isbn
+
+    for isbn_type in ("LibraryISBN", "ISBN"):
+        for media_format in [
+            f
+            for f in formats
+            if f["id"] in format_types
+            and [i for i in f["identifiers"] if i["type"] == isbn_type]
+        ]:
+            isbn = next(
+                iter(
+                    [
+                        identifier["value"]
+                        for identifier in media_format["identifiers"]
+                        if identifier["type"] == isbn_type
+                    ]
+                ),
+                "",
+            )
+            if isbn:
+                return isbn
+
+    return ""
+
+
+def build_opf_package(
+    media_info: Dict, version: str = "2.0", loan_format: str = LibbyFormats.AudioBookMP3
+) -> ET.Element:
+    """
+    Build the package element from media_info.
+
+    :param media_info:
+    :param version:
+    :param loan_format:
+    :return:
+    """
+
+    # References:
+    # Version 2: https://idpf.org/epub/20/spec/OPF_2.0_final_spec.html#Section2.0
+    # Version 3: https://www.w3.org/TR/epub-33/#sec-package-doc
+
+    ET.register_namespace("opf", "http://www.idpf.org/2007/opf")
+    ET.register_namespace("dc", "http://purl.org/dc/elements/1.1/")
+    package = ET.Element(
+        "package",
+        attrib={
+            "version": version,
+            "xmlns": "http://www.idpf.org/2007/opf",
+            "unique-identifier": "publication-id",
+        },
+    )
+    metadata = ET.SubElement(
+        package,
+        "metadata",
+        attrib={
+            "xmlns:dc": "http://purl.org/dc/elements/1.1/",
+            "xmlns:opf": "http://www.idpf.org/2007/opf",
+        },
+    )
+    title = ET.SubElement(metadata, "dc:title")
+    title.text = media_info["title"]
+    if version == "3.0":
+        title.set("id", "main-title")
+        meta_main_title = ET.SubElement(
+            metadata,
+            "meta",
+            attrib={"refines": "#main-title", "property": "title-type"},
+        )
+        meta_main_title.text = "main"
+
+    if (
+        version == "2.0"
+        and loan_format != LibbyFormats.EBookOverdrive
+        and media_info.get("subtitle")
+    ):
+        ET.SubElement(metadata, "dc:subtitle").text = media_info["subtitle"]
+    if version == "3.0" and media_info.get("subtitle"):
+        sub_title = ET.SubElement(metadata, "dc:title")
+        sub_title.text = media_info["subtitle"]
+        sub_title.set("id", "sub-title")
+        meta_sub_title = ET.SubElement(
+            metadata, "meta", attrib={"refines": "#sub-title", "property": "title-type"}
+        )
+        meta_sub_title.text = "subtitle"
+
+    if version == "3.0" and media_info.get("edition"):
+        sub_title = ET.SubElement(metadata, "dc:title")
+        sub_title.text = media_info["edition"]
+        sub_title.set("id", "edition")
+        media_edition = ET.SubElement(
+            metadata, "meta", attrib={"refines": "#edition", "property": "title-type"}
+        )
+        media_edition.text = "edition"
+
+    ET.SubElement(metadata, "dc:language").text = media_info["languages"][0]["id"]
+    identifier = ET.SubElement(metadata, "dc:identifier")
+    identifier.set("id", "publication-id")
+
+    isbn = extract_isbn(media_info["formats"], format_types=[loan_format])
+    if isbn:
+        identifier.text = isbn
+        if version == "2.0":
+            identifier.set("opf:scheme", "ISBN")
+        if version == "3.0":
+            if len(isbn) in (10, 13):
+                meta_isbn = ET.SubElement(
+                    metadata,
+                    "meta",
+                    attrib={
+                        "refines": "#publication-id",
+                        "property": "identifier-type",
+                        "scheme": "onix:codelist5",
+                    },
+                )
+                # https://ns.editeur.org/onix/en/5
+                meta_isbn.text = "15" if len(isbn) == 13 else "02"
+    else:
+        identifier.text = media_info["id"]
+        if version == "2.0":
+            identifier.set("opf:scheme", "overdrive")
+        if version == "3.0":
+            identifier.text = media_info["id"]
+
+    # add overdrive id and reserveId
+    overdrive_id = ET.SubElement(metadata, "dc:identifier")
+    overdrive_id.text = media_info["id"]
+    overdrive_id.set("id", "overdrive-id")
+    overdrive_reserve_id = ET.SubElement(metadata, "dc:identifier")
+    overdrive_reserve_id.text = media_info["reserveId"]
+    overdrive_reserve_id.set("id", "overdrive-reserve-id")
+    if version == "2.0":
+        overdrive_id.set("opf:scheme", "OverDriveId")
+        overdrive_reserve_id.set("opf:scheme", "OverDriveReserveId")
+    if version == "3.0":
+        overdrive_id_meta = ET.SubElement(
+            metadata,
+            "meta",
+            attrib={
+                "refines": "#overdrive-id",
+                "property": "identifier-type",
+            },
+        )
+        overdrive_id_meta.text = "overderive-id"
+
+        overdrive_reserve_id_meta = ET.SubElement(
+            metadata,
+            "meta",
+            attrib={
+                "refines": "#overdrive-reserve-id",
+                "property": "identifier-type",
+            },
+        )
+        overdrive_reserve_id_meta.text = "overdrive-reserve-id"
+
+    # for magazines, no creators are provided, so we'll patch in the publisher
+    if media_info.get("publisher", {}).get("name") and not media_info["creators"]:
+        media_info["creators"] = [
+            {
+                "name": media_info["publisher"]["name"],
+                "id": media_info["publisher"]["id"],
+                "role": "Publisher",
+            }
+        ]
+
+    # Roles https://idpf.org/epub/20/spec/OPF_2.0_final_spec.html#Section2.2.6
+    for media_role, opf_role in (
+        ("Author", "aut"),
+        ("Narrator", "nrt"),
+        ("Editor", "edt"),
+        ("Translator", "trl"),
+        ("Illustrator", "ill"),
+        ("Photographer", "pht"),
+        ("Artist", "art"),
+        ("Collaborator", "clb"),
+        ("Other", "oth"),
+        ("Publisher", "pbl"),
+    ):
+        creators = [
+            c for c in media_info["creators"] if c.get("role", "") == media_role
+        ]
+        for c in creators:
+            creator = ET.SubElement(metadata, "dc:creator")
+            creator.text = c["name"]
+            if version == "2.0":
+                creator_attributes = {"opf:role": opf_role}
+                if c.get("sortName"):
+                    creator_attributes["opf:file-as"] = c["sortName"]
+                set_ele_attributes(creator, creator_attributes)
+            if version == "3.0":
+                creator.set("id", f'creator_{c["id"]}')
+                if c.get("sortName"):
+                    meta_file_as = ET.SubElement(
+                        metadata,
+                        "meta",
+                        attrib={
+                            "refines": f'#creator_{c["id"]}',
+                            "property": "file-as",
+                        },
+                    )
+                    meta_file_as.text = c["sortName"]
+                meta_role = ET.SubElement(
+                    metadata,
+                    "meta",
+                    attrib={
+                        "refines": f'#creator_{c["id"]}',
+                        "property": "role",
+                        "scheme": "marc:relators",
+                    },
+                )
+                meta_role.text = opf_role
+
+    if media_info.get("publisher", {}).get("name"):
+        ET.SubElement(metadata, "dc:publisher").text = media_info["publisher"]["name"]
+    if media_info.get("description"):
+        ET.SubElement(metadata, "dc:description").text = media_info["description"]
+    for s in media_info.get("subject", []):
+        ET.SubElement(metadata, "dc:subject").text = s["name"]
+
+    if version == "2.0" and loan_format != LibbyFormats.EBookOverdrive:
+        for k in media_info.get("keywords", []):
+            ET.SubElement(metadata, "dc:tag").text = k
+    if version == "3.0" and media_info.get("bisac"):
+        for i, bisac in enumerate(media_info["bisac"], start=1):
+            subject = ET.SubElement(metadata, "dc:subject")
+            subject.text = bisac["description"]
+            subject.set("id", f"subject_{i}")
+            meta_subject_authority = ET.SubElement(
+                metadata,
+                "meta",
+                attrib={"refines": f"#subject_{i}", "property": "authority"},
+            )
+            meta_subject_authority.text = "BISAC"
+            meta_subject_term = ET.SubElement(
+                metadata,
+                "meta",
+                attrib={"refines": f"#subject_{i}", "property": "term"},
+            )
+            meta_subject_term.text = bisac["code"]
+
+    publish_date = media_info.get("publishDate") or media_info.get(
+        "estimatedReleaseDate"
+    )
+    if publish_date:
+        pub_date = ET.SubElement(metadata, "dc:date")
+        if version == "2.0":
+            pub_date.set("opf:event", "publication")
+        pub_date.text = publish_date
+        if version == "3.0":
+            meta_pubdate = ET.SubElement(metadata, "meta")
+            meta_pubdate.set("property", "dcterms:modified")
+            meta_pubdate.text = publish_date
+
+    if media_info.get("detailedSeries"):
+        series_info = media_info["detailedSeries"]
+        if series_info.get("seriesName"):
+            ET.SubElement(
+                metadata,
+                "meta",
+                attrib={"name": "calibre:series", "content": series_info["seriesName"]},
+            )
+            if version == "3.0":
+                meta_series = ET.SubElement(
+                    metadata,
+                    "meta",
+                    attrib={"id": "series-name", "property": "belongs-to-collection"},
+                )
+                meta_series.text = series_info["seriesName"]
+                meta_series_type = ET.SubElement(
+                    metadata,
+                    "meta",
+                    attrib={"refines": "#series-name", "property": "collection-type"},
+                )
+                meta_series_type.text = "series"
+
+        if series_info.get("readingOrder"):
+            ET.SubElement(
+                metadata,
+                "meta",
+                attrib={
+                    "name": "calibre:series_index",
+                    "content": series_info["readingOrder"],
+                },
+            )
+            if version == "3.0":
+                meta_series_pos = ET.SubElement(
+                    metadata,
+                    "meta",
+                    attrib={"refines": "#series-name", "property": "group-position"},
+                )
+                meta_series_pos.text = series_info["readingOrder"]
+
+    return package
+
+
 def create_opf(
     media_info: Dict,
     cover_filename: Optional[str],
@@ -504,109 +854,13 @@ def create_opf(
     :param logger:
     :return:
     """
-    ET.register_namespace("opf", "http://www.idpf.org/2007/opf")
-    ET.register_namespace("dc", "http://purl.org/dc/elements/1.1/")
-    package = ET.Element("package")
-    set_ele_attributes(
-        package,
-        {
-            "version": "2.0",
-            "xmlns": "http://www.idpf.org/2007/opf",
-            "unique-identifier": "BookId",
-        },
-    )
-    metadata = ET.SubElement(package, "metadata")
-    set_ele_attributes(
-        metadata,
-        {
-            "xmlns:dc": "http://purl.org/dc/elements/1.1/",
-            "xmlns:opf": "http://www.idpf.org/2007/opf",
-        },
-    )
-    title = ET.SubElement(metadata, "dc:title")
-    title.text = media_info["title"]
-    if media_info.get("subtitle"):
-        ET.SubElement(metadata, "dc:subtitle").text = media_info["subtitle"]
-    ET.SubElement(metadata, "dc:language").text = media_info["languages"][0]["id"]
-    identifier = ET.SubElement(metadata, "dc:identifier")
-    identifier.set("id", "BookId")
-    isbn = next(
-        iter(
-            [
-                f["identifiers"][0]["value"]
-                for f in media_info["formats"]
-                if f["id"] == "audiobook-mp3"
-                and [i for i in f["identifiers"] if i["type"] == "ISBN"]
-            ]
-        ),
-        None,
-    )
-    if isbn:
-        identifier.set("opf:scheme", "ISBN")
-        identifier.text = isbn
-    else:
-        identifier.set("opf:scheme", "overdrive")
-        identifier.text = media_info["id"]
-
-    # add overdrive id and reserveId
-    overdrive_id = ET.SubElement(metadata, "dc:identifier")
-    overdrive_id.set("opf:scheme", "OverDriveId")
-    overdrive_id.text = media_info["id"]
-    overdrive_reserve_id = ET.SubElement(metadata, "dc:identifier")
-    overdrive_reserve_id.set("opf:scheme", "OverDriveReserveId")
-    overdrive_reserve_id.text = media_info["reserveId"]
-
-    # Roles https://idpf.org/epub/20/spec/OPF_2.0_final_spec.html#Section2.2.6
-    for media_role, opf_role in (
-        ("Author", "aut"),
-        ("Narrator", "nrt"),
-        ("Editor", "edt"),
-    ):
-        creators = [
-            c for c in media_info["creators"] if c.get("role", "") == media_role
-        ]
-        for c in creators:
-            creator = ET.SubElement(metadata, "dc:creator")
-            creator.set("opf:role", opf_role)
-            set_ele_attributes(
-                creator,
-                {"opf:role": opf_role, "opf:file-as": c["sortName"]},
-            )
-            creator.text = c["name"]
-
-    if media_info.get("publisher", {}).get("name"):
-        ET.SubElement(metadata, "dc:publisher").text = media_info["publisher"]["name"]
-    if media_info.get("description"):
-        ET.SubElement(metadata, "dc:description").text = media_info["description"]
-    for s in media_info.get("subject", []):
-        ET.SubElement(metadata, "dc:subject").text = s["name"]
-    for k in media_info.get("keywords", []):
-        ET.SubElement(metadata, "dc:tag").text = k
-    if media_info.get("publishDate"):
-        pub_date = ET.SubElement(metadata, "dc:date")
-        pub_date.set("opf:event", "publication")
-        pub_date.text = media_info["publishDate"]
-    if media_info.get("detailedSeries"):
-        series_info = media_info["detailedSeries"]
-        if series_info.get("seriesName"):
-            set_ele_attributes(
-                ET.SubElement(metadata, "meta"),
-                {"name": "calibre:series", "content": series_info["seriesName"]},
-            )
-        if series_info.get("readingOrder"):
-            set_ele_attributes(
-                ET.SubElement(metadata, "meta"),
-                {
-                    "name": "calibre:series_index",
-                    "content": series_info["readingOrder"],
-                },
-            )
-
+    package = build_opf_package(media_info, version="2.0", loan_format="audiobook-mp3")
     manifest = ET.SubElement(package, "manifest")
     if cover_filename:
-        set_ele_attributes(
-            ET.SubElement(manifest, "item"),
-            {
+        ET.SubElement(
+            manifest,
+            "item",
+            attrib={
                 "id": "cover",
                 "href": os.path.basename(cover_filename),
                 "media-type": "image/jpeg",
@@ -616,15 +870,16 @@ def create_opf(
     for f in file_tracks:
         file_name, _ = os.path.splitext(os.path.basename(f["file"]))
         file_id = slugify(file_name)
-        set_ele_attributes(
-            ET.SubElement(manifest, "item"),
-            {
+        ET.SubElement(
+            manifest,
+            "item",
+            attrib={
                 "id": file_id,
                 "href": os.path.basename(f["file"]),
                 "media-type": "audio/mpeg",
             },
         )
-        set_ele_attributes(ET.SubElement(spine, "itemref"), {"idref": file_id})
+        ET.SubElement(spine, "itemref", attrib={"idref": file_id})
 
     tree = ET.ElementTree(package)
     tree.write(opf_file_path, xml_declaration=True, encoding="utf-8")

@@ -22,6 +22,7 @@ import re
 import sys
 from collections import OrderedDict
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Optional, NamedTuple, Dict, List, Tuple
 from typing import OrderedDict as OrderedDictType
 from urllib import request
@@ -66,6 +67,32 @@ PartMeta = TypedDict(
     },
 )
 
+
+class LibbyFormats(str, Enum):
+    """
+    Format strings
+    """
+
+    AudioBookMP3 = "audiobook-mp3"
+    AudioBookOverDrive = "audiobook-overdrive"  # not used
+    EBookEPubAdobe = "ebook-epub-adobe"
+    EBookEPubOpen = "ebook-epub-open"
+    EBookKobo = "ebook-kobo"  # not used
+    EBookKindle = "ebook-kindle"  # not used
+    EBookOverdrive = "ebook-overdrive"
+    MagazineOverDrive = "magazine-overdrive"
+
+
+class LibbyMediaTypes(str, Enum):
+    """
+    Loan type strings
+    """
+
+    Audiobook = "audiobook"
+    EBook = "ebook"
+    Magazine = "magazine"
+
+
 FILE_PART_RE = re.compile(
     r"(?P<part_name>{[A-F0-9\-]{36}}[^#]+)(#(?P<second_stamp>\d+(\.\d+)?))?$"
 )
@@ -73,14 +100,12 @@ USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "
     "Version/14.0.2 Safari/605.1.15"
 )
-AUDIOBOOK_MP3_FORMAT = "audiobook-mp3"
-EBOOK_EPUB_ADOBE_FORMAT = "ebook-epub-adobe"
-EBOOK_EPUB_OPEN_FORMAT = "ebook-epub-open"
-EBOOK_EPUB_FORMATS = (EBOOK_EPUB_ADOBE_FORMAT, EBOOK_EPUB_OPEN_FORMAT)
+EBOOK_EPUB_FORMATS = (LibbyFormats.EBookEPubAdobe, LibbyFormats.EBookEPubOpen)
 DOWNLOADABLE_FORMATS = (
-    AUDIOBOOK_MP3_FORMAT,
-    EBOOK_EPUB_ADOBE_FORMAT,
-    EBOOK_EPUB_OPEN_FORMAT,
+    LibbyFormats.AudioBookMP3,
+    LibbyFormats.EBookEPubAdobe,
+    LibbyFormats.EBookEPubOpen,
+    LibbyFormats.MagazineOverDrive,
 )
 
 
@@ -429,11 +454,11 @@ class LibbyClient(object):
         :return:
         """
         return bool(
-            [f for f in book.get("formats", []) if f["id"] == AUDIOBOOK_MP3_FORMAT]
+            [f for f in book.get("formats", []) if f["id"] == LibbyFormats.AudioBookMP3]
         )
 
     @staticmethod
-    def is_downloadble_ebook_loan(book: Dict) -> bool:
+    def is_downloadable_ebook_loan(book: Dict) -> bool:
         """
         Verify if book is a downloadable ebook.
 
@@ -442,6 +467,22 @@ class LibbyClient(object):
         """
         return bool(
             [f for f in book.get("formats", []) if f["id"] in EBOOK_EPUB_FORMATS]
+        )
+
+    @staticmethod
+    def is_downloadable_magazine_loan(book: Dict) -> bool:
+        """
+        Verify if loan is a downloadable magazine.
+
+        :param book:
+        :return:
+        """
+        return bool(
+            [
+                f
+                for f in book.get("formats", [])
+                if f["id"] == LibbyFormats.MagazineOverDrive
+            ]
         )
 
     @staticmethod
@@ -464,17 +505,21 @@ class LibbyClient(object):
 
         if not locked_in_format:
             if LibbyClient.is_open_ebook_loan(loan) and LibbyClient.has_format(
-                loan, EBOOK_EPUB_OPEN_FORMAT
+                loan, LibbyFormats.EBookEPubOpen
             ):
-                return EBOOK_EPUB_OPEN_FORMAT
-            elif LibbyClient.is_downloadble_ebook_loan(loan) and LibbyClient.has_format(
-                loan, EBOOK_EPUB_ADOBE_FORMAT
-            ):
-                return EBOOK_EPUB_ADOBE_FORMAT
+                return LibbyFormats.EBookEPubOpen
+            elif LibbyClient.is_downloadable_magazine_loan(
+                loan
+            ) and LibbyClient.has_format(loan, LibbyFormats.MagazineOverDrive):
+                return LibbyFormats.MagazineOverDrive
+            elif LibbyClient.is_downloadable_ebook_loan(
+                loan
+            ) and LibbyClient.has_format(loan, LibbyFormats.EBookEPubAdobe):
+                return LibbyFormats.EBookEPubAdobe
             elif LibbyClient.is_downloadable_audiobook_loan(
                 loan
-            ) and LibbyClient.has_format(loan, AUDIOBOOK_MP3_FORMAT):
-                return AUDIOBOOK_MP3_FORMAT
+            ) and LibbyClient.has_format(loan, LibbyFormats.AudioBookMP3):
+                return LibbyFormats.AudioBookMP3
 
         raise ValueError("Unable to find a downloadable format")
 
@@ -487,7 +532,11 @@ class LibbyClient(object):
         :return:
         """
         return bool(
-            [f for f in book.get("formats", []) if f["id"] == EBOOK_EPUB_OPEN_FORMAT]
+            [
+                f
+                for f in book.get("formats", [])
+                if f["id"] == LibbyFormats.EBookEPubOpen
+            ]
         )
 
     @staticmethod
@@ -605,7 +654,7 @@ class LibbyClient(object):
         headers = self.default_headers()
         headers["Accept"] = "*/*"
 
-        if format_id == EBOOK_EPUB_OPEN_FORMAT:
+        if format_id == LibbyFormats.EBookEPubOpen:
             res_redirect: requests.Response = self.make_request(
                 f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
                 headers=headers,
@@ -637,20 +686,22 @@ class LibbyClient(object):
         )
         return res
 
-    def process_audiobook(
-        self, loan: Dict
-    ) -> Tuple[Dict, OrderedDictType[str, PartMeta]]:
+    def prepare_loan(self, loan: Dict) -> Tuple[str, Dict]:
         """
-        Returns the data needed to download an audiobook.
+        Pre-requisite step for processing a loan.
 
         :param loan:
         :return:
         """
-        loan_type = "audiobook" if loan["type"]["id"] == "audiobook" else "book"
+        loan_type = "book"
+        if loan["type"]["id"] == LibbyMediaTypes.Audiobook:
+            loan_type = "audiobook"
+        if loan["type"]["id"] == LibbyMediaTypes.Magazine:
+            loan_type = "magazine"
         card_id = loan["cardId"]
         title_id = loan["id"]
         meta = self.open_loan(loan_type, card_id, title_id)
-        download_base = meta["urls"]["web"]
+        download_base: str = meta["urls"]["web"]
 
         # Sets a needed cookie
         web_url = download_base + "?" + meta["message"]
@@ -661,11 +712,35 @@ class LibbyClient(object):
             authenticated=False,
             return_res=True,
         )
+        return download_base, meta
 
+    def process_audiobook(
+        self, loan: Dict
+    ) -> Tuple[Dict, OrderedDictType[str, PartMeta]]:
+        """
+        Returns the data needed to download an audiobook.
+
+        :param loan:
+        :return:
+        """
+        download_base, meta = self.prepare_loan(loan)
         # contains nav/toc and spine
         openbook = self.make_request(meta["urls"]["openbook"])
         toc = parse_toc(download_base, openbook["nav"]["toc"], openbook["spine"])
         return openbook, toc
+
+    def process_ebook(self, loan: Dict) -> Tuple[str, Dict, List[Dict]]:
+        """
+        Returns the data needed to download an ebook directly.
+
+        :param loan:
+        :return:
+        """
+        download_base, meta = self.prepare_loan(loan)
+        # contains nav/toc and spine, manifest
+        openbook = self.make_request(meta["urls"]["openbook"])
+        rosters: List[Dict] = self.make_request(meta["urls"]["rosters"])
+        return download_base, openbook, rosters
 
     def return_title(self, title_id: str, card_id: str) -> None:
         """
