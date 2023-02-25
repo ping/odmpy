@@ -61,6 +61,7 @@ from ..utils import (
     parse_duration_to_seconds,
     parse_duration_to_milliseconds,
     get_element_text,
+    plural_or_singular_noun as ps,
 )
 
 RESERVE_ID_RE = re.compile(
@@ -265,7 +266,7 @@ def process_odm(
     logger.info(
         f'Downloading "{colored(title, "blue", attrs=["bold"])}" '
         f'by "{colored(", ".join(authors), "blue", attrs=["bold"])}" '
-        f"in {len(download_parts)} part(s)..."
+        f'in {len(download_parts)} {ps(len(download_parts), "part")}...'
     )
 
     book_folder, book_filename, book_m4b_filename = generate_names(

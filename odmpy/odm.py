@@ -52,8 +52,7 @@ from .processing.shared import (
     init_session,
     extract_authors_from_openbook,
 )
-from .utils import slugify
-from .utils import plural_or_singular_noun as ps
+from .utils import slugify, plural_or_singular_noun as ps
 
 #
 # Orchestrates the interaction between the CLI, APIs and the processing bits

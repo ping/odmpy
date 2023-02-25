@@ -47,9 +47,8 @@ from ..libby import (
     PartMeta,
 )
 from ..overdrive import OverDriveClient
-from ..utils import (
-    slugify,
-)
+from ..utils import slugify, plural_or_singular_noun as ps
+
 
 #
 # Main processing logic for libby direct audiobook loans
@@ -141,7 +140,7 @@ def process_audiobook_loan(
     logger.info(
         f'Downloading "{colored(title, "blue", attrs=["bold"])}" '
         f'by "{colored(", ".join(authors), "blue", attrs=["bold"])}" '
-        f"in {len(download_parts)} part(s)..."
+        f'in {len(download_parts)} {ps(len(download_parts), "part")}...'
     )
 
     book_folder, book_filename, book_m4b_filename = generate_names(
