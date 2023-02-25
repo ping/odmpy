@@ -4,6 +4,8 @@ A simple console manager for OverDrive/Libby loans. Originally a python port of 
 
 Requires Python >= 3.7.
 
+![Screenshot](https://user-images.githubusercontent.com/104607/221328089-507db45e-8a19-4369-9576-084bd8707b89.png)
+
 ## Features
 
 1. Downloads the cover and audio files for an audiobook loan, using a downloaded `.odm` loan or direct via [Libby](https://help.libbyapp.com/en-us/6103.htm), with additional options to:
