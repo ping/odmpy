@@ -21,7 +21,7 @@ Requires Python >= 3.7.
 
 ```bash
 # Install / Update to specific version
-python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.0 --upgrade
+python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.1 --upgrade
 
 # Install / Update from latest source
 python3 -m pip install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -74,7 +74,7 @@ Available commands:
     libbyreturn         Return loans via Libby.
     libbyrenew          Renew loans via Libby.
 
-Version 0.7.0. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
+Version 0.7.1. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
 ```
 
 ### Download via Libby
