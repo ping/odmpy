@@ -1,6 +1,6 @@
 # odmpy
 
-A simple console manager for OverDrive/Libby audiobook loans. Originally a python port of [overdrive](https://github.com/chbrown/overdrive), it now supports additional features such as adding of metadata such as chapters, merging of files, and downloading via [Libby](https://help.libbyapp.com/en-us/6103.htm).
+A simple console manager for OverDrive/Libby loans. Originally a python port of [overdrive](https://github.com/chbrown/overdrive), it now supports additional features for audiobooks such as adding of metadata such as chapters, merging of files, and downloading of various loans types such as eBooks and magazines via [Libby](https://help.libbyapp.com/en-us/6103.htm).
 
 Requires Python >= 3.7.
 
@@ -9,9 +9,11 @@ Requires Python >= 3.7.
 1. Downloads the cover and audio files for an audiobook loan, using a downloaded `.odm` loan or direct via [Libby](https://help.libbyapp.com/en-us/6103.htm), with additional options to:
    - merge files into a single `mp3` or `m4b` file
    - add chapters information into the audio file(s)
-2. Return a loan
-3. Renew a loan (Libby only)
-4. Display information about an `.odm` loan file
+2. Download eBook (EPUB) loans as `.acsm` files or as `.epub` files (with `--direct`)
+3. Download magazine loans
+4. Return a loan
+5. Renew a loan (Libby only)
+6. Display information about an `.odm` loan file
 
 ## Install
 
@@ -339,6 +341,12 @@ options:
 # The `libby` command shares almost all of the download options as `dl`
 # Example, downloads will be saved in MyLoans/
 odmpy libby -d "MyLoans/"
+
+# View and download ebook (EPUB) loans as `.acsm` files
+odmpy libby --ebooks
+
+# View and download magazines loans as `.epub` files
+odmpy libby --magazines
 
 # Download via Libby without generating the odm file
 odmpy libby --direct

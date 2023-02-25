@@ -496,8 +496,8 @@ def run(
     # libby download parser
     parser_libby = subparsers.add_parser(
         OdmpyCommands.Libby,
-        description="Interactive Libby Interface for downloading audiobook loans.",
-        help="Download audiobooks via Libby.",
+        description="Interactive Libby Interface for downloading loans.",
+        help="Download audiobook/ebook/magazine loans via Libby.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     add_common_libby_arguments(parser_libby)
