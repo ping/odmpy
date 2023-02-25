@@ -70,7 +70,7 @@ Available commands:
     info                Get information about a loan file
     dl                  Download from a loan odm file.
     ret                 Return a loan file.
-    libby               Download audiobooks via Libby.
+    libby               Download audiobook/ebook/magazine loans via Libby.
     libbyreturn         Return loans via Libby.
     libbyrenew          Renew loans via Libby.
 
@@ -94,7 +94,7 @@ usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--ebooks] [--magazines]
                    [--select N [N ...]] [--exportloans LOANS_JSON_FILEPATH]
                    [--reset] [--check] [--debug]
 
-Interactive Libby Interface for downloading audiobook loans.
+Interactive Libby Interface for downloading loans.
 
 options:
   -h, --help            show this help message and exit
@@ -109,12 +109,12 @@ options:
   --magazines           Include magazines loans (experimental).
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
                         Download folder path.
-  -c, --chapters        Add chapter marks (experimental).
-  -m, --merge           Merge into 1 file (experimental, requires ffmpeg).
+  -c, --chapters        Add chapter marks (experimental). For audiobooks.
+  -m, --merge           Merge into 1 file (experimental, requires ffmpeg). For audiobooks.
   --mergeformat {mp3,m4b}
-                        Merged file format (m4b is slow, experimental, requires ffmpeg).
+                        Merged file format (m4b is slow, experimental, requires ffmpeg). For audiobooks.
   -k, --keepcover       Always generate the cover image file (cover.jpg).
-  -f, --keepmp3         Keep downloaded mp3 files (after merging).
+  -f, --keepmp3         Keep downloaded mp3 files (after merging). For audiobooks.
   --nobookfolder        Don't create a book subfolder.
   --bookfolderformat BOOK_FOLDER_FORMAT
                         Book folder format string. Default "%(Title)s - %(Author)s".
@@ -133,17 +133,19 @@ options:
                           %(Edition)s: Edition
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
-                        This option forces odmpy to overwrite tags where possible.
+                        This option forces odmpy to overwrite tags where possible. For audiobooks.
   --tagsdelimiter DELIMITER
                         For ID3 tags with multiple values, this defines the delimiter.
-                        For example, with the default delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
-  --opf                 Generate an OPF file for the book.
+                        For example, with the default delimiter ";", authors are written
+                        to the artist tag as "Author A;Author B;Author C". For audiobooks.
+  --opf                 Generate an OPF file for the audiobook.
   -r OBSOLETE_RETRIES, --retry OBSOLETE_RETRIES
                         Obsolete. Do not use.
   -j, --writejson       Generate a meta json file (for debugging).
   --hideprogress        Hide the download progress bar (e.g. during testing).
-  --direct              Process the download directly from Libby without downloading an odm/acsm file.
-  --keepodm             Keep the downloaded odm and license files.
+  --direct              Process the download directly from Libby without 
+                        downloading an odm/acsm file. For audiobooks/eBooks.
+  --keepodm             Keep the downloaded odm and license files. For audiobooks.
   --latest N            Non-interactive mode that downloads the latest N number of loans.
   --select N [N ...]    Non-interactive mode that downloads loans by the index entered.
                         For example, "--select 1 5" will download the first and fifth loans in order of the checked out date.
@@ -247,7 +249,7 @@ usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
                 [--hideprogress]
                 odm_file
 
-Download from a loan file.
+Download from an audiobook loan file.
 
 positional arguments:
   odm_file              ODM file path.
@@ -256,12 +258,12 @@ options:
   -h, --help            show this help message and exit
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
                         Download folder path.
-  -c, --chapters        Add chapter marks (experimental).
-  -m, --merge           Merge into 1 file (experimental, requires ffmpeg).
+  -c, --chapters        Add chapter marks (experimental). For audiobooks.
+  -m, --merge           Merge into 1 file (experimental, requires ffmpeg). For audiobooks.
   --mergeformat {mp3,m4b}
-                        Merged file format (m4b is slow, experimental, requires ffmpeg).
+                        Merged file format (m4b is slow, experimental, requires ffmpeg). For audiobooks.
   -k, --keepcover       Always generate the cover image file (cover.jpg).
-  -f, --keepmp3         Keep downloaded mp3 files (after merging).
+  -f, --keepmp3         Keep downloaded mp3 files (after merging). For audiobooks.
   --nobookfolder        Don't create a book subfolder.
   --bookfolderformat BOOK_FOLDER_FORMAT
                         Book folder format string. Default "%(Title)s - %(Author)s".
@@ -280,11 +282,12 @@ options:
                           %(Edition)s: Edition
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
-                        This option forces odmpy to overwrite tags where possible.
+                        This option forces odmpy to overwrite tags where possible. For audiobooks.
   --tagsdelimiter DELIMITER
                         For ID3 tags with multiple values, this defines the delimiter.
-                        For example, with the default delimiter ";", authors are written to the artist tag as "Author A;Author B;Author C".
-  --opf                 Generate an OPF file for the book.
+                        For example, with the default delimiter ";", authors are written
+                        to the artist tag as "Author A;Author B;Author C". For audiobooks.
+  --opf                 Generate an OPF file for the audiobook.
   -r OBSOLETE_RETRIES, --retry OBSOLETE_RETRIES
                         Obsolete. Do not use.
   -j, --writejson       Generate a meta json file (for debugging).
@@ -311,7 +314,7 @@ odmpy libby -h
 ```
 usage: odmpy ret [-h] odm_file
 
-Return a loan file.
+Return an audiobook loan file.
 
 positional arguments:
   odm_file    ODM file path.
@@ -324,7 +327,7 @@ options:
 ```
 usage: odmpy info [-h] [-f {text,json}] odm_file
 
-Get information about a loan file.
+Get information about an audiobook loan file.
 
 positional arguments:
   odm_file              ODM file path.

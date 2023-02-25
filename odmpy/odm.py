@@ -145,21 +145,21 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         "--chapters",
         dest="add_chapters",
         action="store_true",
-        help="Add chapter marks (experimental).",
+        help="Add chapter marks (experimental). For audiobooks.",
     )
     parser_dl.add_argument(
         "-m",
         "--merge",
         dest="merge_output",
         action="store_true",
-        help="Merge into 1 file (experimental, requires ffmpeg).",
+        help="Merge into 1 file (experimental, requires ffmpeg). For audiobooks.",
     )
     parser_dl.add_argument(
         "--mergeformat",
         dest="merge_format",
         choices=["mp3", "m4b"],
         default="mp3",
-        help="Merged file format (m4b is slow, experimental, requires ffmpeg).",
+        help="Merged file format (m4b is slow, experimental, requires ffmpeg). For audiobooks.",
     )
     parser_dl.add_argument(
         "-k",
@@ -173,7 +173,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         "--keepmp3",
         dest="keep_mp3",
         action="store_true",
-        help="Keep downloaded mp3 files (after merging).",
+        help="Keep downloaded mp3 files (after merging). For audiobooks.",
     )
     parser_dl.add_argument(
         "--nobookfolder",
@@ -217,7 +217,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         help=(
             "Always overwrite ID3 tags.\n"
             "By default odmpy tries to non-destructively tag audiofiles.\n"
-            "This option forces odmpy to overwrite tags where possible."
+            "This option forces odmpy to overwrite tags where possible. For audiobooks."
         ),
     )
     parser_dl.add_argument(
@@ -228,15 +228,15 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         default=";",
         help=(
             "For ID3 tags with multiple values, this defines the delimiter.\n"
-            'For example, with the default delimiter ";", authors are written '
-            'to the artist tag as "Author A;Author B;Author C".'
+            'For example, with the default delimiter ";", authors are written\n'
+            'to the artist tag as "Author A;Author B;Author C". For audiobooks.'
         ),
     )
     parser_dl.add_argument(
         "--opf",
         dest="generate_opf",
         action="store_true",
-        help="Generate an OPF file for the book.",
+        help="Generate an OPF file for the audiobook.",
     )
     parser_dl.add_argument(
         "-r",
@@ -462,8 +462,8 @@ def run(
     # odm info parser
     parser_info = subparsers.add_parser(
         OdmpyCommands.Information,
-        description="Get information about a loan file.",
-        help="Get information about a loan file",
+        description="Get information about an audiobook loan file.",
+        help="Get information about an audiobook loan file",
     )
     parser_info.add_argument(
         "-f",
@@ -478,8 +478,8 @@ def run(
     # odm download parser
     parser_dl = subparsers.add_parser(
         OdmpyCommands.Download,
-        description="Download from a loan file.",
-        help="Download from a loan odm file.",
+        description="Download from an audiobook loan file.",
+        help="Download from a audiobook loan file.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser_dl.add_argument("odm_file", type=str, help="ODM file path.")
@@ -488,8 +488,8 @@ def run(
     # odm return parser
     parser_ret = subparsers.add_parser(
         OdmpyCommands.Return,
-        description="Return a loan file.",
-        help="Return a loan file.",
+        description="Return an audiobook loan file.",
+        help="Return an audiobook loan file.",
     )
     parser_ret.add_argument("odm_file", type=str, help="ODM file path.")
 
@@ -506,12 +506,15 @@ def run(
         "--direct",
         dest="libby_direct",
         action="store_true",
-        help="Process the download directly from Libby without downloading an odm/acsm file.",
+        help=(
+            "Process the download directly from Libby without "
+            "\ndownloading an odm/acsm file. For audiobooks/eBooks."
+        ),
     )
     parser_libby.add_argument(
         "--keepodm",
         action="store_true",
-        help="Keep the downloaded odm and license files.",
+        help="Keep the downloaded odm and license files. For audiobooks.",
     )
     parser_libby.add_argument(
         "--latest",
