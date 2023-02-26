@@ -21,7 +21,7 @@ from setuptools import setup  # type: ignore[import]
 
 __author__ = "ping"
 __url__ = "https://github.com/ping/odmpy/"
-__version__ = "0.7.1"  # also update odmpy/odm.py
+__version__ = "0.7.2"  # also update odmpy/odm.py
 
 
 __long_description__ = """
