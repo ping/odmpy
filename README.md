@@ -4,7 +4,7 @@ A simple console manager for OverDrive/Libby loans. Originally a python port of 
 
 Requires Python >= 3.7.
 
-![Screenshot](https://user-images.githubusercontent.com/104607/221328089-507db45e-8a19-4369-9576-084bd8707b89.png)
+![Screenshot](https://user-images.githubusercontent.com/104607/221388023-03d828ca-1745-452a-91d6-0349b5bac829.png)
 
 ## Features
 
