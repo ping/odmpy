@@ -45,7 +45,7 @@ setup(
     author=__author__,
     license="GPL",
     url=__url__,
-    packages=["odmpy"],
+    packages=["odmpy", "odmpy.processing"],
     entry_points={
         "console_scripts": [
             "odmpy = odmpy.__main__:main",

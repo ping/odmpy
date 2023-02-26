@@ -38,3 +38,9 @@ python -m unittest -v tests.UtilsTests
 
 # Tests for odmpy.processing.shared
 python -m unittest tests.ProcessingSharedTests
+
+# Test installation
+python3 -m venv venvtest
+source venvtest/bin/activate
+python3 setup.py install
+odmpy --version
