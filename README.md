@@ -49,7 +49,7 @@ python3 -m pip uninstall odmpy
 ```
 usage: odmpy [-h] [--version] [-v] [-t TIMEOUT] [-r RETRIES]
              [--noversioncheck]
-             {info,dl,ret,libby,libbyreturn,libbyrenew} ...
+             {libby,libbyreturn,libbyrenew,dl,ret,info} ...
 
 Manage your OverDrive loans
 
@@ -65,14 +65,14 @@ options:
   --noversioncheck      Do not check if newer version is available.
 
 Available commands:
-  {info,dl,ret,libby,libbyreturn,libbyrenew}
+  {libby,libbyreturn,libbyrenew,dl,ret,info}
                         To get more help, use the -h option with the command.
-    info                Get information about a loan file
-    dl                  Download from a loan odm file.
-    ret                 Return a loan file.
     libby               Download audiobook/ebook/magazine loans via Libby.
     libbyreturn         Return loans via Libby.
     libbyrenew          Renew loans via Libby.
+    dl                  Download from an audiobook loan file (odm).
+    ret                 Return an audiobook loan file (odm).
+    info                Get information about an audiobook loan file (odm).
 
 Version 0.7.2. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
 ```

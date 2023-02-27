@@ -459,40 +459,6 @@ def run(
         help="To get more help, use the -h option with the command.",
     )
 
-    # odm info parser
-    parser_info = subparsers.add_parser(
-        OdmpyCommands.Information,
-        description="Get information about an audiobook loan file.",
-        help="Get information about an audiobook loan file",
-    )
-    parser_info.add_argument(
-        "-f",
-        "--format",
-        dest="format",
-        choices=["text", "json"],
-        default="text",
-        help="Format for output.",
-    )
-    parser_info.add_argument("odm_file", type=str, help="ODM file path.")
-
-    # odm download parser
-    parser_dl = subparsers.add_parser(
-        OdmpyCommands.Download,
-        description="Download from an audiobook loan file.",
-        help="Download from a audiobook loan file.",
-        formatter_class=argparse.RawTextHelpFormatter,
-    )
-    parser_dl.add_argument("odm_file", type=str, help="ODM file path.")
-    add_common_download_arguments(parser_dl)
-
-    # odm return parser
-    parser_ret = subparsers.add_parser(
-        OdmpyCommands.Return,
-        description="Return an audiobook loan file.",
-        help="Return an audiobook loan file.",
-    )
-    parser_ret.add_argument("odm_file", type=str, help="ODM file path.")
-
     # libby download parser
     parser_libby = subparsers.add_parser(
         OdmpyCommands.Libby,
@@ -581,6 +547,40 @@ def run(
     )
     add_common_libby_arguments(parser_libby_renew)
 
+    # odm download parser
+    parser_dl = subparsers.add_parser(
+        OdmpyCommands.Download,
+        description="Download from an audiobook loan file (odm).",
+        help="Download from an audiobook loan file (odm).",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser_dl.add_argument("odm_file", type=str, help="ODM file path.")
+    add_common_download_arguments(parser_dl)
+
+    # odm return parser
+    parser_ret = subparsers.add_parser(
+        OdmpyCommands.Return,
+        description="Return an audiobook loan file (odm).",
+        help="Return an audiobook loan file (odm).",
+    )
+    parser_ret.add_argument("odm_file", type=str, help="ODM file path.")
+
+    # odm info parser
+    parser_info = subparsers.add_parser(
+        OdmpyCommands.Information,
+        description="Get information about an audiobook loan file (odm).",
+        help="Get information about an audiobook loan file (odm).",
+    )
+    parser_info.add_argument(
+        "-f",
+        "--format",
+        dest="format",
+        choices=["text", "json"],
+        default="text",
+        help="Format for output.",
+    )
+    parser_info.add_argument("odm_file", type=str, help="ODM file path.")
+
     args = parser.parse_args(custom_args)
 
     if injected_stream_handler:
@@ -631,8 +631,7 @@ def run(
             OdmpyCommands.LibbyReturn,
             OdmpyCommands.LibbyRenew,
         ):
-            client_title = "Libby Interactive Client"
-            logger.info(client_title)
+            logger.info("odmpy Interactive Client for Libby")
             logger.info("-" * 70)
 
             libby_client = LibbyClient(
