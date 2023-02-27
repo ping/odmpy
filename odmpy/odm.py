@@ -1076,7 +1076,7 @@ def run(
         raise
 
     except Exception:  # noqa, pylint: disable=broad-except
-        logger.exception(colored("An unexpected error has occured", "red"))
+        logger.exception(colored("An unexpected error has occurred", "red"))
         raise
 
     # we shouldn't get this error

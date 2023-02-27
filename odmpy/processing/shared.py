@@ -686,7 +686,7 @@ def build_opf_package(
                 "property": "identifier-type",
             },
         )
-        overdrive_id_meta.text = "overderive-id"
+        overdrive_id_meta.text = "overdrive-id"
 
         overdrive_reserve_id_meta = ET.SubElement(
             metadata,

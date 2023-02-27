@@ -60,7 +60,7 @@ class LibbyNotConfiguredError(RuntimeError):
 
 def positive_int(value: str) -> int:
     """
-    Ensure that argument is a postive integer
+    Ensure that argument is a positive integer
 
     :param value:
     :return:
