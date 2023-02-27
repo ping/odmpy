@@ -390,6 +390,8 @@ where [`example.dl.conf`](example.dl.conf) contains the command arguments values
 - [overdrive](https://github.com/chbrown/overdrive)
 - [pylibby](https://github.com/lullius/pylibby)
 
+<a href="https://www.buymeacoffee.com/ping"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=ping&button_colour=FFDD00&font_colour=000000&font_family=Bree&outline_colour=000000&coffee_colour=ffffff" /></a>
+
 ## Contributing
 
 This repository uses [black](https://github.com/psf/black) to ensure consistent formatting.
@@ -406,3 +408,7 @@ pip3 install -r requirements-dev.txt --upgrade
 # 3. Check for linting errors
 sh dev-lint.sh
 ```
+
+## Disclaimer
+
+This is not affliated, endorsed or certified by OverDrive. To use odmpy, you must already have access to OverDrive services via a valid library account. Use at your own risk.
