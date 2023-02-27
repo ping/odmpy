@@ -403,3 +403,9 @@ class LibbyClientTests(unittest.TestCase):
     def test_string_enum(self):
         self.assertEqual(f"{LibbyFormats.AudioBookMP3}", "audiobook-mp3")
         self.assertEqual(str(LibbyFormats.AudioBookMP3), "audiobook-mp3")
+        self.assertEqual("" + LibbyFormats.AudioBookMP3, "audiobook-mp3")
+        self.assertEqual("%s" % LibbyFormats.AudioBookMP3, "audiobook-mp3")
+        self.assertEqual("{}".format(LibbyFormats.AudioBookMP3), "audiobook-mp3")
+        self.assertEqual(LibbyFormats.AudioBookMP3.value, "audiobook-mp3")
+        self.assertEqual(LibbyFormats.AudioBookMP3, "audiobook-mp3")
+        self.assertEqual(LibbyFormats.AudioBookMP3, LibbyFormats("audiobook-mp3"))
