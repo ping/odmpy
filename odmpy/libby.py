@@ -241,7 +241,7 @@ class LibbyClient(object):
         settings_folder: str,
         max_retries: int = 0,
         timeout: int = 10,
-        logger=Optional[logging.Logger],
+        logger: Optional[logging.Logger] = None,
         **kwargs,
     ) -> None:
         if not logger:
