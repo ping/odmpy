@@ -238,7 +238,8 @@ class LibbyClient(object):
     # Original reverse engineering of the libby endpoints is thanks to https://github.com/lullius/pylibby
     def __init__(
         self,
-        settings_folder: str,
+        settings_folder: Optional[str] = None,
+        identity_token: Optional[str] = None,
         max_retries: int = 0,
         timeout: int = 10,
         logger: Optional[logging.Logger] = None,
@@ -248,21 +249,28 @@ class LibbyClient(object):
             logger = logging.getLogger(__name__)
         self.logger = logger
         self.settings_folder = settings_folder
-        if not os.path.exists(self.settings_folder):
+        if self.settings_folder and not os.path.exists(self.settings_folder):
             os.makedirs(self.settings_folder, exist_ok=True)
-        self.temp_folder = os.path.join(self.settings_folder, "temp")
-        if not os.path.exists(self.temp_folder):
+        self.temp_folder = (
+            os.path.join(self.settings_folder, "temp") if self.settings_folder else None
+        )
+        if self.temp_folder and not os.path.exists(self.temp_folder):
             os.makedirs(self.temp_folder, exist_ok=True)
 
         self.timeout = timeout
+        self.identity_token = identity_token
         self.identity = {}
-        self.identity_settings_file = os.path.join(self.settings_folder, "libby.json")
-        if os.path.exists(self.identity_settings_file):
+        self.identity_settings_file = (
+            os.path.join(self.settings_folder, "libby.json")
+            if self.settings_folder
+            else None
+        )
+        if self.identity_settings_file and os.path.exists(self.identity_settings_file):
             with open(self.identity_settings_file, "r", encoding="utf-8") as f:
                 self.identity = json.load(f)
 
         # migrate old sync code storage key
-        if self.identity.get("__odmpy_sync_code"):
+        if self.identity_settings_file and self.identity.get("__odmpy_sync_code"):
             if not self.identity.get("__libby_sync_code"):
                 self.identity["__libby_sync_code"] = self.identity["__odmpy_sync_code"]
             del self.identity["__odmpy_sync_code"]
@@ -315,8 +323,8 @@ class LibbyClient(object):
                 method = "GET"
         if headers is None:
             headers = self.default_headers()
-        if authenticated and self.has_chip():
-            headers["Authorization"] = f'Bearer {self.identity["identity"]}'
+        if authenticated and self.get_token():
+            headers["Authorization"] = f"Bearer {self.get_token()}"
 
         req = requests.Request(
             method,
@@ -357,6 +365,10 @@ class LibbyClient(object):
         :return:
         """
         self.identity.update(updates)
+        if not self.identity_settings_file:
+            raise ValueError(
+                "Unable to save settings because settings_folder is not defined"
+            )
         with open(self.identity_settings_file, "w", encoding="utf-8") as f:
             json.dump(self.identity, f)
 
@@ -366,13 +378,13 @@ class LibbyClient(object):
 
         :return:
         """
-        if os.path.exists(self.identity_settings_file):
+        if self.identity_settings_file and os.path.exists(self.identity_settings_file):
             os.remove(self.identity_settings_file)
         self.identity = {}
 
     def has_chip(self) -> bool:
         """
-        Check if client has identity token.
+        Check if client has identity token chip.
 
         :return:
         """
@@ -407,6 +419,9 @@ class LibbyClient(object):
             # persist to settings
             self.save_settings(res)
         return res
+
+    def get_token(self) -> Optional[str]:
+        return self.identity_token or self.identity.get("identity")
 
     def clone_by_code(self, code: str, auto_save: bool = True) -> Dict:
         """

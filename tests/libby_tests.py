@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 import unittest
 from collections import OrderedDict
@@ -31,12 +32,21 @@ class LibbyClientTests(unittest.TestCase):
             HTTPConnection.debuglevel = 1
             logging.basicConfig(stream=sys.stdout)
 
-        self.client = LibbyClient(
-            settings_folder="./odmpy_settings",
-            logger=self.logger,
-            max_retries=1,
-            timeout=15,
-        )
+        try:
+            token = os.environ["LIBBY_TEST_TOKEN"]
+            self.client = LibbyClient(
+                identity_token=token,
+                logger=self.logger,
+                max_retries=1,
+                timeout=15,
+            )
+        except KeyError:
+            self.client = LibbyClient(
+                settings_folder="./odmpy_settings",
+                logger=self.logger,
+                max_retries=1,
+                timeout=15,
+            )
 
     def tearDown(self) -> None:
         self.client.libby_session.close()
@@ -219,7 +229,7 @@ class LibbyClientTests(unittest.TestCase):
         )
 
     def test_loans(self):
-        if not self.client.has_sync_code():
+        if not self.client.get_token():
             self.skipTest("Libby not logged in.")
             return
 
@@ -294,7 +304,7 @@ class LibbyClientTests(unittest.TestCase):
                 self.assertIn(k, loan, msg=f"'{k}' not found in loan")
 
     def test_holds(self):
-        if not self.client.has_sync_code():
+        if not self.client.get_token():
             self.skipTest("Libby not logged in.")
             return
 
@@ -354,3 +364,37 @@ class LibbyClientTests(unittest.TestCase):
             "renewableOn": (now - timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
         }
         self.assertTrue(LibbyClient.is_renewable(loan))
+
+    def test_unauthed_libby_client(self):
+        client = LibbyClient(logger=self.logger)
+        try:
+            chip_res = client.get_chip(auto_save=False)
+            for k in ("chip", "identity", "syncable", "primary"):
+                self.assertIn(k, chip_res)
+        finally:
+            client.libby_session.close()  # avoid ResourceWarning
+
+        client = LibbyClient(logger=self.logger, identity_token=chip_res["identity"])
+        try:
+            res = client.sync()
+            for k in ("cards", "summary"):
+                self.assertFalse(res.get(k))
+        finally:
+            client.libby_session.close()  # avoid ResourceWarning
+
+    def test_alt_authed_libby_client(self):
+        token = None
+        try:
+            token = os.environ["LIBBY_TEST_TOKEN"]
+        except KeyError:
+            self.skipTest("No libby token setup in environ")
+
+        client = LibbyClient(logger=self.logger, identity_token=token)
+        try:
+            res = client.sync()
+            for k in ("cards", "summary"):
+                self.assertTrue(res.get(k))
+            with self.assertRaises(ValueError) as _:
+                client.save_settings({"identity": token})
+        finally:
+            client.libby_session.close()  # avoid ResourceWarning
