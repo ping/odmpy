@@ -12,6 +12,7 @@ from odmpy.libby import (
     merge_toc,
     ChapterMarker,
     parse_part_path,
+    LibbyFormats,
 )
 
 test_logger = logging.getLogger(__name__)
@@ -398,3 +399,7 @@ class LibbyClientTests(unittest.TestCase):
                 client.save_settings({"identity": token})
         finally:
             client.libby_session.close()  # avoid ResourceWarning
+
+    def test_string_enum(self):
+        self.assertEqual(f"{LibbyFormats.AudioBookMP3}", "audiobook-mp3")
+        self.assertEqual(str(LibbyFormats.AudioBookMP3), "audiobook-mp3")

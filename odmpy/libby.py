@@ -82,6 +82,9 @@ class LibbyFormats(str, Enum):
     EBookOverdrive = "ebook-overdrive"
     MagazineOverDrive = "magazine-overdrive"
 
+    def __str__(self):
+        return str(self.value)
+
 
 class LibbyMediaTypes(str, Enum):
     """
@@ -91,6 +94,9 @@ class LibbyMediaTypes(str, Enum):
     Audiobook = "audiobook"
     EBook = "ebook"
     Magazine = "magazine"
+
+    def __str__(self):
+        return str(self.value)
 
 
 FILE_PART_RE = re.compile(
