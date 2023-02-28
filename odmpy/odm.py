@@ -596,6 +596,12 @@ def run(
 
     if hasattr(args, "download_dir") and args.download_dir:
         args.download_dir = os.path.expanduser(args.download_dir)
+        if not os.path.exists(args.download_dir):
+            # prevents FileNotFoundError when using libby odm-based downloads
+            # because the odm is first downloaded into the download dir
+            # without a book folder
+            os.makedirs(args.download_dir, exist_ok=True)
+
     if hasattr(args, "settings_folder") and args.settings_folder:
         args.settings_folder = os.path.expanduser(args.settings_folder)
     if hasattr(args, "export_loans_path") and args.export_loans_path:
