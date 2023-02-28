@@ -584,7 +584,7 @@ def build_opf_package(
     # References:
     # Version 2: https://idpf.org/epub/20/spec/OPF_2.0_final_spec.html#Section2.0
     # Version 3: https://www.w3.org/TR/epub-33/#sec-package-doc
-
+    direct_epub_formats = [LibbyFormats.EBookOverdrive, LibbyFormats.MagazineOverDrive]
     ET.register_namespace("opf", "http://www.idpf.org/2007/opf")
     ET.register_namespace("dc", "http://purl.org/dc/elements/1.1/")
     package = ET.Element(
@@ -605,6 +605,10 @@ def build_opf_package(
     )
     title = ET.SubElement(metadata, "dc:title")
     title.text = media_info["title"]
+    if loan_format == LibbyFormats.MagazineOverDrive and media_info.get("edition"):
+        # for magazines, put the edition into the title to ensure some uniqueness
+        title.text = f'{media_info["title"]} - {media_info["edition"]}'
+
     if version == "3.0":
         title.set("id", "main-title")
         meta_main_title = ET.SubElement(
@@ -616,7 +620,7 @@ def build_opf_package(
 
     if (
         version == "2.0"
-        and loan_format != LibbyFormats.EBookOverdrive
+        and loan_format not in direct_epub_formats
         and media_info.get("subtitle")
     ):
         ET.SubElement(metadata, "dc:subtitle").text = media_info["subtitle"]
@@ -762,7 +766,7 @@ def build_opf_package(
     for s in media_info.get("subject", []):
         ET.SubElement(metadata, "dc:subject").text = s["name"]
 
-    if version == "2.0" and loan_format != LibbyFormats.EBookOverdrive:
+    if version == "2.0" and loan_format not in direct_epub_formats:
         for k in media_info.get("keywords", []):
             ET.SubElement(metadata, "dc:tag").text = k
     if version == "3.0" and media_info.get("bisac"):

@@ -464,7 +464,11 @@ def process_ebook_loan(
     opt_file_name = "package.opf"
     opf_file_path = os.path.join(book_content_folder, opt_file_name)
     package = build_opf_package(
-        media_info, version=epub_version, loan_format=LibbyFormats.EBookOverdrive
+        media_info,
+        version=epub_version,
+        loan_format=LibbyFormats.MagazineOverDrive
+        if loan["type"]["id"] == LibbyMediaTypes.Magazine
+        else LibbyFormats.EBookOverdrive,
     )
     # add manifest
     manifest = ET.SubElement(package, "manifest")
