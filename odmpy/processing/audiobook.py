@@ -165,6 +165,15 @@ def process_audiobook_loan(
         )
         return
 
+    if args.is_debug_mode:
+        with open(os.path.join(book_folder, "loan.json"), "w", encoding="utf-8") as f:
+            json.dump(loan, f, indent=2)
+
+        with open(
+            os.path.join(book_folder, "openbook.json"), "w", encoding="utf-8"
+        ) as f:
+            json.dump(openbook, f, indent=2)
+
     debug_filename = os.path.join(book_folder, "debug.json")
 
     cover_filename, cover_bytes = generate_cover(
@@ -452,3 +461,13 @@ def process_audiobook_loan(
     if args.write_json:
         with open(debug_filename, "w", encoding="utf-8") as outfile:
             json.dump(debug_meta, outfile, indent=2)
+
+    if not args.is_debug_mode:
+        # clean up
+        for file_name in (
+            "openbook.json",
+            "loan.json",
+        ):
+            target = os.path.join(book_folder, file_name)
+            if os.path.exists(target):
+                os.remove(target)
