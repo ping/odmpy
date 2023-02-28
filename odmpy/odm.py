@@ -314,9 +314,12 @@ def extract_loan_file(
         book_folder, book_file_name, _ = generate_names(
             title=selected_loan["title"],
             series=selected_loan.get("series") or "",
-            authors=extract_authors_from_openbook(
-                openbook
-            ),  # same logic in ebook.process_ebook_loan()
+            authors=extract_authors_from_openbook(openbook)
+            or (
+                [selected_loan["firstCreatorName"]]
+                if selected_loan.get("firstCreatorName")
+                else []
+            ),  # for open-epub
             edition=selected_loan.get("edition") or "",
             args=args,
             logger=logger,
@@ -353,7 +356,7 @@ def extract_loan_file(
                 logger=logger,
             )
         else:
-            # formats: odm, acsm
+            # formats: odm, acsm or open-epub
             try:
                 odm_res_content = libby_client.fulfill_loan_file(
                     selected_loan["id"], selected_loan["cardId"], format_id
