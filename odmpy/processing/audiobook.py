@@ -419,11 +419,11 @@ def process_audiobook_loan(
             )
 
         if not args.keep_mp3:
-            for f in file_tracks:
+            for file_track in file_tracks:
                 try:
-                    os.remove(f["file"])
+                    os.remove(file_track["file"])
                 except Exception as e:  # pylint: disable=broad-except
-                    logger.warning(f'Error deleting "{f["file"]}": {str(e)}')
+                    logger.warning(f'Error deleting "{file_track["file"]}": {str(e)}')
 
     if not keep_cover and os.path.isfile(cover_filename):
         try:
