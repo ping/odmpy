@@ -366,6 +366,7 @@ class LibbyClientTests(unittest.TestCase):
         }
         self.assertTrue(LibbyClient.is_renewable(loan))
 
+    @unittest.skip("May get blocked by libby servers during CI/CD")
     def test_unauthed_libby_client(self):
         client = LibbyClient(logger=self.logger)
         try:
