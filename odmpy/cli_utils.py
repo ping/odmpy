@@ -38,6 +38,10 @@ class OdmpyCommands(str, Enum):
     def __str__(self):
         return str(self.value)
 
+    def __repr__(self):
+        # to ensure that proper values are printed out in arg command_name error help
+        return str(self.value)
+
 
 class OdmpyNoninteractiveOptions(str, Enum):
     """
@@ -48,6 +52,9 @@ class OdmpyNoninteractiveOptions(str, Enum):
     DownloadSelectedN = "selected_loans_indices"
     ExportLoans = "export_loans_path"
     Check = "check_signed_in"
+
+    def __str__(self):
+        return str(self.value)
 
 
 class LibbyNotConfiguredError(RuntimeError):
