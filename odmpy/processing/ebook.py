@@ -320,6 +320,9 @@ def process_ebook_loan(
     contents_re = re.compile(r"parent\.__bif_cfc0\(self,'(?P<base64_text>.+)'\)")
 
     openbook_toc = openbook["nav"]["toc"]
+    if len(openbook_toc) <= 1 and loan["type"]["id"] == LibbyMediaTypes.Magazine:
+        raise RuntimeError("Unsupported fixed-layout (pre-paginated) magazine format.")
+
     toc_pages = [item["path"].split("#")[0] for item in openbook_toc]
     manifest_entries: List[Dict] = []
 
