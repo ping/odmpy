@@ -631,7 +631,9 @@ def run(
             OdmpyCommands.LibbyReturn,
             OdmpyCommands.LibbyRenew,
         ):
-            logger.info("odmpy Interactive Client for Libby")
+            logger.info(
+                "%s Interactive Client for Libby", colored("odmpy", attrs=["bold"])
+            )
             logger.info("-" * 70)
 
             libby_client = LibbyClient(
