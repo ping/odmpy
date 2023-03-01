@@ -57,14 +57,6 @@ class OdmpyNoninteractiveOptions(str, Enum):
         return str(self.value)
 
 
-class LibbyNotConfiguredError(RuntimeError):
-    """
-    Raised when Libby is not yet configured. Used in `--check`.
-    """
-
-    pass
-
-
 def positive_int(value: str) -> int:
     """
     Ensure that argument is a positive integer

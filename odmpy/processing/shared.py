@@ -31,6 +31,7 @@ from requests.adapters import HTTPAdapter, Retry
 from termcolor import colored
 
 from ..constants import PERFORMER_FID, LANGUAGE_FID
+from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyFormats
 from ..utils import slugify, sanitize_path, set_ele_attributes
 
@@ -381,7 +382,7 @@ def merge_into_mp3(
     if exit_code:
         logger.error(f"ffmpeg exited with the code: {exit_code!s}")
         logger.error(f"Command: {' '.join(cmd)!s}")
-        raise RuntimeError("ffmpeg exited with a non-zero code")
+        raise OdmpyRuntimeError("ffmpeg exited with a non-zero code")
 
     # Switch to using os.replace() instead of os.rename() to avoid
     # issues with remnant files between tests
@@ -459,7 +460,7 @@ def convert_to_m4b(
     if exit_code:
         logger.error(f"ffmpeg exited with the code: {exit_code!s}")
         logger.error(f"Command: {' '.join(cmd)!s}")
-        raise RuntimeError("ffmpeg exited with a non-zero code")
+        raise OdmpyRuntimeError("ffmpeg exited with a non-zero code")
 
     os.rename(temp_book_m4b_filename, book_m4b_filename)
     logger.info('Merged files into "%s"', colored(book_m4b_filename, "magenta"))

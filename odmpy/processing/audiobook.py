@@ -41,6 +41,7 @@ from .shared import (
     create_opf,
     get_best_cover_url,
 )
+from ..errors import OdmpyRuntimeError
 from ..libby import (
     USER_AGENT,
     merge_toc,
@@ -242,11 +243,11 @@ def process_audiobook_loan(
             except HTTPError as he:
                 logger.error(f"HTTPError: {str(he)}")
                 logger.debug(he.response.content)
-                raise RuntimeError("HTTP Error while downloading part file.")
+                raise OdmpyRuntimeError("HTTP Error while downloading part file.")
 
             except ConnectionError as ce:
                 logger.error(f"ConnectionError: {str(ce)}")
-                raise RuntimeError("Connection Error while downloading part file.")
+                raise OdmpyRuntimeError("Connection Error while downloading part file.")
 
         try:
             # Fill id3 info for mp3 part

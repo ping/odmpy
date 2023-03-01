@@ -50,6 +50,7 @@ from .shared import (
 )
 from ..cli_utils import OdmpyCommands
 from ..constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES, UA_LONG
+from ..errors import OdmpyRuntimeError
 from ..libby import (
     USER_AGENT,
 )
@@ -365,10 +366,10 @@ def process_odm(
                 )
             else:
                 logger.error(he.response.content)
-            raise RuntimeError("HTTP Error while downloading license.")
+            raise OdmpyRuntimeError("HTTP Error while downloading license.")
         except ConnectionError as ce:
             logger.error(f"ConnectionError: {str(ce)}")
-            raise RuntimeError("Connection Error while downloading license.")
+            raise OdmpyRuntimeError("Connection Error while downloading license.")
 
     license_xml_doc = ET.parse(license_file)
     license_root = license_xml_doc.getroot()
@@ -450,11 +451,11 @@ def process_odm(
             except HTTPError as he:
                 logger.error(f"HTTPError: {str(he)}")
                 logger.debug(he.response.content)
-                raise RuntimeError("HTTP Error while downloading part file.")
+                raise OdmpyRuntimeError("HTTP Error while downloading part file.")
 
             except ConnectionError as ce:
                 logger.error(f"ConnectionError: {str(ce)}")
-                raise RuntimeError("Connection Error while downloading part file.")
+                raise OdmpyRuntimeError("Connection Error while downloading part file.")
 
         try:
             # Fill id3 info for mp3 part
@@ -776,7 +777,7 @@ def process_odm_return(odm_file: str, logger: logging.Logger) -> None:
     logger.info(f"Returning {odm_file} ...")
     early_return_url = get_element_text(root.find("EarlyReturnURL"))
     if not early_return_url:
-        raise RuntimeError("Unable to get EarlyReturnURL")
+        raise OdmpyRuntimeError("Unable to get EarlyReturnURL")
     try:
         early_return_res = requests.get(
             early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
@@ -789,7 +790,7 @@ def process_odm_return(odm_file: str, logger: logging.Logger) -> None:
             return
         logger.error(f"HTTPError: {str(he)}")
         logger.debug(he.response.content)
-        raise RuntimeError(f"HTTP error returning odm {odm_file}")
+        raise OdmpyRuntimeError(f"HTTP error returning odm {odm_file}")
     except ConnectionError as ce:
         logger.error(f"ConnectionError: {str(ce)}")
-        raise RuntimeError(f"Connection error returning odm {odm_file}")
+        raise OdmpyRuntimeError(f"Connection error returning odm {odm_file}")

@@ -28,7 +28,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from functools import cmp_to_key
 from typing import Dict, List
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 import bs4.element
 import requests
@@ -42,6 +42,7 @@ from .shared import (
     extract_isbn,
     extract_authors_from_openbook,
 )
+from ..errors import OdmpyRuntimeError
 from ..libby import (
     USER_AGENT,
     LibbyClient,
@@ -218,6 +219,40 @@ def _sort_spine_entries(a: Dict, b: Dict, toc_pages: List[str]):
     return -1 if a["-odread-spine-position"] < b["-odread-spine-position"] else 1
 
 
+def _sort_title_contents(a: Dict, b: Dict):
+    """
+    Sort the title contents roster so that pages get processed first.
+    This is a precautionary measure for getting high-res cover images
+    since we must parse the html for the image src.
+
+    :param a:
+    :param b:
+    :return:
+    """
+    extensions_rank = [".xhtml", ".html", ".htm", ".jpg", ".jpeg", ".png", ".gif"]
+    a_parsedurl = urlparse(a["url"])
+    b_parsedurl = urlparse(b["url"])
+    _, a_ext = os.path.splitext(os.path.basename(a_parsedurl.path))
+    _, b_ext = os.path.splitext(os.path.basename(b_parsedurl.path))
+    try:
+        a_index = extensions_rank.index(a_ext)
+    except ValueError:
+        a_index = 999
+    try:
+        b_index = extensions_rank.index(b_ext)
+    except ValueError:
+        b_index = 999
+
+    if a_index != b_index:
+        # sort order found via toc
+        return -1 if a_index < b_index else 1
+
+    if a_ext != b_ext:
+        return -1 if a_ext < b_ext else 1
+
+    return -1 if a_parsedurl.path < b_parsedurl.path else 1
+
+
 def _filter_content(entry: Dict, media_info: Dict, toc_pages: List[str]):
     """
     Filter title contents that are not needed.
@@ -237,7 +272,7 @@ def _filter_content(entry: Dict, media_info: Dict, toc_pages: List[str]):
         ):
             return False
         if (
-            media_type == "application/xhtml+xml"
+            media_type in ("application/xhtml+xml", "text/html")
             and parsed_entry_url.path[1:] not in toc_pages
         ):
             return False
@@ -321,8 +356,30 @@ def process_ebook_loan(
 
     openbook_toc = openbook["nav"]["toc"]
     if len(openbook_toc) <= 1 and loan["type"]["id"] == LibbyMediaTypes.Magazine:
-        raise RuntimeError("Unsupported fixed-layout (pre-paginated) magazine format.")
+        raise OdmpyRuntimeError("Unsupported fixed-layout (pre-paginated) format.")
 
+    # for finding cover image for magazines
+    cover_toc_item = next(
+        iter(
+            [
+                item
+                for item in openbook_toc
+                if item.get("pageRange", "") == "Cover" and item.get("featureImage")
+            ]
+        ),
+        None,
+    )
+    # for finding cover image for ebooks
+    cover_page_landmark = next(
+        iter(
+            [
+                item
+                for item in openbook.get("nav", {}).get("landmarks", [])
+                if item["type"] == "cover"
+            ]
+        ),
+        None,
+    )
     toc_pages = [item["path"].split("#")[0] for item in openbook_toc]
     manifest_entries: List[Dict] = []
 
@@ -331,6 +388,10 @@ def process_ebook_loan(
             lambda e: _filter_content(e, media_info, toc_pages),
             title_contents["entries"],
         )
+    )
+    # Ignoring mypy error below because of https://github.com/python/mypy/issues/9372
+    title_content_entries = sorted(
+        title_content_entries, key=cmp_to_key(_sort_title_contents)  # type: ignore[misc]
     )
     progress_bar = tqdm(title_content_entries, disable=args.hide_progress)
     has_ncx = False
@@ -342,6 +403,9 @@ def process_ebook_loan(
     patch_magazine_css_re = re.compile(
         r"(#article-body\s*\{[^{}]+?)overflow-x:\s*hidden;([^{}]+?})"
     )
+
+    # holds the manifest item ID for the image identified as the cover
+    cover_img_manifest_id = None
 
     for entry in progress_bar:
         entry_url = entry["url"]
@@ -359,25 +423,29 @@ def process_ebook_loan(
             else _sanitise_opf_id(parsed_entry_url.path[1:]),
             "media-type": media_type,
         }
+
+        # try to find cover image for magazines
+        if cover_toc_item and manifest_entry["id"] == _sanitise_opf_id(
+            cover_toc_item["featureImage"]
+        ):
+            # we assign it here to ensure that the image referenced in the
+            # toc actually exists
+            cover_img_manifest_id = manifest_entry["id"]
+
         if not os.path.exists(asset_folder):
             os.makedirs(asset_folder)
         asset_file_path = os.path.join(
             asset_folder, os.path.basename(parsed_entry_url.path)
         )
+
+        soup = None
         if os.path.exists(asset_file_path):
             progress_bar.set_description(
                 f"Already saved {os.path.basename(parsed_entry_url.path)}"
             )
-            # check for properties
-            if media_type == "application/xhtml+xml":
+            if media_type in ("application/xhtml+xml", "text/html"):
                 with open(asset_file_path, "r", encoding="utf-8") as f_asset:
                     soup = BeautifulSoup(f_asset, features="html.parser")
-                    if soup.find_all("svg"):
-                        manifest_entry["properties"] = "svg"
-                    # identify nav page
-                    if soup.find(attrs={"epub:type": "toc"}):
-                        manifest_entry["properties"] = "nav"
-                        has_nav = True
         else:
             progress_bar.set_description(
                 f"Downloading {os.path.basename(parsed_entry_url.path)}"
@@ -396,7 +464,7 @@ def process_ebook_loan(
                 css_content = patch_magazine_css_re.sub(r"\1\2", res.text)
                 with open(asset_file_path, "w", encoding="utf-8") as f_out:
                     f_out.write(css_content)
-            elif media_type == "application/xhtml+xml":
+            elif media_type in ("application/xhtml+xml", "text/html"):
                 soup = BeautifulSoup(res.text, features="html.parser")
                 script_ele = soup.find("script", attrs={"type": "text/javascript"})
                 if script_ele and hasattr(script_ele, "string"):
@@ -410,16 +478,37 @@ def process_ebook_loan(
                 _cleanup_soup(soup, version=epub_version)
                 with open(asset_file_path, "w", encoding="utf-8") as f_out:
                     f_out.write(str(soup))
-                if soup.find_all("svg"):
-                    manifest_entry["properties"] = "svg"
-                # identify nav page
-                if soup.find(attrs={"epub:type": "toc"}):
-                    manifest_entry["properties"] = "nav"
-                    has_nav = True
             else:
                 with open(asset_file_path, "wb") as f_out:
                     f_out.write(res.content)
+
+        if soup:
+            # try to min. soup searches where possible
+            if (
+                (not cover_img_manifest_id)
+                and cover_page_landmark
+                and cover_page_landmark["path"] == parsed_entry_url.path[1:]
+            ):
+                # try to find cover image for the book from the cover html content
+                cover_image = soup.find("img", attrs={"src": True})
+                if cover_image:
+                    cover_img_manifest_id = _sanitise_opf_id(
+                        urljoin(cover_page_landmark["path"], cover_image["src"])  # type: ignore[index]
+                    )
+            elif (not has_nav) and soup.find(attrs={"epub:type": "toc"}):
+                # identify nav page
+                manifest_entry["properties"] = "nav"
+                has_nav = True
+            elif soup.find("svg"):
+                # page has svg
+                manifest_entry["properties"] = "svg"
+
+        if cover_img_manifest_id == manifest_entry["id"]:
+            manifest_entry["properties"] = "cover-image"
         manifest_entries.append(manifest_entry)
+        if manifest_entry.get("properties") == "cover-image" and cover_path:
+            # replace the cover image already downloaded via the OD api, in case it is to be kept
+            shutil.copyfile(asset_file_path, cover_path)
 
     if not has_nav:
         # Generate nav - needed for magazines
@@ -477,7 +566,20 @@ def process_ebook_loan(
     manifest = ET.SubElement(package, "manifest")
     for entry in manifest_entries:
         ET.SubElement(manifest, "item", attrib=entry)
-    if cover_path:
+
+    cover_manifest_entry = next(
+        iter(
+            [
+                entry
+                for entry in manifest_entries
+                if entry.get("properties", "") == "cover-image"
+            ]
+        ),
+        None,
+    )
+    if not cover_manifest_entry:
+        cover_img_manifest_id = None
+    if cover_path and not cover_manifest_entry:
         # add cover image separately since we can't identify which item is the cover
         shutil.copyfile(cover_path, os.path.join(book_content_folder, "cover.jpg"))
         ET.SubElement(
@@ -490,10 +592,15 @@ def process_ebook_loan(
                 "properties": "cover-image",
             },
         )
+        cover_img_manifest_id = "coverimage"
+
+    if cover_img_manifest_id:
         metadata = package.find("metadata")
         if metadata:
             _ = ET.SubElement(
-                metadata, "meta", attrib={"name": "cover", "content": "coverimage"}
+                metadata,
+                "meta",
+                attrib={"name": "cover", "content": cover_img_manifest_id},
             )
 
     # add spine

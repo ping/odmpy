@@ -18,13 +18,14 @@
 
 import sys
 
-from .odm import run, LibbyNotConfiguredError
+from .errors import OdmpyRuntimeError
+from .odm import run
 
 
 def main() -> None:  # pragma: no cover
     try:
         run()
-    except (KeyboardInterrupt, LibbyNotConfiguredError):
+    except (KeyboardInterrupt, OdmpyRuntimeError):
         # we can silently ignore LibbyNotConfiguredError
         # because the message is already shown earlier
         sys.exit(1)

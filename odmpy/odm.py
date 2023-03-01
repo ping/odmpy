@@ -35,8 +35,8 @@ from .cli_utils import (
     OdmpyNoninteractiveOptions,
     positive_int,
     valid_book_folder_file_format,
-    LibbyNotConfiguredError,
 )
+from .errors import LibbyNotConfiguredError, OdmpyRuntimeError
 from .libby import LibbyClient, LibbyFormats
 from .libby_errors import ClientBadRequestError, ClientError
 from .processing import (
@@ -672,7 +672,7 @@ def run(
                     for opt_name in OdmpyNoninteractiveOptions
                     if hasattr(args, opt_name) and getattr(args, opt_name)
                 ]:
-                    raise RuntimeError(
+                    raise OdmpyRuntimeError(
                         'Libby has not been setup. Please run "odmpy libby" first.'
                     )
 
@@ -698,7 +698,7 @@ def run(
                     libby_client.clone_by_code(sync_code)
                     if not libby_client.is_logged_in():
                         libby_client.clear_settings()
-                        raise RuntimeError(
+                        raise OdmpyRuntimeError(
                             "Could not log in with code.\n"
                             "Make sure that you have entered the right code and within the time limit.\n"
                             "You also need to have at least 1 registered library card."
@@ -706,7 +706,7 @@ def run(
                     logger.info("Login successful.\n")
                 except requests.exceptions.HTTPError as he:
                     libby_client.clear_settings()
-                    raise RuntimeError(
+                    raise OdmpyRuntimeError(
                         "Could not log in with code.\n"
                         "Make sure that you have entered the right code and within the time limit."
                     ) from he
@@ -1082,8 +1082,12 @@ def run(
             process_odm(args.odm_file, args, logger)
             return
 
-    except RuntimeError as run_err:
-        logger.error(colored(str(run_err), "red"))
+    except OdmpyRuntimeError as run_err:
+        logger.error(
+            "%s %s",
+            colored("Error:", attrs=["bold"]),
+            colored(str(run_err), "red"),
+        )
         raise
 
     except Exception:  # noqa, pylint: disable=broad-except

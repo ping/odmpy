@@ -6,7 +6,7 @@ import unittest
 import warnings
 from datetime import datetime
 
-from odmpy.cli_utils import LibbyNotConfiguredError
+from odmpy.errors import LibbyNotConfiguredError
 from odmpy.libby import LibbyClient, LibbyFormats
 from odmpy.odm import run
 
