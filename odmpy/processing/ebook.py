@@ -476,6 +476,33 @@ def process_ebook_loan(
                         )
                         soup.body.replace_with(new_soup.body)  # type: ignore[arg-type,union-attr]
                 _cleanup_soup(soup, version=epub_version)
+                if (
+                    cover_toc_item
+                    and cover_toc_item.get("featureImage")
+                    and manifest_entry["id"] == _sanitise_opf_id(cover_toc_item["path"])
+                ):
+                    img_src = os.path.relpath(
+                        os.path.join(
+                            book_content_folder, cover_toc_item["featureImage"]
+                        ),
+                        start=asset_folder,
+                    )
+                    # patch the svg based cover for magazines
+                    cover_svg = soup.find("svg")
+                    if cover_svg:
+                        # replace the svg ele with a simple image tag
+                        cover_svg.decompose()
+                        for c in soup.body.find_all(recursive=False):
+                            c.decompose()
+                        soup.body.append(
+                            soup.new_tag("img", attrs={"src": img_src, "alt": "Cover"})
+                        )
+                        style_ele = soup.new_tag("style")
+                        style_ele.append(
+                            "img { max-width: 100%; margin-left: auto; margin-right: auto; }"
+                        )
+                        soup.head.append(style_ele)
+
                 with open(asset_file_path, "w", encoding="utf-8") as f_out:
                     f_out.write(str(soup))
             else:
