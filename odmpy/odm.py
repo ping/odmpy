@@ -339,8 +339,6 @@ def extract_loan_file(
                 logger=logger,
                 force_square=False,
             )
-            if cover_path:
-                logger.info("Downloaded cover to %s", colored(cover_path, "magenta"))
 
     # don't re-download odm if it already exists so that we don't
     # needlessly use up the fulfillment limits
