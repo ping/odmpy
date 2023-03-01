@@ -491,17 +491,17 @@ def process_ebook_loan(
                     cover_svg = soup.find("svg")
                     if cover_svg:
                         # replace the svg ele with a simple image tag
-                        cover_svg.decompose()
-                        for c in soup.body.find_all(recursive=False):
+                        cover_svg.decompose()  # type: ignore[union-attr]
+                        for c in soup.body.find_all(recursive=False):  # type: ignore[union-attr]
                             c.decompose()
-                        soup.body.append(
+                        soup.body.append(  # type: ignore[union-attr]
                             soup.new_tag("img", attrs={"src": img_src, "alt": "Cover"})
                         )
                         style_ele = soup.new_tag("style")
                         style_ele.append(
                             "img { max-width: 100%; margin-left: auto; margin-right: auto; }"
                         )
-                        soup.head.append(style_ele)
+                        soup.head.append(style_ele)  # type: ignore[union-attr]
 
                 with open(asset_file_path, "w", encoding="utf-8") as f_out:
                     f_out.write(str(soup))
