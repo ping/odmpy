@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright (C) 2021 github.com/ping
 #
 # This file is part of odmpy.
