@@ -322,7 +322,7 @@ class LibbyClient(object):
     ):
         endpoint_url = urljoin(self.api_base, endpoint)
         if not method:
-            # try to set a HTTP method
+            # try to set an HTTP method
             if data is not None:
                 method = "POST"
             else:

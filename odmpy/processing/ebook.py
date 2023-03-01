@@ -553,8 +553,8 @@ def process_ebook_loan(
         has_ncx = True
 
     # create epub OPF
-    opt_file_name = "package.opf"
-    opf_file_path = os.path.join(book_content_folder, opt_file_name)
+    opf_file_name = "package.opf"
+    opf_file_path = os.path.join(book_content_folder, opf_file_name)
     package = build_opf_package(
         media_info,
         version=epub_version,
@@ -672,7 +672,7 @@ def process_ebook_loan(
         root_files,
         "rootfile",
         attrib={
-            "full-path": os.path.join(book_content_name, opt_file_name),
+            "full-path": os.path.join(book_content_name, opf_file_name),
             "media-type": "application/oebps-package+xml",
         },
     )

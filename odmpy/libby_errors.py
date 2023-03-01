@@ -70,7 +70,7 @@ class ErrorHandler(object):
     @staticmethod
     def process(http_err: requests.HTTPError) -> None:
         """
-        Try to process a HTTP error from the api appropriately.
+        Try to process an HTTP error from the api appropriately.
 
         :param http_err: requests.HTTPError instance
         :raises ClientError:

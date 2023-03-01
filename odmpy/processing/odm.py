@@ -485,7 +485,7 @@ def process_odm(
 
             # Notes: Can't switch over to using eyed3 (audiofile.info.time_secs)
             # because it is completely off by about 10-20 seconds.
-            # Also can't rely on `p["duration"]` because it is also often off
+            # Also, can't rely on `p["duration"]` because it is also often off
             # by about 1 second.
             audio_lengths_ms.append(mp3_duration_ms(part_filename))
 
