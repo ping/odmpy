@@ -589,6 +589,16 @@ def process_ebook_loan(
         if loan["type"]["id"] == LibbyMediaTypes.Magazine
         else LibbyFormats.EBookOverdrive,
     )
+    if args.generate_opf:
+        # save opf before the manifest and spine elements get added
+        # because those elements are meaningless outside an epub
+        opf_file_root, _ = os.path.splitext(epub_file_path)
+        export_opf_file = f"{opf_file_root}.opf"
+        ET.ElementTree(package).write(
+            export_opf_file, xml_declaration=True, encoding="utf-8"
+        )
+        logger.info('Saved "%s"', colored(export_opf_file, "magenta"))
+
     # add manifest
     manifest = ET.SubElement(package, "manifest")
     for entry in manifest_entries:
