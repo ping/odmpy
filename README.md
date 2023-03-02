@@ -138,7 +138,7 @@ options:
                         For ID3 tags with multiple values, this defines the delimiter.
                         For example, with the default delimiter ";", authors are written
                         to the artist tag as "Author A;Author B;Author C". For audiobooks.
-  --opf                 Generate an OPF file for the audiobook.
+  --opf                 Generate an OPF file for the downloaded audiobook/magazine/ebook.
   -r OBSOLETE_RETRIES, --retry OBSOLETE_RETRIES
                         Obsolete. Do not use.
   -j, --writejson       Generate a meta json file (for debugging).
@@ -249,7 +249,7 @@ usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
                 [--hideprogress]
                 odm_file
 
-Download from an audiobook loan file.
+Download from an audiobook loan file (odm).
 
 positional arguments:
   odm_file              ODM file path.
@@ -287,7 +287,7 @@ options:
                         For ID3 tags with multiple values, this defines the delimiter.
                         For example, with the default delimiter ";", authors are written
                         to the artist tag as "Author A;Author B;Author C". For audiobooks.
-  --opf                 Generate an OPF file for the audiobook.
+  --opf                 Generate an OPF file for the downloaded audiobook/magazine/ebook.
   -r OBSOLETE_RETRIES, --retry OBSOLETE_RETRIES
                         Obsolete. Do not use.
   -j, --writejson       Generate a meta json file (for debugging).

@@ -236,7 +236,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         "--opf",
         dest="generate_opf",
         action="store_true",
-        help="Generate an OPF file for the audiobook.",
+        help="Generate an OPF file for the downloaded audiobook/magazine/ebook.",
     )
     parser_dl.add_argument(
         "-r",
