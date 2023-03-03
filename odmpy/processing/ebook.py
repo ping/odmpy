@@ -23,6 +23,7 @@ import json
 import logging
 import mimetypes
 import os
+import platform
 import re
 import shutil
 import xml.etree.ElementTree as ET
@@ -732,6 +733,7 @@ def process_ebook_loan(
         f.write("application/epub+zip")
 
     # create epub zip
+    is_windows = os.name == "nt" or platform.system().lower() == "windows"
     with zipfile.ZipFile(
         epub_file_path, mode="w", compression=zipfile.ZIP_STORED
     ) as epub_zip:
@@ -743,17 +745,18 @@ def process_ebook_loan(
             epub_zip.write(book_meta_folder, arcname=folder_name)
             for path, _, files in os.walk(root_start):
                 for file in files:
+                    zip_target_file = os.path.join(path, file)
+                    zip_archive_name = os.path.relpath(
+                        zip_target_file, start=book_folder
+                    )
+                    if is_windows:
+                        zip_archive_name = zip_archive_name.encode(
+                            "CP437", errors="replace"
+                        ).decode("CP437")
                     logger.debug(
-                        'epub: Added "%s" as "%s"',
-                        os.path.join(path, file),
-                        os.path.relpath(os.path.join(path, file), start=book_folder),
+                        'epub: Added "%s" as "%s"', zip_target_file, zip_archive_name
                     )
-                    epub_zip.write(
-                        os.path.join(path, file),
-                        arcname=os.path.relpath(
-                            os.path.join(path, file), start=book_folder
-                        ),
-                    )
+                    epub_zip.write(zip_target_file, zip_archive_name)
     logger.info('Saved "%s"', colored(epub_file_path, "magenta", attrs=["bold"]))
 
     # clean up
