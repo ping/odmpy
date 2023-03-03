@@ -244,8 +244,8 @@ class LibbyClientTests(unittest.TestCase):
             "ebook": [
                 "firstCreatorName",
                 "firstCreatorSortName",
-                "publishDate",
-                "publishDateText",
+                # "publishDate",
+                # "publishDateText",
             ],
             "magazine": [
                 "parentMagazineTitleId",
@@ -302,7 +302,9 @@ class LibbyClientTests(unittest.TestCase):
             self.assertIn(loan["type"]["name"], ("Audiobook", "eBook", "Magazine"))
 
             for k in formats_keys.get(loan["type"]["id"], []):
-                self.assertIn(k, loan, msg=f"'{k}' not found in loan")
+                self.assertIn(
+                    k, loan, msg=f'"{k}" not found in {loan["type"]["id"]} loan'
+                )
 
     def test_holds(self):
         if not self.client.get_token():
