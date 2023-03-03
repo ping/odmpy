@@ -484,8 +484,8 @@ def process_ebook_loan(
                     and cover_toc_item.get("featureImage")
                     and manifest_entry["id"] == _sanitise_opf_id(cover_toc_item["path"])
                 ):
-                    img_src = os.path.relpath(
-                        os.path.join(
+                    img_src = zip_path.relpath(
+                        zip_path.join(
                             book_content_folder, cover_toc_item["featureImage"]
                         ),
                         start=asset_folder,
@@ -721,7 +721,7 @@ def process_ebook_loan(
         root_files,
         "rootfile",
         attrib={
-            "full-path": os.path.join(book_content_name, opf_file_name),
+            "full-path": zip_path.join(book_content_name, opf_file_name),
             "media-type": "application/oebps-package+xml",
         },
     )
