@@ -725,9 +725,13 @@ def process_odm(
             logger.warning(f'Error deleting "{cover_filename}": {str(e)}')
 
     if args.generate_opf:
-        opf_file_path = os.path.join(
-            book_folder, f"{slugify(title, allow_unicode=True)}.opf"
-        )
+        if args.merge_output:
+            opf_file_root, _ = os.path.splitext(book_filename)
+            opf_file_path = f"{opf_file_root}.opf"
+        else:
+            opf_file_path = os.path.join(
+                book_folder, f"{slugify(title, allow_unicode=True)}.opf"
+            )
         if not os.path.exists(opf_file_path):
             mobj = RESERVE_ID_RE.match(overdrive_media_id)
             if not mobj:

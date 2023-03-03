@@ -433,9 +433,13 @@ def process_audiobook_loan(
             logger.warning(f'Error deleting "{cover_filename}": {str(e)}')
 
     if args.generate_opf:
-        opf_file_path = os.path.join(
-            book_folder, f"{slugify(title, allow_unicode=True)}.opf"
-        )
+        if args.merge_output:
+            opf_file_root, _ = os.path.splitext(book_filename)
+            opf_file_path = f"{opf_file_root}.opf"
+        else:
+            opf_file_path = os.path.join(
+                book_folder, f"{slugify(title, allow_unicode=True)}.opf"
+            )
         if not os.path.exists(opf_file_path):
             od_client = OverDriveClient(
                 user_agent=USER_AGENT, timeout=args.timeout, retry=args.retries
