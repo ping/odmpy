@@ -6,7 +6,7 @@ import unittest
 import warnings
 from datetime import datetime
 
-import ebooklib
+import ebooklib  # type: ignore[import]
 import responses
 from bs4 import BeautifulSoup
 from ebooklib import epub
