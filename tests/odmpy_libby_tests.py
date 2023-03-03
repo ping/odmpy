@@ -2,6 +2,7 @@ import glob
 import json
 import os.path
 import shutil
+import sys
 import unittest
 import warnings
 from datetime import datetime
@@ -28,6 +29,9 @@ class OdmpyLibbyTests(unittest.TestCase):
         self.test_downloads_dir = os.path.join(self.test_data_dir, "downloads")
         if not os.path.isdir(self.test_downloads_dir):
             os.makedirs(self.test_downloads_dir)
+
+        # hijack unittest -v arg to toggle log verbosity in test
+        self.is_verbose = "-vv" in sys.argv
 
     def tearDown(self) -> None:
         if os.path.isdir(self.test_downloads_dir):
@@ -338,25 +342,25 @@ class OdmpyLibbyTests(unittest.TestCase):
                     body=f.read(),
                 )
 
-        run(
-            [
-                "libby",
-                "--settings",
-                settings_folder,
-                "--magazines",
-                "--downloaddir",
-                self.test_downloads_dir,
-                "--bookfolderformat",
-                "test",
-                "--bookfileformat",
-                "magazine",
-                "--latest",
-                "1",
-                "--opf",
-                "--hideprogress",
-            ],
-            be_quiet=True,
-        )
+        run_command = [
+            "libby",
+            "--settings",
+            settings_folder,
+            "--magazines",
+            "--downloaddir",
+            self.test_downloads_dir,
+            "--bookfolderformat",
+            "test",
+            "--bookfileformat",
+            "magazine",
+            "--latest",
+            "1",
+            "--opf",
+            "--hideprogress",
+        ]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
         self.assertTrue(
             os.path.exists(
                 os.path.join(self.test_downloads_dir, "test", "magazine.opf")

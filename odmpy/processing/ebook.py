@@ -743,6 +743,11 @@ def process_ebook_loan(
             epub_zip.write(book_meta_folder, arcname=folder_name)
             for path, _, files in os.walk(root_start):
                 for file in files:
+                    logger.debug(
+                        'epub: Added "%s" as "%s"',
+                        str(os.path.join(path, file)),
+                        os.path.relpath(os.path.join(path, file), start=book_folder),
+                    )
                     epub_zip.write(
                         str(os.path.join(path, file)),
                         arcname=os.path.relpath(
