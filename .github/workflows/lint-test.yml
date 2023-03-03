@@ -70,18 +70,11 @@ jobs:
         python3 -m pip -q install -r requirements.txt
         python3 -m pip -q install -r requirements-dev.txt
     - name: Run tests on ${{ matrix.os }} with python ${{ matrix.python-version }}
-      env:
-        test_build_env: "${{ matrix.os }}_${{ matrix.python-version }}"
       run: |
         cd ${GITHUB_WORKSPACE}
         echo "$test_build_env"
         sh run_tests.sh
       shell: bash
-    - uses: actions/upload-artifact@v3
-      with:
-        name: test-epub-artifacts
-        path: epubs
-        if-no-files-found: warn
     - name: Test installation process
       run: |
         python3 setup.py install

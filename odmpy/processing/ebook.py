@@ -307,7 +307,7 @@ def process_ebook_loan(
     :param logger:
     :return:
     """
-
+    is_windows = os.name == "nt" or platform.system().lower() == "windows"
     book_folder, book_file_name, _ = generate_names(
         title=loan["title"],
         series=loan.get("series") or "",
@@ -484,12 +484,14 @@ def process_ebook_loan(
                     and cover_toc_item.get("featureImage")
                     and manifest_entry["id"] == _sanitise_opf_id(cover_toc_item["path"])
                 ):
-                    img_src = zip_path.relpath(
-                        zip_path.join(
+                    img_src = os.path.relpath(
+                        os.path.join(
                             book_content_folder, cover_toc_item["featureImage"]
                         ),
                         start=asset_folder,
                     )
+                    if is_windows:
+                        img_src = img_src.replace(os.sep, "/")
                     # patch the svg based cover for magazines
                     cover_svg = soup.find("svg")
                     if cover_svg:
@@ -721,6 +723,7 @@ def process_ebook_loan(
         root_files,
         "rootfile",
         attrib={
+            # use posix path because zipFile requires "/"
             "full-path": zip_path.join(book_content_name, opf_file_name),
             "media-type": "application/oebps-package+xml",
         },
@@ -730,7 +733,6 @@ def process_ebook_loan(
     logger.debug('Saved "%s"', container_file_path)
 
     # create epub zip
-    is_windows = os.name == "nt" or platform.system().lower() == "windows"
     with zipfile.ZipFile(
         epub_file_path, mode="w", compression=zipfile.ZIP_DEFLATED
     ) as epub_zip:
@@ -742,6 +744,8 @@ def process_ebook_loan(
             (book_content_name, book_content_folder),
         ):
             if is_windows:
+                # patch for windows because zipFile requires "/" separator but windows os.sep is "\"
+                folder_name = folder_name.replace(os.sep, "/")
                 folder_name = folder_name.encode("CP437", errors="replace").decode(
                     "CP437"
                 )
@@ -753,9 +757,8 @@ def process_ebook_loan(
                         zip_target_file, start=book_folder
                     )
                     if is_windows:
-                        zip_archive_name = zip_path.relpath(
-                            zip_path.join(path, file), start=book_folder
-                        )
+                        # patch for windows because zipFile requires "/" separator but windows os.sep is "\"
+                        zip_archive_name = zip_archive_name.replace(os.sep, "/")
                         zip_archive_name = zip_archive_name.encode(
                             "CP437", errors="replace"
                         ).decode("CP437")

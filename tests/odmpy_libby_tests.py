@@ -1,7 +1,6 @@
 import glob
 import json
 import os.path
-import platform
 import shutil
 import sys
 import unittest
@@ -345,11 +344,6 @@ class OdmpyLibbyTests(unittest.TestCase):
 
         test_folder = "test"
         download_dir = self.test_downloads_dir
-        try:
-            test_folder = os.environ["test_build_env"]
-            download_dir = "epubs"
-        except KeyError:
-            pass
 
         run_command = [
             "libby",
@@ -376,38 +370,34 @@ class OdmpyLibbyTests(unittest.TestCase):
         epub_file_path = os.path.join(download_dir, test_folder, "magazine.epub")
         self.assertTrue(os.path.exists(epub_file_path))
 
-        if not (os.name == "nt" or platform.system().lower() == "windows"):
-            # don't run these tests for windows bcause it's failing for some reason
-            book = epub.read_epub(epub_file_path, {"ignore_ncx": True})
-            stories = [
-                d
-                for d in list(book.get_items_of_type(ebooklib.ITEM_DOCUMENT))
-                if d.get_name().startswith("stories/")
-            ]
-            self.assertEqual(len(stories), 2)
-            for story in stories:
-                soup = BeautifulSoup(story.get_content(), "html.parser")
-                self.assertTrue(
-                    soup.find("h1")
-                )  # check that pages are properly de-serialised
+        book = epub.read_epub(epub_file_path, {"ignore_ncx": True})
+        stories = [
+            d
+            for d in list(book.get_items_of_type(ebooklib.ITEM_DOCUMENT))
+            if d.get_name().startswith("stories/")
+        ]
+        self.assertEqual(len(stories), 2)
+        for story in stories:
+            soup = BeautifulSoup(story.get_content(), "html.parser")
+            self.assertTrue(
+                soup.find("h1")
+            )  # check that pages are properly de-serialised
 
-            cover = next(
-                iter([b for b in list(book.get_items_of_type(ebooklib.ITEM_COVER))]),
-                None,
-            )
-            self.assertTrue(cover)
-            with open(
-                os.path.join(
-                    self.test_data_dir, "magazine", "content", "assets", "cover.jpg"
-                ),
-                "rb",
-            ) as f:
-                self.assertEqual(f.read(), cover.get_content())
+        cover = next(
+            iter([b for b in list(book.get_items_of_type(ebooklib.ITEM_COVER))]),
+            None,
+        )
+        self.assertTrue(cover)
+        with open(
+            os.path.join(
+                self.test_data_dir, "magazine", "content", "assets", "cover.jpg"
+            ),
+            "rb",
+        ) as f:
+            self.assertEqual(f.read(), cover.get_content())
 
-            nav = next(
-                iter(
-                    [b for b in list(book.get_items_of_type(ebooklib.ITEM_NAVIGATION))]
-                ),
-                None,
-            )
-            self.assertTrue(nav)
+        nav = next(
+            iter([b for b in list(book.get_items_of_type(ebooklib.ITEM_NAVIGATION))]),
+            None,
+        )
+        self.assertTrue(nav)
