@@ -31,6 +31,7 @@ import zipfile
 from functools import cmp_to_key
 from typing import Dict, List
 from urllib.parse import urlparse, urljoin
+import posixpath as zip_path
 
 import bs4.element
 import requests
@@ -752,6 +753,9 @@ def process_ebook_loan(
                         zip_target_file, start=book_folder
                     )
                     if is_windows:
+                        zip_archive_name = zip_path.relpath(
+                            zip_path.join(path, file), start=book_folder
+                        )
                         zip_archive_name = zip_archive_name.encode(
                             "CP437", errors="replace"
                         ).decode("CP437")
