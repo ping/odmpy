@@ -728,20 +728,22 @@ def process_ebook_loan(
     tree.write(container_file_path, xml_declaration=True, encoding="utf-8")
     logger.debug('Saved "%s"', container_file_path)
 
-    mimetype_file_path = os.path.join(book_folder, "mimetype")
-    with open(mimetype_file_path, "w", encoding="ascii") as f:
-        f.write("application/epub+zip")
-
     # create epub zip
     is_windows = os.name == "nt" or platform.system().lower() == "windows"
     with zipfile.ZipFile(
-        epub_file_path, mode="w", compression=zipfile.ZIP_STORED
+        epub_file_path, mode="w", compression=zipfile.ZIP_DEFLATED
     ) as epub_zip:
-        epub_zip.write(mimetype_file_path, arcname="mimetype")
+        epub_zip.writestr(
+            "mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED
+        )
         for folder_name, root_start in (
             (book_meta_name, book_meta_folder),
             (book_content_name, book_content_folder),
         ):
+            if is_windows:
+                folder_name = folder_name.encode("CP437", errors="replace").decode(
+                    "CP437"
+                )
             epub_zip.write(book_meta_folder, arcname=folder_name)
             for path, _, files in os.walk(root_start):
                 for file in files:
