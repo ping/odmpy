@@ -1,0 +1,106 @@
+{
+  "firstCreatorId": 999999,
+  "subjects": [
+    {
+      "name": "Tests",
+      "id": "1000"
+    }
+  ],
+  "bisacCodes": [],
+  "bisac": [],
+  "levels": [],
+  "creators": [
+    {
+      "id": 999999,
+      "sortName": "Author, Test",
+      "role": "Author",
+      "name": "Test Author"
+    }
+  ],
+  "languages": [
+    {
+      "name": "English",
+      "id": "en"
+    }
+  ],
+  "ratings": {
+    "maturityLevel": {
+      "name": "General content",
+      "id": "generalcontent"
+    },
+    "naughtyScore": {
+      "name": "General content",
+      "id": "GeneralContent"
+    }
+  },
+  "publisher": {
+    "name": "Test Publisher",
+    "id": "12345678"
+  },
+  "keywords": [],
+  "type": {
+    "name": "Audiobook",
+    "id": "audiobook"
+  },
+  "covers": {
+    "cover150Wide": {
+      "width": 150,
+      "height": 200,
+      "href": "http://localhost/mock/cover.jpg"
+    },
+    "cover300Wide": {
+      "width": 300,
+      "height": 400,
+      "href": "http://localhost/mock/cover.jpg"
+    },
+    "cover510Wide": {
+      "width": 510,
+      "height": 680,
+      "href": "http://localhost/mock/cover.jpg"
+    }
+  },
+  "formats": [
+    {
+      "identifiers": [
+        {
+          "value": "9789999999999",
+          "type": "ISBN"
+        }
+      ],
+      "isLockedIn": false,
+      "id": "audiobook-overdrive",
+      "name": "OverDrive Listen audiobook",
+      "fulfillmentType": "bifocal"
+    },
+    {
+      "identifiers": [
+        {
+          "value": "9789999999999",
+          "type": "ISBN"
+        }
+      ],
+      "isLockedIn": false,
+      "id": "audiobook-mp3",
+      "name": "MP3 audiobook",
+      "isbn": "9789999999999",
+      "fulfillmentType": "odm"
+    }
+  ],
+  "publisherAccount": {
+    "name": "Tests",
+    "id": "12345"
+  },
+  "id": "9999999",
+  "firstCreatorName": "Test Author",
+  "firstCreatorSortName": "Author, Test",
+  "title": "Test Audiobook",
+  "sortTitle": "Test Audiobook",
+  "edition": "Jan 20 2023",
+  "publishDateText": "Jan 19 2023  7:00PM",
+  "estimatedReleaseDate": "2023-02-10T00:00:00Z",
+  "description": "Test Audiobook's description",
+  "fullDescription": "Test Audiobook's full description",
+  "shortDescription": "Test Audiobook' short description",
+  "series": "Test Audiobook Series",
+  "reserveId": "12345a67-b8c9-12de-a1b2-cd345678efa9"
+}

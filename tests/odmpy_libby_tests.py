@@ -601,3 +601,173 @@ class OdmpyLibbyTests(unittest.TestCase):
             None,
         )
         self.assertTrue(nav)
+
+    @responses.activate
+    def test_mock_libby_download_audiobook_odm(self):
+        settings_folder = self._generate_fake_settings()
+
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "book.odm"),
+            "r",
+            encoding="utf-8",
+        ) as b:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999/fulfill/audiobook-mp3",
+                content_type="application/xml",
+                body=b.read(),
+            )
+
+        responses.get(
+            "https://sentry-read.svc.overdrive.com/open/audiobook/card/123456789/title/9999999",
+            json={
+                "message": "xyz",
+                "urls": {
+                    "web": "http://localhost/mock",
+                    "rosters": "http://localhost/mock/rosters.json",
+                    "openbook": "http://localhost/mock/openbook.json",
+                },
+            },
+        )
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "media.json"),
+            "r",
+            encoding="utf-8",
+        ) as m:
+            responses.get(
+                "https://thunder.api.overdrive.com/v2/media/0fef5121-bb1f-42a5-b62a-d9fded939d50?x-client-id=dewey",
+                json=json.load(m),
+            )
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
+        ) as c:
+            # this is the cover from OD API
+            responses.get(
+                "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fodmpy%2Ftest_data%2Fcover.jpg",
+                content_type="image/jpeg",
+                body=c.read(),
+            )
+        responses.add_passthru("https://ping.github.io/odmpy/test_data/")
+
+        test_folder = "test"
+        download_dir = self.test_downloads_dir
+
+        run_command = [
+            "libby",
+            "--settings",
+            settings_folder,
+            "--downloaddir",
+            download_dir,
+            "--bookfolderformat",
+            test_folder,
+            "--bookfileformat",
+            "ebook",
+            "--select",
+            "1",
+            "--opf",
+            "--merge",
+            "--hideprogress",
+        ]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+        mp3_file_path = os.path.join(download_dir, test_folder, "ebook.mp3")
+        self.assertTrue(os.path.exists(mp3_file_path))
+        opf_file_path = os.path.join(download_dir, test_folder, "ebook.opf")
+        self.assertTrue(os.path.exists(opf_file_path))
+
+    @responses.activate
+    def test_mock_libby_download_audiobook_direct(self):
+        settings_folder = self._generate_fake_settings()
+
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "openbook.json"),
+            "r",
+            encoding="utf-8",
+        ) as o:
+            responses.get(
+                "http://localhost/mock/openbook.json",
+                json=json.load(o),
+            )
+        responses.head(
+            "http://localhost/mock",
+            body="",
+        )
+        responses.get(
+            "https://sentry-read.svc.overdrive.com/open/audiobook/card/123456789/title/9999999",
+            json={
+                "message": "xyz",
+                "urls": {
+                    "web": "http://localhost/mock",
+                    "rosters": "http://localhost/mock/rosters.json",
+                    "openbook": "http://localhost/mock/openbook.json",
+                },
+            },
+        )
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "media.json"),
+            "r",
+            encoding="utf-8",
+        ) as m:
+            responses.get(
+                "https://thunder.api.overdrive.com/v2/media/9999999?x-client-id=dewey",
+                json=json.load(m),
+            )
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
+        ) as c:
+            # this is the cover from OD API
+            responses.get(
+                "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fmock%2Fcover.jpg",
+                content_type="image/jpeg",
+                body=c.read(),
+            )
+        with open(os.path.join(self.test_data_dir, "audiobook", "book.mp3"), "rb") as c:
+            responses.get(
+                "http://localhost/%7BAAAAAAAA-BBBB-CCCC-9999-ABCDEF123456%7Dbook.mp3",
+                content_type="audio/mp3",
+                body=c.read(),
+            )
+
+        test_folder = "test"
+        download_dir = self.test_downloads_dir
+
+        run_command = [
+            "libby",
+            "--settings",
+            settings_folder,
+            "--downloaddir",
+            download_dir,
+            "--bookfolderformat",
+            test_folder,
+            "--bookfileformat",
+            "ebook",
+            "--direct",
+            "--select",
+            "1",
+            "--merge",
+            "--opf",
+            "--hideprogress",
+        ]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+        mp3_file_path = os.path.join(download_dir, test_folder, "ebook.mp3")
+        self.assertTrue(os.path.exists(mp3_file_path))
+        opf_file_path = os.path.join(download_dir, test_folder, "ebook.opf")
+        self.assertTrue(os.path.exists(opf_file_path))

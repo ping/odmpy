@@ -1,0 +1,54 @@
+{
+  "title": {
+    "main": "Test EBook",
+    "subtitle": "",
+    "collection": "Test EBook Series"
+  },
+  "creator": [
+    {
+      "name": "Test Publisher",
+      "role": "pbl"
+    }
+  ],
+  "description": {
+    "full": "Test Audiobook's full description",
+    "short": "Test Audiobook's short description"
+  },
+  "language": "en",
+  "nav": {
+    "toc": [
+      {
+        "title": "Ball Lightning",
+        "path": "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}book.mp3"
+      },
+      {
+        "title": "Prelude",
+        "path": "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}book.mp3#15"
+      },
+      {
+        "title": "Part 1 - College",
+        "path": "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}book.mp3#30"
+      },
+      {
+        "title": "Part 1 - Strange Phenomena 1",
+        "path": "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}book.mp3#40"
+      },
+      {
+        "title": "Part 1 - Ball Lightning",
+        "path": "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}book.mp3#55"
+      }
+    ]
+  },
+  "rendition-format": "ebook",
+  "spine": [
+    {
+      "path": "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}book.mp3",
+      "media-type": "audio/mpeg",
+      "audio-duration": 61.49,
+      "audio-bitrate": 64,
+      "-odread-spine-position": 0,
+      "-odread-file-bytes": 5792287,
+      "-odread-original-path": "{AAAAAAAA-BBBB-CCCC-9999-ABCDEF123456}book.mp3"
+    }
+  ]
+}

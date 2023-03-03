@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<OverDriveMedia id="0fef5121-bb1f-42a5-b62a-d9fded939d50-425" ODMVersion="3.0.0.0" OMCVersion="3.0.0.0">
+	<License>
+		<AcquisitionUrl>https://ping.github.io/odmpy/test_data/test.license</AcquisitionUrl>
+	</License><![CDATA[<Metadata>
+	<ContentType>MP3 Audio Book</ContentType>
+	<Title>Ceremonies For Christmas</Title>
+	<SortTitle>Ceremonies For Christmas</SortTitle>
+	<Series></Series>
+	<Publisher>Librivox</Publisher>
+	<ThumbnailUrl>https://ping.github.io/odmpy/test_data/cover.jpg</ThumbnailUrl>
+	<CoverUrl>https://ping.github.io/odmpy/test_data/cover.jpg</CoverUrl>
+	<Creators>
+		<Creator role="Author" file-as="herrick, rober">Robert Herrick</Creator>
+		<Creator role="Narrator" file-as="LibriVox, Volunteers">LibriVox Volunteers</Creator>
+	</Creators>
+	<Subjects>
+		<Subject id="26">Fiction</Subject>
+	</Subjects>
+	<Languages>
+		<Language code="en">English</Language>
+	</Languages>
+<Description>Robert Herrick was a 17th-century English lyric poet and cleric. He is best known for Hesperides, a book of poems. This includes the carpe diem poem "To the Virgins, to Make Much of Time", with the first line "Gather ye rosebuds while ye may"</Description>
+</Metadata>]]><DrmInfo>
+	<PlayOnPC>1</PlayOnPC>
+	<PlayOnPCCount>-1</PlayOnPCCount>
+	<BurnToCD>1</BurnToCD>
+	<BurnToCDCount>-1</BurnToCDCount>
+	<PlayOnPM>1</PlayOnPM>
+	<TransferToSDMI>1</TransferToSDMI>
+	<TransferToNonSDMI>1</TransferToNonSDMI>
+	<TransferCount>-1</TransferCount>
+	<CollaborativePlay>0</CollaborativePlay>
+	<PublicPerformance>0</PublicPerformance>
+	<TranscodeToAAC>1</TranscodeToAAC>
+<ExpirationDate>2099-01-01T00:00:00Z</ExpirationDate><Hash></Hash><Hash2></Hash2></DrmInfo><Formats><Format name="Medium Quality"><Quality level="Medium" /><Protocols><Protocol method="download" baseurl="https://ping.github.io/odmpy/test_data" /></Protocols><Parts count="1"><Part number="1" filesize="493921" name="Part 1" filename="book3/01_ceremonies_herrick_cjph_64kb.mp3" duration="01:01" /></Parts></Format></Formats><Source id="X"><Name>Library X</Name><WebsiteUrl>http://overdrive.com</WebsiteUrl><BannerUrl>http://overdrive.com/odmbanner.gif</BannerUrl><AccentColor>#eeeeee</AccentColor></Source><TransactionID>000-0000000-00000</TransactionID><EarlyReturnURL>https://ping.github.io/odmpy/test_data</EarlyReturnURL><DownloadSuccessURL>https://ping.github.io/odmpy/test_data</DownloadSuccessURL></OverDriveMedia>
