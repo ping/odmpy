@@ -4,7 +4,7 @@ A simple console manager for OverDrive/Libby loans. Originally a python port of 
 
 Requires Python >= 3.7.
 
-![Screenshot](https://user-images.githubusercontent.com/104607/221388023-03d828ca-1745-452a-91d6-0349b5bac829.png)
+![Screenshot](https://user-images.githubusercontent.com/104607/222404653-0776e3ef-df3d-4f12-bcc7-163c95147dca.png)
 
 ## Features
 
@@ -21,7 +21,7 @@ Requires Python >= 3.7.
 
 ```bash
 # Install / Update to specific version
-python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.2 --upgrade
+python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.3 --upgrade
 
 # Install / Update from latest source
 python3 -m pip install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -74,7 +74,7 @@ Available commands:
     ret                 Return an audiobook loan file (odm).
     info                Get information about an audiobook loan file (odm).
 
-Version 0.7.2. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
+Version 0.7.3. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
 ```
 
 ### Download via Libby
@@ -138,7 +138,7 @@ options:
                         For ID3 tags with multiple values, this defines the delimiter.
                         For example, with the default delimiter ";", authors are written
                         to the artist tag as "Author A;Author B;Author C". For audiobooks.
-  --opf                 Generate an OPF file for the audiobook.
+  --opf                 Generate an OPF file for the downloaded audiobook/magazine/ebook.
   -r OBSOLETE_RETRIES, --retry OBSOLETE_RETRIES
                         Obsolete. Do not use.
   -j, --writejson       Generate a meta json file (for debugging).
@@ -249,7 +249,7 @@ usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
                 [--hideprogress]
                 odm_file
 
-Download from an audiobook loan file.
+Download from an audiobook loan file (odm).
 
 positional arguments:
   odm_file              ODM file path.
@@ -287,7 +287,7 @@ options:
                         For ID3 tags with multiple values, this defines the delimiter.
                         For example, with the default delimiter ";", authors are written
                         to the artist tag as "Author A;Author B;Author C". For audiobooks.
-  --opf                 Generate an OPF file for the audiobook.
+  --opf                 Generate an OPF file for the downloaded audiobook/magazine/ebook.
   -r OBSOLETE_RETRIES, --retry OBSOLETE_RETRIES
                         Obsolete. Do not use.
   -j, --writejson       Generate a meta json file (for debugging).
