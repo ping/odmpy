@@ -18,6 +18,7 @@
 
 import argparse
 import base64
+import datetime
 import json
 import logging
 import mimetypes
@@ -548,13 +549,16 @@ def process_ebook_loan(
             a_ele.append(item["title"])
             li_ele.append(a_ele)
             toc_ele.append(li_ele)  # type: ignore[union-attr]
+        # we give the nav a timestamped file name to avoid accidentally overwriting
+        # an existing file name
+        nav_file_name = f"nav_{int(datetime.datetime.now().timestamp())}.xhtml"
         with open(
-            os.path.join(book_content_folder, "nav.xhtml"), "w", encoding="utf-8"
+            os.path.join(book_content_folder, nav_file_name), "w", encoding="utf-8"
         ) as f_nav:
             f_nav.write(str(nav_soup).strip())
         manifest_entries.append(
             {
-                "href": "nav.xhtml",
+                "href": nav_file_name,
                 "id": "nav",
                 "media-type": "application/xhtml+xml",
                 "properties": "nav",
@@ -564,15 +568,18 @@ def process_ebook_loan(
     if not has_ncx:
         # generate ncx for backward compat
         ncx = _build_ncx(media_info, openbook)
+        # we give the ncx a timestamped file name to avoid accidentally overwriting
+        # an existing file name
+        toc_ncx_name = f"toc_{int(datetime.datetime.now().timestamp())}.ncx"
         tree = ET.ElementTree(ncx)
         tree.write(
-            os.path.join(book_content_folder, "toc.ncx"),
+            os.path.join(book_content_folder, toc_ncx_name),
             xml_declaration=True,
             encoding="utf-8",
         )
         manifest_entries.append(
             {
-                "href": "toc.ncx",
+                "href": toc_ncx_name,
                 "id": "ncx",
                 "media-type": "application/x-dtbncx+xml",
             }
@@ -618,13 +625,16 @@ def process_ebook_loan(
         cover_img_manifest_id = None
     if cover_path and not cover_manifest_entry:
         # add cover image separately since we can't identify which item is the cover
-        shutil.copyfile(cover_path, os.path.join(book_content_folder, "cover.jpg"))
+        # we give the cover a timestamped file name to avoid accidentally overwriting
+        # an existing file name
+        cover_image_name = f"cover_{int(datetime.datetime.now().timestamp())}.jpg"
+        shutil.copyfile(cover_path, os.path.join(book_content_folder, cover_image_name))
         ET.SubElement(
             manifest,
             "item",
             attrib={
                 "id": "coverimage",
-                "href": "cover.jpg",
+                "href": cover_image_name,
                 "media-type": "image/jpeg",
                 "properties": "cover-image",
             },
