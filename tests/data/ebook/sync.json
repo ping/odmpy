@@ -1,8 +1,15 @@
 {
-  "cards": [{"cardId": "123456789", "library": {"name": "Test Library"}}],
+  "cards": [
+    {
+      "cardId": "123456789",
+      "library": {
+        "name": "Test Library"
+      }
+    }
+  ],
   "loans": [
     {
-      "firstCreatorId": 0,
+      "firstCreatorId": 999999,
       "renewableOn": "2023-03-01T00:00:00Z",
       "checkoutDate": "2023-03-01T00:00:00Z",
       "expireDate": "2023-03-31T00:00:00Z",
@@ -28,8 +35,8 @@
         }
       ],
       "type": {
-        "name": "Magazine",
-        "id": "magazine"
+        "name": "eBook",
+        "id": "ebook"
       },
       "covers": {
         "cover150Wide": {
@@ -50,10 +57,28 @@
       },
       "formats": [
         {
-          "identifiers": [],
-          "id": "magazine-overdrive",
-          "name": "OverDrive Magazine",
-          "isLockedIn": false
+          "identifiers": [
+            {
+              "value": "9789999999999",
+              "type": "ISBN"
+            }
+          ],
+          "isLockedIn": false,
+          "id": "ebook-overdrive",
+          "name": "OverDrive Read",
+          "fulfillmentType": "bifocal"
+        },
+        {
+          "identifiers": [
+            {
+              "value": "9789999999999",
+              "type": "ISBN"
+            }
+          ],
+          "isLockedIn": false,
+          "id": "ebook-epub-adobe",
+          "name": "EPUB eBook",
+          "isbn": "9789999999999"
         }
       ],
       "publisherAccount": {
@@ -61,13 +86,15 @@
         "id": "12345"
       },
       "id": "9999999",
-      "title": "Test Magazine",
-      "sortTitle": "Test Magazine",
+      "firstCreatorName": "Test Author",
+      "firstCreatorSortName": "Author, Test",
+      "title": "Test EBook",
+      "sortTitle": "Test EBook",
       "edition": "Jan 20 2023",
       "publishDateText": "Jan 10 2023  7:00PM",
       "holdsCount": 0,
       "availabilityType": "always",
-      "series": "Test Magazine",
+      "series": "Test EBook",
       "reserveId": "12345a67-b8c9-12de-a1b2-cd345678efa9",
       "websiteId": "99",
       "cardId": "123456789"

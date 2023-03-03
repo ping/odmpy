@@ -1,0 +1,67 @@
+{
+  "title": {
+    "main": "Test EBook",
+    "subtitle": "",
+    "collection": "Test EBook Series"
+  },
+  "creator": [
+    {
+      "name": "Test Publisher",
+      "role": "pbl"
+    }
+  ],
+  "description": {
+    "full": "Test EBook's full description",
+    "short": "Test EBooks's short description"
+  },
+  "language": "en",
+  "nav": {
+    "landmarks": [
+      {
+        "type": "cover",
+        "path": "pages/Cover.xhtml",
+        "title": "Cover",
+        "media-type": "application/xhtml+xml"
+      }
+    ],
+    "toc": [
+      {
+        "path": "pages/Cover.xhtml",
+        "title": "Test EBook",
+        "pageRange": "Cover"
+      },
+      {
+        "path": "pages/page-01.xhtml",
+        "title": "Test Chapter 1",
+        "sectionName": "Test Section",
+        "pageRange": "2"
+      },
+      {
+        "path": "pages/page-02.xhtml",
+        "title": "Test Chapter 2",
+        "pageRange": "3"
+      }
+    ]
+  },
+  "rendition-format": "ebook",
+  "spine": [
+    {
+      "path": "pages/Cover.xhtml",
+      "media-type": "application/xhtml+xml",
+      "-odread-spine-position": 0,
+      "-odread-original-path": "pages/Cover.xhtml"
+    },
+    {
+      "path": "pages/page-01.xhtml",
+      "media-type": "application/xhtml+xml",
+      "-odread-spine-position": 1,
+      "-odread-original-path": "pages/page-01.xhtml"
+    },
+    {
+      "path": "pages/page-02.xhtml",
+      "media-type": "application/xhtml+xml",
+      "-odread-spine-position": 2,
+      "-odread-original-path": "pages/page-02.xhtml"
+    }
+  ]
+}

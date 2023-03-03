@@ -238,8 +238,7 @@ class OdmpyLibbyTests(unittest.TestCase):
         epub_file = glob.glob(f"{download_folder}/*/*.epub")
         self.assertTrue(epub_file)
 
-    @responses.activate
-    def test_mock_libby_download_magazine(self):
+    def _generate_fake_settings(self) -> str:
         settings_folder = os.path.join(self.test_downloads_dir, "settings")
         if not os.path.exists(settings_folder):
             os.makedirs(settings_folder)
@@ -258,6 +257,11 @@ class OdmpyLibbyTests(unittest.TestCase):
                 },
                 f,
             )
+        return settings_folder
+
+    @responses.activate
+    def test_mock_libby_download_magazine(self):
+        settings_folder = self._generate_fake_settings()
 
         with open(
             os.path.join(self.test_data_dir, "magazine", "sync.json"),
@@ -392,6 +396,202 @@ class OdmpyLibbyTests(unittest.TestCase):
             os.path.join(
                 self.test_data_dir, "magazine", "content", "assets", "cover.jpg"
             ),
+            "rb",
+        ) as f:
+            self.assertEqual(f.read(), cover.get_content())
+
+        nav = next(
+            iter([b for b in list(book.get_items_of_type(ebooklib.ITEM_NAVIGATION))]),
+            None,
+        )
+        self.assertTrue(nav)
+
+    @responses.activate
+    def test_mock_libby_download_ebook_acsm(self):
+        settings_folder = self._generate_fake_settings()
+
+        with open(
+            os.path.join(self.test_data_dir, "ebook", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        with open(
+            os.path.join(self.test_data_dir, "ebook", "ebook.acsm"),
+            "r",
+            encoding="utf-8",
+        ) as a:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999/fulfill/ebook-epub-adobe",
+                content_type="application/xml",
+                body=a.read(),
+            )
+
+        test_folder = "test"
+        download_dir = self.test_downloads_dir
+
+        run_command = [
+            "libby",
+            "--settings",
+            settings_folder,
+            "--ebooks",
+            "--downloaddir",
+            download_dir,
+            "--bookfolderformat",
+            test_folder,
+            "--bookfileformat",
+            "ebook",
+            "--latest",
+            "1",
+            "--hideprogress",
+        ]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+        self.assertTrue(
+            os.path.exists(os.path.join(download_dir, test_folder, "ebook.acsm"))
+        )
+
+    @responses.activate
+    def test_mock_libby_download_ebook_direct(self):
+        settings_folder = self._generate_fake_settings()
+
+        with open(
+            os.path.join(self.test_data_dir, "ebook", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        with open(
+            os.path.join(self.test_data_dir, "ebook", "rosters.json"),
+            "r",
+            encoding="utf-8",
+        ) as r:
+            responses.get(
+                "http://localhost/mock/rosters.json",
+                json=json.load(r),
+            )
+        with open(
+            os.path.join(self.test_data_dir, "ebook", "openbook.json"),
+            "r",
+            encoding="utf-8",
+        ) as o:
+            responses.get(
+                "http://localhost/mock/openbook.json",
+                json=json.load(o),
+            )
+        responses.head(
+            "http://localhost/mock",
+            body="",
+        )
+        responses.get(
+            "https://sentry-read.svc.overdrive.com/open/book/card/123456789/title/9999999",
+            json={
+                "message": "xyz",
+                "urls": {
+                    "web": "http://localhost/mock",
+                    "rosters": "http://localhost/mock/rosters.json",
+                    "openbook": "http://localhost/mock/openbook.json",
+                },
+            },
+        )
+        with open(
+            os.path.join(self.test_data_dir, "ebook", "media.json"),
+            "r",
+            encoding="utf-8",
+        ) as m:
+            responses.get(
+                "https://thunder.api.overdrive.com/v2/media/9999999?x-client-id=dewey",
+                json=json.load(m),
+            )
+        with open(os.path.join(self.test_data_dir, "magazine", "cover.jpg"), "rb") as c:
+            # this is the cover from OD API
+            responses.get(
+                "http://localhost/mock/cover.jpg",
+                content_type="image/jpeg",
+                body=c.read(),
+            )
+        # mock roster title contents
+        for page in (
+            "pages/Cover.xhtml",
+            "pages/page-01.xhtml",
+            "pages/page-02.xhtml",
+        ):
+            with open(
+                os.path.join(self.test_data_dir, "ebook", "content", page),
+                "r",
+                encoding="utf-8",
+            ) as f:
+                responses.get(
+                    f"http://localhost/{page}",
+                    content_type="application/xhtml+xml",
+                    body=f.read(),
+                )
+        for img in ("assets/cover.jpg",):
+            with open(
+                os.path.join(self.test_data_dir, "ebook", "content", img), "rb"
+            ) as f:
+                responses.get(
+                    f"http://localhost/{img}",
+                    content_type="image/jpeg",
+                    body=f.read(),
+                )
+
+        test_folder = "test"
+        download_dir = self.test_downloads_dir
+
+        run_command = [
+            "libby",
+            "--settings",
+            settings_folder,
+            "--ebooks",
+            "--downloaddir",
+            download_dir,
+            "--bookfolderformat",
+            test_folder,
+            "--bookfileformat",
+            "ebook",
+            "--direct",
+            "--latest",
+            "1",
+            "--opf",
+            "--hideprogress",
+        ]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+        self.assertTrue(
+            os.path.exists(os.path.join(download_dir, test_folder, "ebook.opf"))
+        )
+        epub_file_path = os.path.join(download_dir, test_folder, "ebook.epub")
+        self.assertTrue(os.path.exists(epub_file_path))
+
+        book = epub.read_epub(epub_file_path, {"ignore_ncx": True})
+        pages = [
+            d
+            for d in list(book.get_items_of_type(ebooklib.ITEM_DOCUMENT))
+            if d.get_name().startswith("pages/")
+        ]
+        self.assertEqual(len(pages), 3)
+        for page in pages:
+            if page.get_name() == "pages/Cover.xhtml":
+                continue
+            soup = BeautifulSoup(page.get_content(), "html.parser")
+            self.assertTrue(
+                soup.find("h1")
+            )  # check that pages are properly de-serialised
+
+        cover = next(
+            iter([b for b in list(book.get_items_of_type(ebooklib.ITEM_COVER))]),
+            None,
+        )
+        self.assertTrue(cover)
+        with open(
+            os.path.join(self.test_data_dir, "ebook", "content", "assets", "cover.jpg"),
             "rb",
         ) as f:
             self.assertEqual(f.read(), cover.get_content())

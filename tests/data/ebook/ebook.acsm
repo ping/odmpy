@@ -1,0 +1,38 @@
+<fulfillmentToken fulfillmentType="loan" auth="user" xmlns="http://ns.adobe.com/adept">
+  <distributor>urn:uuid:12345a67-b8c9-12de-a1b2-cd345678efa9</distributor>
+  <operatorURL>http://localhost/fulfillment</operatorURL>
+  <transaction>1234</transaction>
+  <purchase>2023-03-01T00:00:00-00:00</purchase>
+  <expiration>2023-03-31T00:00:00-00:00</expiration>
+  <resourceItemInfo>
+    <resource>urn:uuid:12345a67-b8c9-12de-a1b2-cd345678efa9</resource>
+    <resourceItem>1</resourceItem>
+    <metadata>
+      <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">Test EBook</dc:title>
+      <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Test Author</dc:creator>
+      <dc:publisher xmlns:dc="http://purl.org/dc/elements/1.1/">Test Publisher</dc:publisher>
+      <dc:identifier xmlns:dc="http://purl.org/dc/elements/1.1/">9789999999999</dc:identifier>
+      <dc:format xmlns:dc="http://purl.org/dc/elements/1.1/">application/epub+zip</dc:format>
+      <dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">EN-US</dc:language>
+      <thumbnailURL>http://localhost/mock/cover.jpg</thumbnailURL>
+    </metadata>
+    <licenseToken>
+      <resource>urn:uuid:12345a67-b8c9-12de-a1b2-cd345678efa9</resource>
+      <permissions>
+        <display>
+          <duration>1645997</duration>
+        </display>
+        <excerpt>
+          <duration>1645997</duration>
+        </excerpt>
+        <print>
+          <duration>1645997</duration>
+        </print>
+        <play>
+          <duration>1645997</duration>
+        </play>
+      </permissions>
+    </licenseToken>
+  </resourceItemInfo>
+  <hmac>YXNkZmFzZGZhcw==</hmac>
+</fulfillmentToken>
