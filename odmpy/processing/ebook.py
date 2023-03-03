@@ -728,7 +728,7 @@ def process_ebook_loan(
     logger.debug('Saved "%s"', container_file_path)
 
     mimetype_file_path = os.path.join(book_folder, "mimetype")
-    with open(mimetype_file_path, "w", encoding="utf-8") as f:
+    with open(mimetype_file_path, "w", encoding="ascii") as f:
         f.write("application/epub+zip")
 
     # create epub zip
@@ -745,11 +745,11 @@ def process_ebook_loan(
                 for file in files:
                     logger.debug(
                         'epub: Added "%s" as "%s"',
-                        str(os.path.join(path, file)),
+                        os.path.join(path, file),
                         os.path.relpath(os.path.join(path, file), start=book_folder),
                     )
                     epub_zip.write(
-                        str(os.path.join(path, file)),
+                        os.path.join(path, file),
                         arcname=os.path.relpath(
                             os.path.join(path, file), start=book_folder
                         ),
