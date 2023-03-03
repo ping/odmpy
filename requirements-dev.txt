@@ -5,5 +5,9 @@ mypy
 types-requests
 types-tqdm
 types-beautifulsoup4
+# for tests
+responses
 # for tests: to validate opf
 lxml
+# for tests: to validate epub generated
+EbookLib
