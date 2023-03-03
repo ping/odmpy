@@ -1,0 +1,61 @@
+{
+  "title": {
+    "main": "Test Magazine",
+    "subtitle": "",
+    "collection": "Test Magazine"
+  },
+  "creator": [
+    {
+      "name": "Test Publisher",
+      "role": "pbl"
+    }
+  ],
+  "description": {
+    "full": "Test Magazine's full description",
+    "short": "Test Magazine's short description"
+  },
+  "language": "en",
+  "nav": {
+    "toc": [
+      {
+        "path": "pages/Cover.xhtml",
+        "title": "Test Magazine",
+        "pageRange": "Cover",
+        "featureImage": "assets/cover.jpg"
+      },
+      {
+        "path": "stories/story-01.xhtml",
+        "title": "Test Story 1",
+        "sectionName": "Test Section",
+        "pageRange": "2"
+      },
+      {
+        "path": "stories/story-02.xhtml",
+        "title": "Test Story 2",
+        "sectionName": "Test Section",
+        "pageRange": "3"
+      }
+    ]
+  },
+  "rendition-format": "ebook",
+  "spine": [
+    {
+      "path": "pages/Cover.xhtml",
+      "media-type": "application/xhtml+xml",
+      "-odread-spine-position": 0,
+      "-odread-original-path": "pages/Cover.xhtml"
+    },
+    {
+      "path": "stories/story-01.xhtml",
+      "media-type": "application/xhtml+xml",
+      "-odread-spine-position": 1,
+      "-odread-original-path": "stories/story-01.xhtml"
+    },
+    {
+      "path": "stories/story-02.xhtml",
+      "media-type": "application/xhtml+xml",
+      "-odread-spine-position": 2,
+      "-odread-original-path": "stories/story-02.xhtml"
+    }
+  ]
+}

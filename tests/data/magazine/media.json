@@ -1,0 +1,78 @@
+{
+  "firstCreatorId": 0,
+  "subjects": [
+    {
+      "name": "Tests",
+      "id": "1000"
+    }
+  ],
+  "bisacCodes": [],
+  "bisac": [],
+  "levels": [],
+  "creators": [],
+  "languages": [
+    {
+      "name": "English",
+      "id": "en"
+    }
+  ],
+  "ratings": {
+    "maturityLevel": {
+      "name": "General content",
+      "id": "generalcontent"
+    },
+    "naughtyScore": {
+      "name": "General content",
+      "id": "GeneralContent"
+    }
+  },
+  "publisher": {
+    "name": "Test Publisher",
+    "id": "12345678"
+  },
+  "keywords": [],
+  "type": {
+    "name": "Magazine",
+    "id": "magazine"
+  },
+  "covers": {
+    "cover150Wide": {
+      "width": 150,
+      "height": 200,
+      "href": "http://localhost/mock/cover.jpg"
+    },
+    "cover300Wide": {
+      "width": 300,
+      "height": 400,
+      "href": "http://localhost/mock/cover.jpg"
+    },
+    "cover510Wide": {
+      "width": 510,
+      "height": 680,
+      "href": "http://localhost/mock/cover.jpg"
+    }
+  },
+  "formats": [
+    {
+      "identifiers": [],
+      "id": "magazine-overdrive",
+      "name": "OverDrive Magazine",
+      "fulfillmentType": "bifocal"
+    }
+  ],
+  "publisherAccount": {
+    "name": "Tests",
+    "id": "12345"
+  },
+  "id": "9999999",
+  "title": "Test Magazine",
+  "sortTitle": "Test Magazine",
+  "edition": "Jan 20 2023",
+  "publishDateText": "Jan 19 2023  7:00PM",
+  "estimatedReleaseDate": "2023-02-10T00:00:00Z",
+  "description": "Test Magazine's description",
+  "fullDescription": "Test Magazine's full description",
+  "shortDescription": "Test Magazine' short description",
+  "series": "Test Magazine",
+  "reserveId": "12345a67-b8c9-12de-a1b2-cd345678efa9"
+}
