@@ -556,7 +556,7 @@ class OdmpyLibbyTests(unittest.TestCase):
             "--bookfileformat",
             "ebook",
             "--direct",
-            "--latest",
+            "--select",
             "1",
             "--opf",
             "--hideprogress",
