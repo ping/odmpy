@@ -103,14 +103,14 @@ def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
         default=False,
         action="store_true",
         help=(
-            "Include ebook (EPUB) loans (experimental). An EPUB (DRM) loan will be downloaded as an .acsm file"
+            "Include ebook (EPUB/PDF) loans (experimental). An EPUB/PDF (DRM) loan will be downloaded as an .acsm file"
             "\nwhich can be opened in Adobe Digital Editions for offline reading."
             "\nRefer to https://help.overdrive.com/en-us/0577.html and "
             "\nhttps://help.overdrive.com/en-us/0005.html for more information."
-            "\nAn open EPUB (no DRM) loan will be downloaded as an .epub file which can be opened"
-            "\nin any EPUB-compatible reader."
+            "\nAn open EPUB/PDF (no DRM) loan will be downloaded as an .epub/.pdf file which can be opened"
+            "\nin any EPUB/PDF-compatible reader."
             if parser_libby.prog == f"odmpy {OdmpyCommands.Libby}"
-            else "Include ebook (EPUB) loans."
+            else "Include ebook (EPUB/PDF) loans."
         ),
     )
     parser_libby.add_argument(
@@ -309,8 +309,16 @@ def extract_loan_file(
         LibbyFormats.EBookEPubOpen,
         LibbyFormats.EBookOverdrive,
         LibbyFormats.MagazineOverDrive,
+        LibbyFormats.EBookPDFAdobe,
+        LibbyFormats.EBookPDFOpen,
     ):
-        file_ext = "acsm" if format_id == LibbyFormats.EBookEPubAdobe else "epub"
+        file_ext = (
+            "acsm"
+            if format_id in (LibbyFormats.EBookEPubAdobe, LibbyFormats.EBookPDFAdobe)
+            else "pdf"
+            if format_id == LibbyFormats.EBookPDFOpen
+            else "epub"
+        )
         book_folder, book_file_name, _ = generate_names(
             title=selected_loan["title"],
             series=selected_loan.get("series") or "",
@@ -354,7 +362,7 @@ def extract_loan_file(
                 logger=logger,
             )
         else:
-            # formats: odm, acsm or open-epub
+            # formats: odm, acsm, open-epub, open-pdf
             try:
                 odm_res_content = libby_client.fulfill_loan_file(
                     selected_loan["id"], selected_loan["cardId"], format_id

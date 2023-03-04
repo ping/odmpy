@@ -77,6 +77,8 @@ class LibbyFormats(str, Enum):
     AudioBookOverDrive = "audiobook-overdrive"  # not used
     EBookEPubAdobe = "ebook-epub-adobe"
     EBookEPubOpen = "ebook-epub-open"
+    EBookPDFAdobe = "ebook-pdf-adobe"
+    EBookPDFOpen = "ebook-pdf-open"
     EBookKobo = "ebook-kobo"  # not used
     EBookKindle = "ebook-kindle"  # not used
     EBookOverdrive = "ebook-overdrive"
@@ -106,11 +108,18 @@ USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "
     "Version/14.0.2 Safari/605.1.15"
 )
-EBOOK_EPUB_FORMATS = (LibbyFormats.EBookEPubAdobe, LibbyFormats.EBookEPubOpen)
+EBOOK_DOWNLOADABLE_FORMATS = (
+    LibbyFormats.EBookEPubAdobe,
+    LibbyFormats.EBookEPubOpen,
+    LibbyFormats.EBookPDFAdobe,
+    LibbyFormats.EBookPDFOpen,
+)
 DOWNLOADABLE_FORMATS = (
     LibbyFormats.AudioBookMP3,
     LibbyFormats.EBookEPubAdobe,
     LibbyFormats.EBookEPubOpen,
+    LibbyFormats.EBookPDFAdobe,
+    LibbyFormats.EBookPDFOpen,
     LibbyFormats.MagazineOverDrive,
 )
 
@@ -487,7 +496,11 @@ class LibbyClient(object):
         :return:
         """
         return bool(
-            [f for f in book.get("formats", []) if f["id"] in EBOOK_EPUB_FORMATS]
+            [
+                f
+                for f in book.get("formats", [])
+                if f["id"] in EBOOK_DOWNLOADABLE_FORMATS
+            ]
         )
 
     @staticmethod
@@ -515,7 +528,7 @@ class LibbyClient(object):
     @staticmethod
     def get_loan_format(loan: Dict) -> str:
         locked_in_format = next(
-            iter([f["id"] for f in loan["formats"] if f["isLockedIn"]]), None
+            iter([f["id"] for f in loan["formats"] if f.get("isLockedIn")]), None
         )
         if locked_in_format:
             if locked_in_format in DOWNLOADABLE_FORMATS:
@@ -525,7 +538,14 @@ class LibbyClient(object):
             )
 
         if not locked_in_format:
-            if LibbyClient.is_open_ebook_loan(loan) and LibbyClient.has_format(
+            # the order of these checks will determine the output format
+            # the "open" version of the format (example open epub, open pdf) should
+            # be prioritised
+            if LibbyClient.is_downloadable_audiobook_loan(
+                loan
+            ) and LibbyClient.has_format(loan, LibbyFormats.AudioBookMP3):
+                return LibbyFormats.AudioBookMP3
+            elif LibbyClient.is_open_ebook_loan(loan) and LibbyClient.has_format(
                 loan, LibbyFormats.EBookEPubOpen
             ):
                 return LibbyFormats.EBookEPubOpen
@@ -537,10 +557,14 @@ class LibbyClient(object):
                 loan
             ) and LibbyClient.has_format(loan, LibbyFormats.EBookEPubAdobe):
                 return LibbyFormats.EBookEPubAdobe
-            elif LibbyClient.is_downloadable_audiobook_loan(
+            elif LibbyClient.is_downloadable_ebook_loan(
                 loan
-            ) and LibbyClient.has_format(loan, LibbyFormats.AudioBookMP3):
-                return LibbyFormats.AudioBookMP3
+            ) and LibbyClient.has_format(loan, LibbyFormats.EBookPDFOpen):
+                return LibbyFormats.EBookPDFOpen
+            elif LibbyClient.is_downloadable_ebook_loan(
+                loan
+            ) and LibbyClient.has_format(loan, LibbyFormats.EBookPDFAdobe):
+                return LibbyFormats.EBookPDFAdobe
 
         raise ValueError("Unable to find a downloadable format")
 
@@ -626,7 +650,7 @@ class LibbyClient(object):
         endpoint: str, headers: Optional[Dict] = None, timeout: int = 15
     ) -> bytes:
         """
-        Workaround for downloading an open (non-drm) epub.
+        Workaround for downloading an open (non-drm) epub or pdf.
 
         The fulfillment url 403s when using requests but
         works in curl, request.urlretrieve, etc.
@@ -662,7 +686,7 @@ class LibbyClient(object):
         """
         Returns the loan file contents directly for MP3 audiobooks (.odm)
         and DRM epub (.acsm) loans.
-        For open epub loans, the actual epub contents are returned.
+        For open epub/pdf loans, the actual epub/pdf contents are returned.
 
         :param loan_id:
         :param card_id:
@@ -675,7 +699,7 @@ class LibbyClient(object):
         headers = self.default_headers()
         headers["Accept"] = "*/*"
 
-        if format_id == LibbyFormats.EBookEPubOpen:
+        if format_id in (LibbyFormats.EBookEPubOpen, LibbyFormats.EBookPDFOpen):
             res_redirect: requests.Response = self.make_request(
                 f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}",
                 headers=headers,
