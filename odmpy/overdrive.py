@@ -17,7 +17,7 @@
 #
 
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from urllib.parse import urljoin
 
 import requests
@@ -137,3 +137,15 @@ class OverDriveClient(object):
         params = self.default_params()
         params.update(kwargs)
         return self.make_request(f"media/{title_id}", params=params)
+
+    def media_bulk(self, title_ids: List[str], **kwargs) -> List[Dict]:
+        """
+        Retrieve a list of titles.
+
+        :param title_ids: The ids passed in this request can be titleIds or reserveIds.
+        :return:
+        """
+        params = self.default_params()
+        params.update({"titleIds": ",".join(title_ids)})
+        params.update(kwargs)
+        return self.make_request("media/bulk", params=params)

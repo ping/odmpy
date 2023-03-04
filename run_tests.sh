@@ -33,6 +33,9 @@ python -m unittest -v tests.OdmpyLibbyTests
 # Tests for odmpy.libby
 python -m unittest -v tests.LibbyClientTests
 
+# Test for odmpy.overdrive
+python -m unittest -v tests.OverDriveClientTests
+
 # Tests for odmpy.utils
 python -m unittest -v tests.UtilsTests
 
