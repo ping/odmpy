@@ -291,8 +291,14 @@ def extract_loan_file(
         args.download_dir,
         f"{slugify(file_name, allow_unicode=True)}.{file_ext}",
     )
-    if args.libby_direct and libby_client.has_format(
-        selected_loan, LibbyFormats.EBookOverdrive
+    if (
+        args.libby_direct
+        and libby_client.has_format(selected_loan, LibbyFormats.EBookOverdrive)
+        and not (
+            # don't do direct downloads for PDF loans because these turn out badly
+            libby_client.has_format(selected_loan, LibbyFormats.EBookPDFAdobe)
+            or libby_client.has_format(selected_loan, LibbyFormats.EBookPDFOpen)
+        )
     ):
         format_id = LibbyFormats.EBookOverdrive
 
