@@ -43,5 +43,3 @@ coverage run --append -m unittest -v tests.UtilsTests
 
 # Tests for odmpy.processing.shared
 coverage run --append -m unittest -v tests.ProcessingSharedTests
-
-coverage json && python cov2md.py

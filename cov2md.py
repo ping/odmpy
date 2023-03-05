@@ -1,7 +1,5 @@
 import json
 import os
-import platform
-import sys
 
 
 """
@@ -18,10 +16,6 @@ def convert(cover_json_filepath, markdown_filepath):
         results = json.load(f)
 
     job_summary = ""
-    job_summary += (
-        f"\nOS: __{platform.platform()}__, "
-        f"PYTHON: __{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}__\n"
-    )
     job_summary += f'\nTotal Coverage: __{results.get("totals", {}).get("percent_covered", 0):.1f}%__ \n\n'
     job_summary += """| Name | Stmts | Miss | Cover |
 | :--- | ---: | ---: | ---: |

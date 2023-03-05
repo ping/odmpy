@@ -74,10 +74,48 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         echo "$test_build_env"
         sh run_tests.sh
-        if [[ -f 'coverage.md' ]]; then cat 'coverage.md' >> $GITHUB_STEP_SUMMARY; fi
+        mv .coverage ".coverage.${{ matrix.os }}.${{ matrix.python-version }}"
       shell: bash
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-results
+        path: .coverage.*
+        retention-days: 1
     - name: Test installation process
       run: |
         python3 setup.py install
         odmpy --version
       shell: bash
+
+  coverage-report:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install coverage
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          fetch-depth: 1
+      - name: Download a single artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-results
+      - name: Merge and report
+        run: |
+          coverage combine && coverage json && python cov2md.py
+          cat 'coverage.md' >> $GITHUB_STEP_SUMMARY
+          coverage html -d covhtml
+      - name: Update coverage html report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: covhtml/
+          retention-days: 14
