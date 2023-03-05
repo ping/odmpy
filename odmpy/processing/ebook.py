@@ -472,7 +472,12 @@ def process_ebook_loan(
                 script_ele = soup.find("script", attrs={"type": "text/javascript"})
                 if script_ele and hasattr(script_ele, "string"):
                     mobj = contents_re.search(script_ele.string or "")
-                    if mobj:
+                    if not mobj:
+                        logger.warning(
+                            "Unable to extract content string for %s",
+                            parsed_entry_url.path,
+                        )
+                    else:
                         new_soup = BeautifulSoup(
                             base64.b64decode(mobj.group("base64_text")),
                             features="html.parser",
