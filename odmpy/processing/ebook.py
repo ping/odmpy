@@ -553,9 +553,9 @@ def process_ebook_loan(
             a_ele.append(item["title"])
             li_ele.append(a_ele)
             toc_ele.append(li_ele)  # type: ignore[union-attr]
-        # we give the nav a timestamped file name to avoid accidentally overwriting
+        # we give the nav an id-stamped file name to avoid accidentally overwriting
         # an existing file name
-        nav_file_name = f"nav_{int(datetime.datetime.now().timestamp())}.xhtml"
+        nav_file_name = f'nav_{loan["id"]}.xhtml'
         with open(
             os.path.join(book_content_folder, nav_file_name), "w", encoding="utf-8"
         ) as f_nav:
@@ -572,9 +572,9 @@ def process_ebook_loan(
     if not has_ncx:
         # generate ncx for backward compat
         ncx = _build_ncx(media_info, openbook)
-        # we give the ncx a timestamped file name to avoid accidentally overwriting
+        # we give the ncx an id-stamped file name to avoid accidentally overwriting
         # an existing file name
-        toc_ncx_name = f"toc_{int(datetime.datetime.now().timestamp())}.ncx"
+        toc_ncx_name = f'toc_{loan["id"]}.ncx'
         tree = ET.ElementTree(ncx)
         tree.write(
             os.path.join(book_content_folder, toc_ncx_name),
