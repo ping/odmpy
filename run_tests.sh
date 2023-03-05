@@ -1,5 +1,7 @@
 set -e
 
+coverage erase
+
 # test1.odm - book with ascii meta
 # test2.odm - book with non-ascii meta
 # test3.odm - Issue using mutagen, ref #17
@@ -11,11 +13,11 @@ do
   echo "======================= Testing with ${TEST_ODM} ======================="
 
   # Tests for `odmpy info` command
-  python -m unittest -v tests.OdmpyTests.test_info
-  python -m unittest -v tests.OdmpyTests.test_info_json
+  coverage run --append -m unittest -v tests.OdmpyTests.test_info
+  coverage run --append -m unittest -v tests.OdmpyTests.test_info_json
 
   # Tests for `odmpy dl` command
-  python -m unittest -v tests.OdmpyDlTests
+  coverage run --append -m unittest -v tests.OdmpyDlTests
 
   unset TEST_ODM
 done
@@ -23,21 +25,23 @@ echo '======================================================================'
 
 # Misc Tests
 # test fix for #24 cover download fail
-TEST_ODM="test_ref24.odm" python -m unittest -v tests.OdmpyTests.test_cover_fail_ref24
+TEST_ODM="test_ref24.odm" coverage run --append -m unittest -v tests.OdmpyTests.test_cover_fail_ref24
 # test for #26 opf generation
-TEST_ODM="test1.odm" python -m unittest -v tests.OdmpyTests.test_opf
+TEST_ODM="test1.odm" coverage run --append -m unittest -v tests.OdmpyTests.test_opf
 
 # Tests for `odmpy libby` command
-python -m unittest -v tests.OdmpyLibbyTests
+coverage run --append -m unittest -v tests.OdmpyLibbyTests
 
 # Tests for odmpy.libby
-python -m unittest -v tests.LibbyClientTests
+coverage run --append -m unittest -v tests.LibbyClientTests
 
 # Test for odmpy.overdrive
-python -m unittest -v tests.OverDriveClientTests
+coverage run --append -m unittest -v tests.OverDriveClientTests
 
 # Tests for odmpy.utils
-python -m unittest -v tests.UtilsTests
+coverage run --append -m unittest -v tests.UtilsTests
 
 # Tests for odmpy.processing.shared
-python -m unittest -v tests.ProcessingSharedTests
+coverage run --append -m unittest -v tests.ProcessingSharedTests
+
+coverage json && python cov2md.py

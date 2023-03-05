@@ -11,3 +11,4 @@ responses
 lxml
 # for tests: to validate epub generated
 EbookLib
+coverage

@@ -74,6 +74,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         echo "$test_build_env"
         sh run_tests.sh
+        if [[ -f 'coverage.md' ]]; then cat 'coverage.md' >> $GITHUB_STEP_SUMMARY; fi
       shell: bash
     - name: Test installation process
       run: |
