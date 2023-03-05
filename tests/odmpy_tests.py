@@ -13,6 +13,7 @@ import warnings
 from io import StringIO
 
 from lxml import etree  # type: ignore[import]
+import responses
 
 from odmpy.odm import run
 from odmpy.overdrive import OverDriveClient
@@ -104,10 +105,30 @@ class OdmpyTests(unittest.TestCase):
             ]:
                 self.assertTrue(info.get(tag), msg="'{}' is not set".format(tag))
 
+    def _setup_common_responses(self):
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
+        ) as c:
+            img_bytes = c.read()
+            # cover from OD API
+            responses.get(
+                "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fodmpy%2Ftest_data%2Fcover.jpg",
+                content_type="image/jpeg",
+                body=img_bytes,
+            )
+        responses.get(
+            "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fodmpy%2Ftest_data%2Fcover_NOTFOUND.jpg",
+            status=404,
+        )
+        responses.add_passthru("https://ping.github.io/odmpy/test_data/")
+        responses.add_passthru("https://thunder.api.overdrive.com/")
+
+    @responses.activate
     def test_cover_fail_ref24(self):
         """
         Test for error downloading cover
         """
+        self._setup_common_responses()
         run(
             [
                 "--noversioncheck",
@@ -131,10 +152,12 @@ class OdmpyTests(unittest.TestCase):
             os.path.isfile(os.path.join(expected_result.book_folder, "cover.jpg"))
         )
 
+    @responses.activate
     def test_opf(self):
         """
         `odmpy dl test.odm --opf`
         """
+        self._setup_common_responses()
         run(
             [
                 "--noversioncheck",

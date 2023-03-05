@@ -602,10 +602,7 @@ class OdmpyLibbyTests(unittest.TestCase):
         )
         self.assertTrue(nav)
 
-    @responses.activate
-    def test_mock_libby_download_audiobook_odm(self):
-        settings_folder = self._generate_fake_settings()
-
+    def _setup_audiobook_direct_responses(self):
         with open(
             os.path.join(self.test_data_dir, "audiobook", "sync.json"),
             "r",
@@ -615,16 +612,18 @@ class OdmpyLibbyTests(unittest.TestCase):
                 "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
             )
         with open(
-            os.path.join(self.test_data_dir, "audiobook", "book.odm"),
+            os.path.join(self.test_data_dir, "audiobook", "openbook.json"),
             "r",
             encoding="utf-8",
-        ) as b:
+        ) as o:
             responses.get(
-                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999/fulfill/audiobook-mp3",
-                content_type="application/xml",
-                body=b.read(),
+                "http://localhost/mock/openbook.json",
+                json=json.load(o),
             )
-
+        responses.head(
+            "http://localhost/mock",
+            body="",
+        )
         responses.get(
             "https://sentry-read.svc.overdrive.com/open/audiobook/card/123456789/title/9999999",
             json={
@@ -641,18 +640,50 @@ class OdmpyLibbyTests(unittest.TestCase):
             "r",
             encoding="utf-8",
         ) as m:
+            json_text = m.read()
+            responses.get(
+                "https://thunder.api.overdrive.com/v2/media/9999999?x-client-id=dewey",
+                json=json.loads(json_text),
+            )
             responses.get(
                 "https://thunder.api.overdrive.com/v2/media/0fef5121-bb1f-42a5-b62a-d9fded939d50?x-client-id=dewey",
-                json=json.load(m),
+                json=json.loads(json_text),
             )
         with open(
             os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
         ) as c:
+            img_bytes = c.read()
             # this is the cover from OD API
+            responses.get(
+                "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fmock%2Fcover.jpg",
+                content_type="image/jpeg",
+                body=img_bytes,
+            )
             responses.get(
                 "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fodmpy%2Ftest_data%2Fcover.jpg",
                 content_type="image/jpeg",
+                body=img_bytes,
+            )
+        with open(os.path.join(self.test_data_dir, "audiobook", "book.mp3"), "rb") as c:
+            responses.get(
+                "http://localhost/%7BAAAAAAAA-BBBB-CCCC-9999-ABCDEF123456%7Dbook.mp3",
+                content_type="audio/mp3",
                 body=c.read(),
+            )
+
+    @responses.activate
+    def test_mock_libby_download_audiobook_odm(self):
+        settings_folder = self._generate_fake_settings()
+        self._setup_audiobook_direct_responses()
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "book.odm"),
+            "r",
+            encoding="utf-8",
+        ) as b:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999/fulfill/audiobook-mp3",
+                content_type="application/xml",
+                body=b.read(),
             )
         responses.add_passthru("https://ping.github.io/odmpy/test_data/")
 
@@ -686,64 +717,7 @@ class OdmpyLibbyTests(unittest.TestCase):
     @responses.activate
     def test_mock_libby_download_audiobook_direct(self):
         settings_folder = self._generate_fake_settings()
-
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "sync.json"),
-            "r",
-            encoding="utf-8",
-        ) as s:
-            responses.get(
-                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
-            )
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "openbook.json"),
-            "r",
-            encoding="utf-8",
-        ) as o:
-            responses.get(
-                "http://localhost/mock/openbook.json",
-                json=json.load(o),
-            )
-        responses.head(
-            "http://localhost/mock",
-            body="",
-        )
-        responses.get(
-            "https://sentry-read.svc.overdrive.com/open/audiobook/card/123456789/title/9999999",
-            json={
-                "message": "xyz",
-                "urls": {
-                    "web": "http://localhost/mock",
-                    "rosters": "http://localhost/mock/rosters.json",
-                    "openbook": "http://localhost/mock/openbook.json",
-                },
-            },
-        )
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "media.json"),
-            "r",
-            encoding="utf-8",
-        ) as m:
-            responses.get(
-                "https://thunder.api.overdrive.com/v2/media/9999999?x-client-id=dewey",
-                json=json.load(m),
-            )
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
-        ) as c:
-            # this is the cover from OD API
-            responses.get(
-                "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fmock%2Fcover.jpg",
-                content_type="image/jpeg",
-                body=c.read(),
-            )
-        with open(os.path.join(self.test_data_dir, "audiobook", "book.mp3"), "rb") as c:
-            responses.get(
-                "http://localhost/%7BAAAAAAAA-BBBB-CCCC-9999-ABCDEF123456%7Dbook.mp3",
-                content_type="audio/mp3",
-                body=c.read(),
-            )
-
+        self._setup_audiobook_direct_responses()
         test_folder = "test"
         download_dir = self.test_downloads_dir
 
@@ -776,63 +750,7 @@ class OdmpyLibbyTests(unittest.TestCase):
     @responses.activate
     def test_mock_libby_download_audiobook_direct_merge(self):
         settings_folder = self._generate_fake_settings()
-
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "sync.json"),
-            "r",
-            encoding="utf-8",
-        ) as s:
-            responses.get(
-                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
-            )
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "openbook.json"),
-            "r",
-            encoding="utf-8",
-        ) as o:
-            responses.get(
-                "http://localhost/mock/openbook.json",
-                json=json.load(o),
-            )
-        responses.head(
-            "http://localhost/mock",
-            body="",
-        )
-        responses.get(
-            "https://sentry-read.svc.overdrive.com/open/audiobook/card/123456789/title/9999999",
-            json={
-                "message": "xyz",
-                "urls": {
-                    "web": "http://localhost/mock",
-                    "rosters": "http://localhost/mock/rosters.json",
-                    "openbook": "http://localhost/mock/openbook.json",
-                },
-            },
-        )
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "media.json"),
-            "r",
-            encoding="utf-8",
-        ) as m:
-            responses.get(
-                "https://thunder.api.overdrive.com/v2/media/9999999?x-client-id=dewey",
-                json=json.load(m),
-            )
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
-        ) as c:
-            # this is the cover from OD API
-            responses.get(
-                "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fmock%2Fcover.jpg",
-                content_type="image/jpeg",
-                body=c.read(),
-            )
-        with open(os.path.join(self.test_data_dir, "audiobook", "book.mp3"), "rb") as c:
-            responses.get(
-                "http://localhost/%7BAAAAAAAA-BBBB-CCCC-9999-ABCDEF123456%7Dbook.mp3",
-                content_type="audio/mp3",
-                body=c.read(),
-            )
+        self._setup_audiobook_direct_responses()
 
         test_folder = "test"
         download_dir = self.test_downloads_dir

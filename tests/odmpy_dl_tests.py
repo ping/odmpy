@@ -6,6 +6,7 @@ import unittest
 import warnings
 
 import eyed3  # type: ignore[import]
+import responses
 
 from odmpy import constants
 from odmpy.odm import run
@@ -37,6 +38,20 @@ class OdmpyDlTests(unittest.TestCase):
         if os.path.isdir(self.test_downloads_dir):
             shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
 
+    def _setup_common_responses(self):
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
+        ) as c:
+            img_bytes = c.read()
+            # cover from OD API
+            responses.get(
+                "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fodmpy%2Ftest_data%2Fcover.jpg",
+                content_type="image/jpeg",
+                body=img_bytes,
+            )
+        responses.add_passthru("https://ping.github.io/odmpy/test_data/")
+
+    @responses.activate
     def test_standard_download(self):
         """
         `odmpy dl test.odm --keepcover`
@@ -44,6 +59,7 @@ class OdmpyDlTests(unittest.TestCase):
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
+        self._setup_common_responses()
 
         run(
             [
@@ -67,6 +83,7 @@ class OdmpyDlTests(unittest.TestCase):
             os.path.isfile(os.path.join(expected_result.book_folder, "cover.jpg"))
         )
 
+    @responses.activate
     def test_add_chapters(self):
         """
         `odmpy dl test.odm --chapters`
@@ -74,6 +91,7 @@ class OdmpyDlTests(unittest.TestCase):
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
+        self._setup_common_responses()
 
         run(
             [
@@ -116,6 +134,7 @@ class OdmpyDlTests(unittest.TestCase):
                 )
                 marker_count += 1
 
+    @responses.activate
     def test_merge_formats(self):
         """
         `odmpy dl test.odm --merge`
@@ -123,6 +142,7 @@ class OdmpyDlTests(unittest.TestCase):
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
+        self._setup_common_responses()
 
         run(
             [
@@ -162,6 +182,7 @@ class OdmpyDlTests(unittest.TestCase):
         )
         self.assertTrue(os.path.isfile(m4b_file))
 
+    @responses.activate
     def test_merge_formats_add_chapters(self):
         """
         `odmpy dl test.odm --merge --chapters`
@@ -169,6 +190,7 @@ class OdmpyDlTests(unittest.TestCase):
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
+        self._setup_common_responses()
 
         run(
             [
@@ -285,6 +307,7 @@ class OdmpyDlTests(unittest.TestCase):
                 )
             last_end = end
 
+    @responses.activate
     def test_nobook_folder(self):
         """
         `odmpy dl test.odm --nobookfolder`
@@ -292,6 +315,8 @@ class OdmpyDlTests(unittest.TestCase):
         if not self.test_file:
             self.skipTest("No test file")
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
+        self._setup_common_responses()
+
         run(
             [
                 "--noversioncheck",
