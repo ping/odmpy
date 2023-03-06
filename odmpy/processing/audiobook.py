@@ -280,7 +280,7 @@ def process_audiobook_loan(
             if (
                 args.add_chapters
                 and not args.merge_output
-                and not audiofile.tag.table_of_contents
+                and (args.overwrite_tags or not audiofile.tag.table_of_contents)
             ):
                 toc = audiofile.tag.table_of_contents.set(
                     "toc".encode("ascii"),
@@ -363,7 +363,9 @@ def process_audiobook_loan(
             delimiter=args.tag_delimiter,
         )
 
-        if args.add_chapters and not audiofile.tag.table_of_contents:
+        if args.add_chapters and (
+            args.overwrite_tags or not audiofile.tag.table_of_contents
+        ):
             toc = audiofile.tag.table_of_contents.set(
                 "toc".encode("ascii"),
                 toplevel=True,

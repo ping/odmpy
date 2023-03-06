@@ -734,6 +734,7 @@ class OdmpyLibbyTests(unittest.TestCase):
             "--direct",
             "--select",
             "1",
+            "--chapters",
             "--overwritetags",
             "--opf",
             "--hideprogress",
@@ -769,6 +770,8 @@ class OdmpyLibbyTests(unittest.TestCase):
             "--select",
             "1",
             "--merge",
+            "--chapters",
+            "--overwritetags",
             "--opf",
             "--hideprogress",
         ]
