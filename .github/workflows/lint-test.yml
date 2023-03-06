@@ -98,7 +98,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install coverage
+          python3 -m pip install coverage coverage-badge
       - name: Checkout source
         uses: actions/checkout@v3
         with:
@@ -116,6 +116,7 @@ jobs:
           coverage combine && coverage json && python cov2md.py
           cat 'coverage.md' >> $GITHUB_STEP_SUMMARY
           coverage html -d "$GITHUB_WORKSPACE/coverage/"
+          coverage-badge -o "$GITHUB_WORKSPACE/coverage/badge.svg" -f
       - name: Update coverage html report
         uses: actions/upload-artifact@v3
         with:
