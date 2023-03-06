@@ -7,6 +7,7 @@ import sys
 import unittest
 import warnings
 from datetime import datetime
+from http import HTTPStatus
 from io import StringIO
 from unittest.mock import patch
 
@@ -868,6 +869,23 @@ class OdmpyLibbyTests(unittest.TestCase):
         opf_file_path = os.path.join(download_dir, test_folder, "ebook.opf")
         self.assertTrue(os.path.exists(opf_file_path))
 
+    @responses.activate
+    def test_mock_libby_exportloans(self):
+        """
+        `odmpy libby --exportloans`
+        """
+        self._setup_audiobook_direct_responses()
+        loans_file_name = os.path.join(
+            self.test_downloads_dir,
+            f"test_loans_{int(datetime.utcnow().timestamp()*1000)}.json",
+        )
+        run(["libby", "--exportloans", loans_file_name], be_quiet=True)
+        self.assertTrue(os.path.exists(loans_file_name))
+        with open(loans_file_name, "r", encoding="utf-8") as f:
+            loans = json.load(f)
+            for loan in loans:
+                self.assertIn("id", loan)
+
     @staticmethod
     def _libby_setup_prompt(text: str) -> str:
         if "Enter the 8-digit Libby code and press enter" in text:
@@ -905,6 +923,78 @@ class OdmpyLibbyTests(unittest.TestCase):
                 injected_stream_handler=stream_handler,
             )
             self.assertIn("Login successful.", strip_color_codes(out.getvalue()))
+            logging.getLogger(run.__module__).removeHandler(stream_handler)
+
+    @responses.activate
+    @patch(
+        "builtins.input",
+        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
+            txt
+        ),
+    )
+    def test_libby_setup_fail(self):
+        settings_folder = os.path.join(self.test_downloads_dir, "settings")
+        if not os.path.exists(settings_folder):
+            os.makedirs(settings_folder)
+        responses.post(
+            "https://sentry-read.svc.overdrive.com/chip?client=dewey",
+            content_type="application/json",
+            json={"chip": "xxx", "identity": "xxxx"},
+        )
+        responses.post(
+            "https://sentry-read.svc.overdrive.com/chip/clone/code",
+            content_type="applications/json",
+            status=HTTPStatus.BAD_REQUEST,
+            json={},
+        )
+        with StringIO() as out:
+            stream_handler = logging.StreamHandler(out)
+            stream_handler.setLevel(logging.DEBUG)
+            with self.assertRaises(OdmpyRuntimeError) as context:
+                run(
+                    ["libby", "--settings", settings_folder],
+                    be_quiet=True,
+                    injected_stream_handler=stream_handler,
+                )
+            self.assertIn("Could not log in with code", str(context.exception))
+            logging.getLogger(run.__module__).removeHandler(stream_handler)
+
+    @responses.activate
+    @patch(
+        "builtins.input",
+        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
+            txt
+        ),
+    )
+    def test_libby_setup_sync_fail(self):
+        settings_folder = os.path.join(self.test_downloads_dir, "settings")
+        if not os.path.exists(settings_folder):
+            os.makedirs(settings_folder)
+        responses.post(
+            "https://sentry-read.svc.overdrive.com/chip?client=dewey",
+            content_type="application/json",
+            json={"chip": "xxx", "identity": "xxxx"},
+        )
+        responses.post(
+            "https://sentry-read.svc.overdrive.com/chip/clone/code",
+            content_type="applications/json",
+            json={},
+        )
+        responses.get(
+            "https://sentry-read.svc.overdrive.com/chip/sync",
+            content_type="applications/json",
+            json={},
+        )
+        with StringIO() as out:
+            stream_handler = logging.StreamHandler(out)
+            stream_handler.setLevel(logging.DEBUG)
+            with self.assertRaises(OdmpyRuntimeError) as context:
+                run(
+                    ["libby", "--settings", settings_folder],
+                    be_quiet=True,
+                    injected_stream_handler=stream_handler,
+                )
+            self.assertIn("at least 1 registered library card", str(context.exception))
             logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     @responses.activate

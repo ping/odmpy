@@ -716,12 +716,12 @@ def run(
                             "You also need to have at least 1 registered library card."
                         )
                     logger.info("Login successful.\n")
-                except requests.exceptions.HTTPError as he:
+                except ClientError as ce:
                     libby_client.clear_settings()
                     raise OdmpyRuntimeError(
                         "Could not log in with code.\n"
                         "Make sure that you have entered the right code and within the time limit."
-                    ) from he
+                    ) from ce
 
             synced_state = libby_client.sync()
             # sort by checkout date so that recent most is at the bottom
