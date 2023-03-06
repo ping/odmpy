@@ -1,0 +1,34 @@
+name: "Update gh-pages"
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["master"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get source
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+        path: "source"
+    - name: Get pages
+      uses: actions/checkout@v3
+      with:
+        ref: "gh-pages"
+        fetch-depth: 1
+        path: "pages"
+    - name: Update page
+      run: |
+        cp -f source/README.md pages/index.md
+        cd pages
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add index.md
+        git commit -m "Updated from source $GITHUB_REF"
+        git push
