@@ -7,8 +7,8 @@ on:
     tags:
       - '!**'
     paths:
-      - odmpy/
-      - tests/
+      - odmpy/**
+      - tests/**
       - '*.py'
       - '.*'
       - run_tests.sh
