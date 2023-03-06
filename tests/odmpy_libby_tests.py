@@ -100,7 +100,7 @@ class OdmpyLibbyTests(unittest.TestCase):
         self.assertFalse(os.path.exists(settings_file))
 
     @responses.activate
-    @patch("builtins.input", lambda *args: "")
+    @patch("builtins.input", lambda _: "")
     def test_inputs_nodownloads(self):
         settings_folder = self._generate_fake_settings()
 
@@ -878,8 +878,8 @@ class OdmpyLibbyTests(unittest.TestCase):
     @responses.activate
     @patch(
         "builtins.input",
-        lambda *args: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
-            *args
+        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
+            txt
         ),
     )
     def test_libby_setup(self):
@@ -909,7 +909,7 @@ class OdmpyLibbyTests(unittest.TestCase):
             logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     @responses.activate
-    @patch("builtins.input", lambda *args: "1")
+    @patch("builtins.input", lambda _: "1")
     def test_inputs_found(self):
         settings_folder = self._generate_fake_settings()
         self._setup_audiobook_direct_responses()
