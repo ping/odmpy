@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/odm.py: 69.9%</title>
+    <title>Coverage for odmpy/odm.py: 74.0%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/odm.py</b>:
-            <span class="pc_cov">69.9%</span>
+            <span class="pc_cov">74.0%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">339 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">237<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">102<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">251<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">88<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-06 14:04 +0000
+            created at 2023-03-06 15:07 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -140,7 +140,7 @@
     <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t"><span class="com"># Orchestrates the interaction between the CLI, APIs and the processing bits</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="com">#</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t"><span class="nam">logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">__file__</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t"><span class="nam">logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">__name__</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t"><span class="nam">requests_logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="str">"urllib3"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t"><span class="nam">ch</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">StreamHandler</span><span class="op">(</span><span class="nam">io</span><span class="op">.</span><span class="nam">TextIOWrapper</span><span class="op">(</span><span class="nam">sys</span><span class="op">.</span><span class="nam">stdout</span><span class="op">.</span><span class="nam">buffer</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t"><span class="nam">ch</span><span class="op">.</span><span class="nam">setLevel</span><span class="op">(</span><span class="nam">logging</span><span class="op">.</span><span class="nam">DEBUG</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -771,33 +771,33 @@
     <p class="pln"><span class="n"><a id="t689" href="#t689">689</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t690" href="#t690">690</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t691" href="#t691">691</a></span><span class="t">            <span class="key">if</span> <span class="key">not</span> <span class="nam">libby_client</span><span class="op">.</span><span class="nam">has_sync_code</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t692" href="#t692">692</a></span><span class="t">                <span class="nam">instructions</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t692" href="#t692">692</a></span><span class="t">                <span class="nam">instructions</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t693" href="#t693">693</a></span><span class="t">                    <span class="str">"A Libby setup code is needed to allow odmpy to interact with Libby.\n"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t694" href="#t694">694</a></span><span class="t">                    <span class="str">"To get a Libby code, see https://help.libbyapp.com/en-us/6070.htm\n"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t695" href="#t695">695</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t696" href="#t696">696</a></span><span class="t">                <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="nam">instructions</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t697" href="#t697">697</a></span><span class="t">                <span class="key">while</span> <span class="key">True</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t698" href="#t698">698</a></span><span class="t">                    <span class="nam">sync_code</span> <span class="op">=</span> <span class="nam">input</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t696" href="#t696">696</a></span><span class="t">                <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="nam">instructions</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t697" href="#t697">697</a></span><span class="t">                <span class="key">while</span> <span class="key">True</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t698" href="#t698">698</a></span><span class="t">                    <span class="nam">sync_code</span> <span class="op">=</span> <span class="nam">input</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t699" href="#t699">699</a></span><span class="t">                        <span class="str">"Enter the 8-digit Libby code and press enter: "</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t700" href="#t700">700</a></span><span class="t">                    <span class="op">)</span><span class="op">.</span><span class="nam">strip</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t701" href="#t701">701</a></span><span class="t">                    <span class="key">if</span> <span class="key">not</span> <span class="nam">sync_code</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t701" href="#t701">701</a></span><span class="t">                    <span class="key">if</span> <span class="key">not</span> <span class="nam">sync_code</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t702" href="#t702">702</a></span><span class="t">                        <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t703" href="#t703">703</a></span><span class="t">                    <span class="key">if</span> <span class="key">not</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">is_valid_sync_code</span><span class="op">(</span><span class="nam">sync_code</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t703" href="#t703">703</a></span><span class="t">                    <span class="key">if</span> <span class="key">not</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">is_valid_sync_code</span><span class="op">(</span><span class="nam">sync_code</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t704" href="#t704">704</a></span><span class="t">                        <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">"Invalid code: %s"</span><span class="op">,</span> <span class="nam">colored</span><span class="op">(</span><span class="nam">sync_code</span><span class="op">,</span> <span class="str">"red"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t705" href="#t705">705</a></span><span class="t">                        <span class="key">continue</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t706" href="#t706">706</a></span><span class="t">                    <span class="key">break</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t706" href="#t706">706</a></span><span class="t">                    <span class="key">break</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t707" href="#t707">707</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t708" href="#t708">708</a></span><span class="t">                <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t709" href="#t709">709</a></span><span class="t">                    <span class="nam">libby_client</span><span class="op">.</span><span class="nam">get_chip</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t710" href="#t710">710</a></span><span class="t">                    <span class="nam">libby_client</span><span class="op">.</span><span class="nam">clone_by_code</span><span class="op">(</span><span class="nam">sync_code</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t711" href="#t711">711</a></span><span class="t">                    <span class="key">if</span> <span class="key">not</span> <span class="nam">libby_client</span><span class="op">.</span><span class="nam">is_logged_in</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t708" href="#t708">708</a></span><span class="t">                <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t709" href="#t709">709</a></span><span class="t">                    <span class="nam">libby_client</span><span class="op">.</span><span class="nam">get_chip</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t710" href="#t710">710</a></span><span class="t">                    <span class="nam">libby_client</span><span class="op">.</span><span class="nam">clone_by_code</span><span class="op">(</span><span class="nam">sync_code</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t711" href="#t711">711</a></span><span class="t">                    <span class="key">if</span> <span class="key">not</span> <span class="nam">libby_client</span><span class="op">.</span><span class="nam">is_logged_in</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t712" href="#t712">712</a></span><span class="t">                        <span class="nam">libby_client</span><span class="op">.</span><span class="nam">clear_settings</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t713" href="#t713">713</a></span><span class="t">                        <span class="key">raise</span> <span class="nam">OdmpyRuntimeError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t714" href="#t714">714</a></span><span class="t">                            <span class="str">"Could not log in with code.\n"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t715" href="#t715">715</a></span><span class="t">                            <span class="str">"Make sure that you have entered the right code and within the time limit.\n"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t716" href="#t716">716</a></span><span class="t">                            <span class="str">"You also need to have at least 1 registered library card."</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t717" href="#t717">717</a></span><span class="t">                        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t718" href="#t718">718</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"Login successful.\n"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t718" href="#t718">718</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"Login successful.\n"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t719" href="#t719">719</a></span><span class="t">                <span class="key">except</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">exceptions</span><span class="op">.</span><span class="nam">HTTPError</span> <span class="key">as</span> <span class="nam">he</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t720" href="#t720">720</a></span><span class="t">                    <span class="nam">libby_client</span><span class="op">.</span><span class="nam">clear_settings</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t721" href="#t721">721</a></span><span class="t">                    <span class="key">raise</span> <span class="nam">OdmpyRuntimeError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -1016,7 +1016,7 @@
     <p class="pln"><span class="n"><a id="t934" href="#t934">934</a></span><span class="t">                <span class="op">)</span><span class="op">.</span><span class="nam">strip</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t935" href="#t935">935</a></span><span class="t">                <span class="key">if</span> <span class="key">not</span> <span class="nam">user_loan_choice_input</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t936" href="#t936">936</a></span><span class="t">                    <span class="com"># abort choice if user enters blank</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t937" href="#t937">937</a></span><span class="t">                    <span class="key">break</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t937" href="#t937">937</a></span><span class="t">                    <span class="key">break</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t938" href="#t938">938</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t939" href="#t939">939</a></span><span class="t">                <span class="nam">loan_choices</span> <span class="op">=</span> <span class="nam">list</span><span class="op">(</span><span class="nam">set</span><span class="op">(</span><span class="nam">user_loan_choice_input</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="str">" "</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t940" href="#t940">940</a></span><span class="t">                <span class="nam">loan_choices_isvalid</span> <span class="op">=</span> <span class="key">True</span>&nbsp;</span><span class="r"></span></p>
@@ -1034,7 +1034,7 @@
     <p class="pln"><span class="n"><a id="t952" href="#t952">952</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t953" href="#t953">953</a></span><span class="t">            <span class="key">if</span> <span class="key">not</span> <span class="nam">loan_choices</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t954" href="#t954">954</a></span><span class="t">                <span class="com"># abort if no choices made</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t955" href="#t955">955</a></span><span class="t">                <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t955" href="#t955">955</a></span><span class="t">                <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t956" href="#t956">956</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t957" href="#t957">957</a></span><span class="t">            <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">command_name</span> <span class="op">==</span> <span class="nam">OdmpyCommands</span><span class="op">.</span><span class="nam">LibbyReturn</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t958" href="#t958">958</a></span><span class="t">                <span class="com"># do returns</span>&nbsp;</span><span class="r"></span></p>
@@ -1199,7 +1199,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-06 14:04 +0000
+            created at 2023-03-06 15:07 +0000
         </p>
     </div>
 </footer>
