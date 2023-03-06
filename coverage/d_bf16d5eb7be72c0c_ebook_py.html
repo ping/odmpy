@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/processing/ebook.py: 80%</title>
+    <title>Coverage for odmpy/processing/ebook.py: 81%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/processing/ebook.py</b>:
-            <span class="pc_cov">80%</span>
+            <span class="pc_cov">81%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">331 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">264<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">67<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">269<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">62<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_odm_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-06 05:51 +0000
+            created at 2023-03-06 06:03 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -578,7 +578,7 @@
     <p class="pln"><span class="n"><a id="t496" href="#t496">496</a></span><span class="t">                        <span class="nam">start</span><span class="op">=</span><span class="nam">asset_folder</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t497" href="#t497">497</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t498" href="#t498">498</a></span><span class="t">                    <span class="key">if</span> <span class="nam">is_windows</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t499" href="#t499">499</a></span><span class="t">                        <span class="nam">img_src</span> <span class="op">=</span> <span class="nam">img_src</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">,</span> <span class="str">"/"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t499" href="#t499">499</a></span><span class="t">                        <span class="nam">img_src</span> <span class="op">=</span> <span class="nam">img_src</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">,</span> <span class="str">"/"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t500" href="#t500">500</a></span><span class="t">                    <span class="com"># patch the svg based cover for magazines</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t501" href="#t501">501</a></span><span class="t">                    <span class="nam">cover_svg</span> <span class="op">=</span> <span class="nam">soup</span><span class="op">.</span><span class="nam">find</span><span class="op">(</span><span class="str">"svg"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t502" href="#t502">502</a></span><span class="t">                    <span class="key">if</span> <span class="nam">cover_svg</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -832,8 +832,8 @@
     <p class="pln"><span class="n"><a id="t750" href="#t750">750</a></span><span class="t">        <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t751" href="#t751">751</a></span><span class="t">            <span class="key">if</span> <span class="nam">is_windows</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t752" href="#t752">752</a></span><span class="t">                <span class="com"># patch for windows because zipFile requires "/" separator but windows os.sep is "\"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t753" href="#t753">753</a></span><span class="t">                <span class="nam">folder_name</span> <span class="op">=</span> <span class="nam">folder_name</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">,</span> <span class="str">"/"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t754" href="#t754">754</a></span><span class="t">                <span class="nam">folder_name</span> <span class="op">=</span> <span class="nam">folder_name</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span><span class="str">"CP437"</span><span class="op">,</span> <span class="nam">errors</span><span class="op">=</span><span class="str">"replace"</span><span class="op">)</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t753" href="#t753">753</a></span><span class="t">                <span class="nam">folder_name</span> <span class="op">=</span> <span class="nam">folder_name</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">,</span> <span class="str">"/"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t754" href="#t754">754</a></span><span class="t">                <span class="nam">folder_name</span> <span class="op">=</span> <span class="nam">folder_name</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span><span class="str">"CP437"</span><span class="op">,</span> <span class="nam">errors</span><span class="op">=</span><span class="str">"replace"</span><span class="op">)</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t755" href="#t755">755</a></span><span class="t">                    <span class="str">"CP437"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t756" href="#t756">756</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t757" href="#t757">757</a></span><span class="t">            <span class="nam">epub_zip</span><span class="op">.</span><span class="nam">write</span><span class="op">(</span><span class="nam">book_meta_folder</span><span class="op">,</span> <span class="nam">arcname</span><span class="op">=</span><span class="nam">folder_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -845,8 +845,8 @@
     <p class="pln"><span class="n"><a id="t763" href="#t763">763</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t764" href="#t764">764</a></span><span class="t">                    <span class="key">if</span> <span class="nam">is_windows</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t765" href="#t765">765</a></span><span class="t">                        <span class="com"># patch for windows because zipFile requires "/" separator but windows os.sep is "\"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t766" href="#t766">766</a></span><span class="t">                        <span class="nam">zip_archive_name</span> <span class="op">=</span> <span class="nam">zip_archive_name</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">,</span> <span class="str">"/"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t767" href="#t767">767</a></span><span class="t">                        <span class="nam">zip_archive_name</span> <span class="op">=</span> <span class="nam">zip_archive_name</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t766" href="#t766">766</a></span><span class="t">                        <span class="nam">zip_archive_name</span> <span class="op">=</span> <span class="nam">zip_archive_name</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">,</span> <span class="str">"/"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t767" href="#t767">767</a></span><span class="t">                        <span class="nam">zip_archive_name</span> <span class="op">=</span> <span class="nam">zip_archive_name</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t768" href="#t768">768</a></span><span class="t">                            <span class="str">"CP437"</span><span class="op">,</span> <span class="nam">errors</span><span class="op">=</span><span class="str">"replace"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t769" href="#t769">769</a></span><span class="t">                        <span class="op">)</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"CP437"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t770" href="#t770">770</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -878,7 +878,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_odm_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-06 05:51 +0000
+            created at 2023-03-06 06:03 +0000
         </p>
     </div>
 </footer>
