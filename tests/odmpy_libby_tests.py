@@ -91,7 +91,6 @@ class OdmpyLibbyTests(unittest.TestCase):
             self.assertNotIn("__odmpy_sync_code", settings)
             self.assertIn("__libby_sync_code", settings)
 
-    @unittest.skip("x")
     def test_settings_clear(self):
         settings_folder = self._generate_fake_settings()
         settings_file = os.path.join(settings_folder, "libby.json")
