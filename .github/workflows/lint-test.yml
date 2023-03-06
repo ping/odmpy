@@ -72,7 +72,6 @@ jobs:
     - name: Run tests on ${{ matrix.os }} with python ${{ matrix.python-version }}
       run: |
         cd ${GITHUB_WORKSPACE}
-        echo "$test_build_env"
         sh run_tests.sh
         mv .coverage ".coverage.${{ matrix.os }}.${{ matrix.python-version }}"
       shell: bash
@@ -119,3 +118,20 @@ jobs:
           name: coverage-report
           path: covhtml/
           retention-days: 14
+      - name: Get pages
+        uses: actions/checkout@v3
+        if: github.ref == "refs/heads/master"
+        with:
+          ref: "gh-pages"
+          fetch-depth: 1
+          path: "pages"
+      - name: Publish coverage to pages
+        if: github.ref == "refs/heads/master"
+        run: |
+          mv covhtml pages/
+          cd pages
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add covhtml
+          git commit -m "Updated coverage results from $GITHUB_SHA"
+          git push
