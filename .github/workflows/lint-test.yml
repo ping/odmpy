@@ -103,15 +103,18 @@ jobs:
         with:
           submodules: true
           fetch-depth: 1
+          path: "source"
       - name: Download a single artifact
         uses: actions/download-artifact@v3
         with:
           name: coverage-results
+          path: source/
       - name: Merge and report
         run: |
+          cd source/
           coverage combine && coverage json && python cov2md.py
           cat 'coverage.md' >> $GITHUB_STEP_SUMMARY
-          coverage html -d covhtml
+          coverage html -d "$GITHUB_WORKSPACE/covhtml"
       - name: Update coverage html report
         uses: actions/upload-artifact@v3
         with:
@@ -128,6 +131,7 @@ jobs:
       - name: Publish coverage to pages
         if: github.ref == 'refs/heads/master'
         run: |
+          cd "$GITHUB_WORKSPACE"
           mv covhtml pages/
           cd pages
           git config user.name github-actions
