@@ -1,10 +1,9 @@
 import json
 import os
 
-
-"""
-Simple script to convert coverage.json into markdown for display as GitHub Actions job summary
-"""
+#
+# Simple script to convert coverage.json into markdown for display as GitHub Actions job summary
+#
 
 
 def _escape(txt: str) -> str:
@@ -28,7 +27,7 @@ def convert(cover_json_filepath, markdown_filepath):
         f.write(job_summary)
     try:
         os.remove(cover_json_filepath)
-    except:  # noqa
+    except:  # pylint: disable=bare-except
         pass
 
 
