@@ -99,9 +99,17 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install coverage
-      - uses: actions/checkout@v3
+      - name: Checkout gh-pages
+        uses: actions/checkout@v3
+        if: github.ref == 'refs/heads/master'
         with:
-          submodules: true
+          ref: "gh-pages"
+          fetch-depth: 1
+          path: "pages"
+      - name: Checkout source
+        uses: actions/checkout@v3
+        with:
+          ref: "master"
           fetch-depth: 1
           path: "source"
       - name: Download a single artifact
@@ -114,28 +122,19 @@ jobs:
           cd source/
           coverage combine && coverage json && python cov2md.py
           cat 'coverage.md' >> $GITHUB_STEP_SUMMARY
-          coverage html -d "$GITHUB_WORKSPACE/covhtml"
+          coverage html -d "$GITHUB_WORKSPACE/pages/coverage/"
       - name: Update coverage html report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
-          path: covhtml/
+          path: pages/coverage/
           retention-days: 14
-      - name: Get pages
-        uses: actions/checkout@v3
-        if: github.ref == 'refs/heads/master'
-        with:
-          ref: "gh-pages"
-          fetch-depth: 1
-          path: "pages"
       - name: Publish coverage to pages
         if: github.ref == 'refs/heads/master'
         run: |
-          cd "$GITHUB_WORKSPACE"
-          mv covhtml pages/
-          cd pages
+          cd "$GITHUB_WORKSPACE/pages"
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add -A covhtml
+          git add -A coverage/
           git status
           if [[ `git status --porcelain --untracked-files=no` ]]; then git commit -m "Updated coverage results from $GITHUB_SHA"; git push; fi
