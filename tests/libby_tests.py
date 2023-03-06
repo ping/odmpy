@@ -4,7 +4,12 @@ import sys
 import unittest
 from collections import OrderedDict
 from datetime import datetime, timezone, timedelta
+from http import HTTPStatus
 from http.client import HTTPConnection
+
+import responses
+
+from odmpy.libby_errors import ClientBadRequestError, ClientError
 
 from odmpy.libby import (
     LibbyClient,
@@ -402,6 +407,47 @@ class LibbyClientTests(unittest.TestCase):
                 client.save_settings({"identity": token})
         finally:
             client.libby_session.close()  # avoid ResourceWarning
+
+    @responses.activate
+    def test_libby_error_badrequest(self):
+        err_result = {
+            "result": "upstream_failure",
+            "upstream": {
+                "userExplanation": "TestUserExplanation",
+                "errorCode": "99999",
+            },
+        }
+        responses.get(
+            "https://sentry-read.svc.overdrive.com/chip/sync",
+            content_type="application/json",
+            status=HTTPStatus.BAD_REQUEST,
+            json=err_result,
+        )
+        client = LibbyClient(logger=self.logger, identity_token=".")
+        with self.assertRaises(ClientBadRequestError) as context:
+            _ = client.sync()
+        self.assertEqual(
+            context.exception.msg, "TestUserExplanation [errorcode: 99999]"
+        )
+        self.assertEqual(context.exception.http_status, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(context.exception.error_response_obj, err_result)
+
+    @responses.activate
+    def test_libby_error_forbidden(self):
+        responses.get(
+            "https://sentry-read.svc.overdrive.com/chip/sync",
+            status=HTTPStatus.FORBIDDEN,
+            body="",
+        )
+        client = LibbyClient(logger=self.logger, identity_token=".")
+        with self.assertRaises(ClientError) as context:
+            _ = client.sync()
+        self.assertEqual(
+            context.exception.msg,
+            "403 Client Error: Forbidden for url: https://sentry-read.svc.overdrive.com/chip/sync",
+        )
+        self.assertEqual(context.exception.http_status, HTTPStatus.FORBIDDEN)
+        self.assertEqual(context.exception.error_response, "")
 
     def test_string_enum(self):
         self.assertEqual(f"{LibbyFormats.AudioBookMP3}", "audiobook-mp3")

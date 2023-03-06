@@ -1,3 +1,4 @@
+import argparse
 import os
 import platform
 import string
@@ -6,6 +7,7 @@ from datetime import datetime
 from random import choices
 
 from odmpy import utils
+from odmpy import cli_utils
 
 
 class UtilsTests(unittest.TestCase):
@@ -71,3 +73,24 @@ class UtilsTests(unittest.TestCase):
             utils.unescape_html("&lt;b&gt;Hello &amp; Goodbye&lt;/b&gt;"),
             "<b>Hello & Goodbye</b>",
         )
+
+    def test_positive_int(self):
+        self.assertEqual(cli_utils.positive_int("1"), 1)
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            _ = cli_utils.positive_int("x")
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            _ = cli_utils.positive_int("-1")
+
+    def test_valid_book_folder_file_format(self):
+        self.assertEqual(
+            cli_utils.valid_book_folder_file_format(
+                "%(Author)s/%(Series)s/%(Title)s-%(Edition)s"
+            ),
+            "%(Author)s/%(Series)s/%(Title)s-%(Edition)s",
+        )
+
+        with self.assertRaises(argparse.ArgumentTypeError) as context:
+            _ = cli_utils.valid_book_folder_file_format("%(X)s")
+        self.assertIn("Invalid field 'X'", str(context.exception))
