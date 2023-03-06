@@ -22,7 +22,7 @@ from .errors import OdmpyRuntimeError
 from .odm import run
 
 
-def main() -> None:  # pragma: no cover
+def main() -> None:
     try:
         run()
     except (KeyboardInterrupt, OdmpyRuntimeError):
