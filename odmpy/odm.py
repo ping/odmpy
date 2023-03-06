@@ -58,7 +58,7 @@ from .utils import slugify, plural_or_singular_noun as ps
 # Orchestrates the interaction between the CLI, APIs and the processing bits
 #
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 requests_logger = logging.getLogger("urllib3")
 ch = logging.StreamHandler(io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8"))
 ch.setLevel(logging.DEBUG)
