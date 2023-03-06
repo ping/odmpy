@@ -6,9 +6,18 @@ on:
       - '**'
     tags:
       - '!**'
+    paths:
+      - odmpy/
+      - tests/
+      - '*.py'
+      - '.*'
+      - run_tests.sh
+      - 'requirements*.txt'
+      - .github/workflows/lint-test.yml
   pull_request:
     branches:
       - '**'
+  workflow_dispatch:
 
 jobs:
   lint:
