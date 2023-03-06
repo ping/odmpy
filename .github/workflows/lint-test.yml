@@ -120,13 +120,13 @@ jobs:
           retention-days: 14
       - name: Get pages
         uses: actions/checkout@v3
-        if: github.ref == "refs/heads/master"
+        if: github.ref == 'refs/heads/master'
         with:
           ref: "gh-pages"
           fetch-depth: 1
           path: "pages"
       - name: Publish coverage to pages
-        if: github.ref == "refs/heads/master"
+        if: github.ref == 'refs/heads/master'
         run: |
           mv covhtml pages/
           cd pages
