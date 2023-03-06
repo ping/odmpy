@@ -409,6 +409,8 @@ where [`example.dl.conf`](example.dl.conf) contains the command arguments values
 
 ## Contributing
 
+[![Coverage](https://ping.github.io/odmpy/coverage/badge.svg)](https://ping.github.io/odmpy/coverage/)
+
 This repository uses [black](https://github.com/psf/black) to ensure consistent formatting.
 The [CI Actions](https://github.com/ping/odmpy/blob/master/.github/workflows/lint-test.yml)
 currently configured also include lint tests using [flake8](https://github.com/pycqa/flake8),
