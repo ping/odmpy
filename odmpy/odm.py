@@ -27,7 +27,6 @@ import time
 from http.client import HTTPConnection
 from typing import Dict, List, Optional
 
-import requests
 from termcolor import colored
 
 from .cli_utils import (
