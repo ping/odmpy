@@ -17,6 +17,7 @@ import responses
 
 from odmpy.odm import run
 from odmpy.overdrive import OverDriveClient
+from odmpy.utils import strip_color_codes
 from .data import (
     get_expected_result,
 )
@@ -71,9 +72,7 @@ class OdmpyTests(unittest.TestCase):
                 injected_stream_handler=stream_handler,
             )
             expected_text = expected.read()
-            self.assertEqual(
-                strip_color_codes_re.sub("", out.getvalue()), expected_text
-            )
+            self.assertEqual(strip_color_codes(out.getvalue()), expected_text)
 
     def test_info_json(self):
         """

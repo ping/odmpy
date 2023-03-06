@@ -33,6 +33,11 @@ TIMESTAMP_RE = re.compile(
     r"^((?P<hr>[0-9]+):)?(?P<min>[0-9]+):(?P<sec>[0-9]+)(\.(?P<ms>[0-9]+))?$"
 )
 ILLEGAL_WIN_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
+STRIP_COLOR_CODE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+
+
+def strip_color_codes(text: str) -> str:
+    return STRIP_COLOR_CODE_RE.sub("", text)
 
 
 def plural_or_singular_noun(

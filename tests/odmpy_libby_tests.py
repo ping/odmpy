@@ -1,11 +1,14 @@
 import glob
 import json
+import logging
 import os.path
 import shutil
 import sys
 import unittest
 import warnings
 from datetime import datetime
+from io import StringIO
+from unittest.mock import patch
 
 import ebooklib  # type: ignore[import]
 import responses
@@ -18,6 +21,9 @@ from odmpy.odm import run
 
 
 # Test non-interactive options
+from odmpy.utils import strip_color_codes
+
+
 class OdmpyLibbyTests(unittest.TestCase):
     def setUp(self) -> None:
         warnings.filterwarnings(
@@ -84,6 +90,29 @@ class OdmpyLibbyTests(unittest.TestCase):
             settings = json.load(f)
             self.assertNotIn("__odmpy_sync_code", settings)
             self.assertIn("__libby_sync_code", settings)
+
+    @responses.activate
+    @patch("builtins.input", lambda *args: "")
+    def test_inputs_nodownloads(self):
+        settings_folder = self._generate_fake_settings()
+
+        with open(
+            os.path.join(self.test_data_dir, "magazine", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        with StringIO() as out:
+            stream_handler = logging.StreamHandler(out)
+            stream_handler.setLevel(logging.DEBUG)
+            run(
+                ["libby", "--settings", settings_folder],
+                be_quiet=True,
+                injected_stream_handler=stream_handler,
+            )
+            self.assertIn("No downloadable loans found.", out.getvalue())
 
     def test_libby_export(self):
         """
@@ -830,3 +859,38 @@ class OdmpyLibbyTests(unittest.TestCase):
         self.assertTrue(os.path.exists(mp3_file_path))
         opf_file_path = os.path.join(download_dir, test_folder, "ebook.opf")
         self.assertTrue(os.path.exists(opf_file_path))
+
+    @responses.activate
+    @patch("builtins.input", lambda *args: "1")
+    def test_inputs_found(self):
+        settings_folder = self._generate_fake_settings()
+        self._setup_audiobook_direct_responses()
+        test_folder = "test"
+        download_dir = self.test_downloads_dir
+
+        run_command = [
+            "libby",
+            "--settings",
+            settings_folder,
+            "--downloaddir",
+            download_dir,
+            "--bookfolderformat",
+            test_folder,
+            "--bookfileformat",
+            "ebook",
+            "--direct",
+            "--hideprogress",
+        ]
+
+        with StringIO() as out:
+            stream_handler = logging.StreamHandler(out)
+            stream_handler.setLevel(logging.DEBUG)
+            run(
+                run_command,
+                be_quiet=True,
+                injected_stream_handler=stream_handler,
+            )
+            self.assertIn("Found 1 loan.", strip_color_codes(out.getvalue()))
+            self.assertTrue(
+                glob.glob(f"{os.path.join(download_dir, test_folder)}/*part-*.mp3")
+            )
