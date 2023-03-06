@@ -130,6 +130,7 @@ jobs:
           fetch-depth: 1
           path: "pages"
       - name: Publish coverage to gh-pages
+        if: github.ref == 'refs/heads/master'
         run: |
           cd "$GITHUB_WORKSPACE/pages/"
           rm -rf coverage/
