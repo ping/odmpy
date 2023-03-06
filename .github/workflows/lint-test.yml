@@ -140,6 +140,7 @@ jobs:
         with:
           ref: "gh-pages"
           fetch-depth: 1
+          path: "pages"
       - name: Download a single artifact
         uses: actions/download-artifact@v3
         with:
@@ -147,10 +148,14 @@ jobs:
           path: coverage/
       - name: Publish coverage to pages
         run: |
+          mv coverage pages/
+          cd pages
           git config user.name github-actions
           git config user.email github-actions@github.com
+          ls -ltr
+          git remote -v
+          git log -1
           git status
-          ls -ltr coverage/
           git add -A coverage/
           git status
           if [[ `git status --porcelain --untracked-files=no` ]]; then git commit -m "Updated coverage results from $GITHUB_SHA"; git push; fi
