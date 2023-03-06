@@ -1,6 +1,8 @@
-## About
+# odmpy
 
-A simple console manager for OverDrive/Libby loans. Originally a python port of [overdrive](https://github.com/chbrown/overdrive), it now supports additional features for audiobooks such as adding of metadata such as chapters, merging of files, and downloading of various loans types such as eBooks and magazines via [Libby](https://help.libbyapp.com/en-us/6103.htm).
+A simple console manager for OverDrive/Libby loans. Originally a python port of [overdrive](https://github.com/chbrown/overdrive), it now supports downloading of various loan types such as **audiobooks**, **eBooks**, and **magazines** via [Libby](https://help.libbyapp.com/en-us/6103.htm).
+
+odmpy also has useful features for audiobooks such as adding of chapters metadata and merging of multipart files into a single `.mp3` or `.m4b` (requires [ffmpeg](https://ffmpeg.org/)).
 
 Requires Python >= 3.7.
 
@@ -8,14 +10,14 @@ Requires Python >= 3.7.
 
 ## Features
 
-1. Downloads the cover and audio files for an audiobook loan, using a downloaded `.odm` loan or direct via [Libby](https://help.libbyapp.com/en-us/6103.htm), with additional options to:
-   - merge files into a single `mp3` or `m4b` file
+1. Downloads the audio files for an audiobook loan, with additional options to:
+   - merge files into a single `.mp3` or `.m4b` file
    - add chapters information into the audio file(s)
-2. Download eBook (EPUB) loans as `.acsm` files or as `.epub` files (with `--direct`)
-3. Download magazine loans
-4. Return a loan
-5. Renew a loan (Libby only)
-6. Display information about an `.odm` loan file
+2. Download eBook (EPUB/PDF) loans as `.acsm` files or as `.epub` files (with `--direct`)
+3. Download magazine loans as `.epub` files
+4. Return or renew loans
+
+<a href="https://www.buymeacoffee.com/ping"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=ping&button_colour=FFDD00&font_colour=000000&font_family=Bree&outline_colour=000000&coffee_colour=ffffff" /></a>
 
 ## Install
 
@@ -100,12 +102,12 @@ options:
   -h, --help            show this help message and exit
   --settings SETTINGS_FOLDER
                         Settings folder to store odmpy required settings, e.g. Libby authentication.
-  --ebooks              Include ebook (EPUB) loans (experimental). An EPUB (DRM) loan will be downloaded as an .acsm file
+  --ebooks              Include ebook (EPUB/PDF) loans (experimental). An EPUB/PDF (DRM) loan will be downloaded as an .acsm file
                         which can be opened in Adobe Digital Editions for offline reading.
                         Refer to https://help.overdrive.com/en-us/0577.html and 
                         https://help.overdrive.com/en-us/0005.html for more information.
-                        An open EPUB (no DRM) loan will be downloaded as an .epub file which can be opened
-                        in any EPUB-compatible reader.
+                        An open EPUB/PDF (no DRM) loan will be downloaded as an .epub/.pdf file which can be opened
+                        in any EPUB/PDF-compatible reader.
   --magazines           Include magazines loans (experimental).
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
                         Download folder path.
@@ -179,11 +181,11 @@ There are non-interactive options available:
 
 _Experimental Feature_
 
-Using the `--ebooks` option will allow you to download/return/renew EPUB eBook loans. Information about the different eBook formats available can be found [here](https://help.overdrive.com/en-us/0012.html).
+Using the `--ebooks` option will allow you to download/return/renew EPUB/PDF eBook loans. Information about the different eBook formats available can be found [here](https://help.overdrive.com/en-us/0012.html).
 
-For EPUB DRM loans, `odmpy` will download an [`.acsm` file](https://help.overdrive.com/en-us/0577.html) for use with [Adobe Digital Editions (ADE)](https://help.overdrive.com/en-us/0005.html) by default.
+For EPUB/PDF DRM loans, `odmpy` will download an [`.acsm` file](https://help.overdrive.com/en-us/0577.html) for use with [Adobe Digital Editions (ADE)](https://help.libbyapp.com/en-us/6059.htm) by default.
 
-For loans available as an "Open EPUB", the actual DRM-free `.epub` book file will be downloaded. There is no option to download the `.acsm` file for this format.
+For loans available as an "Open EPUB" or "Open PDF", the actual DRM-free `.epub`/`.pdf` book file will be downloaded. There is no option to download the `.acsm` file for open formats.
 
 ##### The `--direct` option
 
@@ -191,11 +193,15 @@ Using the `--direct` option with EPUB DRM loans will download the web Libby vers
 
 This option is not recommended because the `.epub` downloaded may not work well with your reader. Use this as an alternative if you cannot use the `.acsm` file for whatever reason.
 
+The `--direct` option does not affect PDF eBook loans. These will continue to be downloaded as `.acsm` or `.pdf`.
+
 #### Magazines
 
 _Experimental Feature_
 
 Using the `--magazines` option will allow you to download/return/renew magazine loans.
+
+Only magazines that have [readable individual articles](https://help.libbyapp.com/en-us/6215.htm) can be downloaded. 
 
 When downloading, `odmpy` will download the web Libby version of the magazine as an `.epub`. This is _different_ from the Libby app downloaded copy (for offline reading) and is usually smaller in file size.
 
@@ -218,7 +224,7 @@ options:
   -h, --help            show this help message and exit
   --settings SETTINGS_FOLDER
                         Settings folder to store odmpy required settings, e.g. Libby authentication.
-  --ebooks              Include ebook (EPUB) loans.
+  --ebooks              Include ebook (EPUB/PDF) loans.
   --magazines           Include magazines loans.
 ```
 
@@ -233,10 +239,16 @@ options:
   -h, --help            show this help message and exit
   --settings SETTINGS_FOLDER
                         Settings folder to store odmpy required settings, e.g. Libby authentication.
-  --ebooks              Include ebook (EPUB) loans.
+  --ebooks              Include ebook (EPUB/PDF) loans.
   --magazines           Include magazines loans.
 ```
-### Download with an `.odm` loan file
+
+
+### Legacy `.odm` Commands
+
+These commands are still supported but are expected to be less popular as OverDrive app users are encouraged to [switch over to Libby](https://www.overdrive.com/apps/libby/switchtolibby).
+
+<details><summary>Download with an .odm loan file</summary>
 
 [`.odm`](https://help.overdrive.com/en-us/0577.html) files are currently downloadable from your library's OverDrive site and are meant for use with OverDrive's [now legacy app](https://company.overdrive.com/2021/08/09/important-update-regarding-libby-and-the-overdrive-app/).
 
@@ -309,8 +321,10 @@ supports direct from Libby downloads through the `libby` command.
 # view available options
 odmpy libby -h
 ```
+</details>
 
-### Return an `.odm`
+<details><summary>Return an .odm</summary>
+
 ```
 usage: odmpy ret [-h] odm_file
 
@@ -322,8 +336,10 @@ positional arguments:
 options:
   -h, --help  show this help message and exit
 ```
+</details>
 
-### Information about an `.odm`
+<details><summary>Information about an .odm</summary>
+
 ```
 usage: odmpy info [-h] [-f {text,json}] odm_file
 
@@ -337,6 +353,7 @@ options:
   -f {text,json}, --format {text,json}
                         Format for output.
 ```
+</details>
 
 ### Examples
 
@@ -390,9 +407,23 @@ where [`example.dl.conf`](example.dl.conf) contains the command arguments values
 - [overdrive](https://github.com/chbrown/overdrive)
 - [pylibby](https://github.com/lullius/pylibby)
 
-<a href="https://www.buymeacoffee.com/ping"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=ping&button_colour=FFDD00&font_colour=000000&font_family=Bree&outline_colour=000000&coffee_colour=ffffff" /></a>
+## Contributing
+
+This repository uses [black](https://github.com/psf/black) to ensure consistent formatting.
+The [CI Actions](https://github.com/ping/odmpy/blob/master/.github/workflows/lint-test.yml)
+currently configured also include lint tests using [flake8](https://github.com/pycqa/flake8),
+[pylint](https://github.com/PyCQA/pylint) and [mypy](https://github.com/python/mypy).
+
+```bash
+# 1. Install requirements for dev
+pip3 install -r requirements-dev.txt --upgrade
+
+# 2. Make changes
+
+# 3. Check for linting errors
+sh dev-lint.sh
+```
 
 ## Disclaimer
 
 This is not affliated, endorsed or certified by OverDrive. To use odmpy, you must already have access to OverDrive services via a valid library account. Use at your own risk.
-
