@@ -27,7 +27,7 @@ def convert(cover_json_filepath, markdown_filepath):
         f.write(job_summary)
     try:
         os.remove(cover_json_filepath)
-    except:  # pylint: disable=bare-except
+    except:  # noqa: E722, pylint: disable=bare-except
         pass
 
 
