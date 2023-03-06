@@ -874,12 +874,17 @@ class OdmpyLibbyTests(unittest.TestCase):
         """
         `odmpy libby --exportloans`
         """
+        settings_folder = self._generate_fake_settings()
         self._setup_audiobook_direct_responses()
+
         loans_file_name = os.path.join(
             self.test_downloads_dir,
             f"test_loans_{int(datetime.utcnow().timestamp()*1000)}.json",
         )
-        run(["libby", "--exportloans", loans_file_name], be_quiet=True)
+        run(
+            ["libby", "--settings", settings_folder, "--exportloans", loans_file_name],
+            be_quiet=True,
+        )
         self.assertTrue(os.path.exists(loans_file_name))
         with open(loans_file_name, "r", encoding="utf-8") as f:
             loans = json.load(f)
