@@ -73,6 +73,7 @@ class OdmpyTests(unittest.TestCase):
             )
             expected_text = expected.read()
             self.assertEqual(strip_color_codes(out.getvalue()), expected_text)
+            logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     def test_info_json(self):
         """
@@ -103,6 +104,7 @@ class OdmpyTests(unittest.TestCase):
                 "total_duration",
             ]:
                 self.assertTrue(info.get(tag), msg="'{}' is not set".format(tag))
+            logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     def _setup_common_responses(self):
         with open(
