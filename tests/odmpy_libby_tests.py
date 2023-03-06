@@ -91,6 +91,13 @@ class OdmpyLibbyTests(unittest.TestCase):
             self.assertNotIn("__odmpy_sync_code", settings)
             self.assertIn("__libby_sync_code", settings)
 
+    def test_settings_clear(self):
+        settings_folder = self._generate_fake_settings()
+        settings_file = os.path.join(settings_folder, "libby.json")
+        self.assertTrue(os.path.exists(settings_file))
+        run(["libby", "--settings", settings_folder, "--reset"], be_quiet=True)
+        self.assertFalse(os.path.exists(settings_file))
+
     @responses.activate
     @patch("builtins.input", lambda *args: "")
     def test_inputs_nodownloads(self):
@@ -859,6 +866,39 @@ class OdmpyLibbyTests(unittest.TestCase):
         self.assertTrue(os.path.exists(mp3_file_path))
         opf_file_path = os.path.join(download_dir, test_folder, "ebook.opf")
         self.assertTrue(os.path.exists(opf_file_path))
+
+    @staticmethod
+    def _libby_setup_prompt(text: str) -> str:
+        if "Enter the 8-digit Libby code and press enter" in text:
+            return "12345678"
+        return ""
+
+    @responses.activate
+    @patch("builtins.input", new=_libby_setup_prompt)
+    def test_libby_setup(self):
+        settings_folder = os.path.join(self.test_downloads_dir, "settings")
+        if not os.path.exists(settings_folder):
+            os.makedirs(settings_folder)
+        responses.post(
+            "https://sentry-read.svc.overdrive.com/chip?client=dewey",
+            content_type="application/json",
+            json={"chip": "xxx", "identity": "xxxx"},
+        )
+        responses.post(
+            "https://sentry-read.svc.overdrive.com/chip/clone/code",
+            content_type="applications/json",
+            json={},
+        )
+        self._setup_audiobook_direct_responses()
+        with StringIO() as out:
+            stream_handler = logging.StreamHandler(out)
+            stream_handler.setLevel(logging.DEBUG)
+            run(
+                ["libby", "--settings", settings_folder],
+                be_quiet=True,
+                injected_stream_handler=stream_handler,
+            )
+            self.assertIn("Login successful.", strip_color_codes(out.getvalue()))
 
     @responses.activate
     @patch("builtins.input", lambda *args: "1")
