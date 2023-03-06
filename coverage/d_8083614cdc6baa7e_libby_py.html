@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/libby.py: 75.1%</title>
+    <title>Coverage for odmpy/libby.py: 76.4%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/libby.py</b>:
-            <span class="pc_cov">75.1%</span>
+            <span class="pc_cov">76.4%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">301 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">226<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">75<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">230<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">71<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_libby_errors_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-06 10:12 +0000
+            created at 2023-03-06 11:12 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -447,12 +447,12 @@
     <p class="run"><span class="n"><a id="t365" href="#t365">365</a></span><span class="t">            <span class="key">if</span> <span class="nam">return_res</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t366" href="#t366">366</a></span><span class="t">                <span class="key">return</span> <span class="nam">res</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t367" href="#t367">367</a></span><span class="t">            <span class="key">return</span> <span class="nam">res</span><span class="op">.</span><span class="nam">json</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t368" href="#t368">368</a></span><span class="t">        <span class="key">except</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">ConnectionError</span> <span class="key">as</span> <span class="nam">conn_err</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t368" href="#t368">368</a></span><span class="t">        <span class="key">except</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">ConnectionError</span> <span class="key">as</span> <span class="nam">conn_err</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t369" href="#t369">369</a></span><span class="t">            <span class="key">raise</span> <span class="nam">ClientConnectionError</span><span class="op">(</span><span class="nam">str</span><span class="op">(</span><span class="nam">conn_err</span><span class="op">)</span><span class="op">)</span> <span class="key">from</span> <span class="nam">conn_err</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t370" href="#t370">370</a></span><span class="t">        <span class="key">except</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">Timeout</span> <span class="key">as</span> <span class="nam">timeout_err</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t370" href="#t370">370</a></span><span class="t">        <span class="key">except</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">Timeout</span> <span class="key">as</span> <span class="nam">timeout_err</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">            <span class="key">raise</span> <span class="nam">ClientTimeoutError</span><span class="op">(</span><span class="nam">str</span><span class="op">(</span><span class="nam">timeout_err</span><span class="op">)</span><span class="op">)</span> <span class="key">from</span> <span class="nam">timeout_err</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t372" href="#t372">372</a></span><span class="t">        <span class="key">except</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">HTTPError</span> <span class="key">as</span> <span class="nam">http_err</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t373" href="#t373">373</a></span><span class="t">            <span class="nam">ErrorHandler</span><span class="op">.</span><span class="nam">process</span><span class="op">(</span><span class="nam">http_err</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t372" href="#t372">372</a></span><span class="t">        <span class="key">except</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">HTTPError</span> <span class="key">as</span> <span class="nam">http_err</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t373" href="#t373">373</a></span><span class="t">            <span class="nam">ErrorHandler</span><span class="op">.</span><span class="nam">process</span><span class="op">(</span><span class="nam">http_err</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t374" href="#t374">374</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t375" href="#t375">375</a></span><span class="t">    <span class="key">def</span> <span class="nam">save_settings</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">updates</span><span class="op">:</span> <span class="nam">Dict</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t376" href="#t376">376</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
@@ -979,7 +979,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_libby_errors_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-06 10:12 +0000
+            created at 2023-03-06 11:12 +0000
         </p>
     </div>
 </footer>
