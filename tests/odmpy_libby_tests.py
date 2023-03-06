@@ -12,7 +12,7 @@ import responses
 from bs4 import BeautifulSoup
 from ebooklib import epub
 
-from odmpy.errors import LibbyNotConfiguredError
+from odmpy.errors import LibbyNotConfiguredError, OdmpyRuntimeError
 from odmpy.libby import LibbyClient, LibbyFormats
 from odmpy.odm import run
 
@@ -36,6 +36,54 @@ class OdmpyLibbyTests(unittest.TestCase):
     def tearDown(self) -> None:
         if os.path.isdir(self.test_downloads_dir):
             shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
+
+    @responses.activate
+    def test_settings(self):
+        settings_folder = os.path.join(self.test_downloads_dir, "settings")
+        if not os.path.exists(settings_folder):
+            os.makedirs(settings_folder)
+        with self.assertRaises(LibbyNotConfiguredError):
+            run(["libby", "--settings", settings_folder, "--check"], be_quiet=True)
+
+        with self.assertRaises(OdmpyRuntimeError):
+            run(
+                [
+                    "libby",
+                    "--settings",
+                    settings_folder,
+                    "--exportloans",
+                    os.path.join(self.test_downloads_dir, "x.json"),
+                ],
+                be_quiet=True,
+            )
+
+        with open(
+            os.path.join(self.test_data_dir, "magazine", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        # generate fake settings
+        libby_settings = os.path.join(settings_folder, "libby.json")
+        with open(libby_settings, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "chip": "12345",
+                    "identity": "abcdefgh",
+                    "syncable": False,
+                    "primary": True,
+                    "__odmpy_sync_code": "12345678",
+                },
+                f,
+            )
+        run_command = ["libby", "--settings", settings_folder, "--check"]
+        run(run_command, be_quiet=True)
+        with open(libby_settings, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+            self.assertNotIn("__odmpy_sync_code", settings)
+            self.assertIn("__libby_sync_code", settings)
 
     def test_libby_export(self):
         """
