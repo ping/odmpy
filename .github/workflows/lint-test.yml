@@ -137,5 +137,6 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add covhtml
-          git commit -m "Updated coverage results from $GITHUB_SHA"
-          git push
+          git status
+          ls -ltr covhtml/
+          if [[ `git status --porcelain --untracked-files=no` ]]; then git commit -m "Updated coverage results from $GITHUB_SHA"; git push; fi
