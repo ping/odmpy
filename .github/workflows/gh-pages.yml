@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  update:
+  update-pages:
     runs-on: ubuntu-latest
     steps:
     - name: Get source
