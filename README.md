@@ -250,8 +250,6 @@ These commands are still supported but are expected to be less popular as OverDr
 
 <details><summary>Download with an .odm loan file</summary>
 
-[`.odm`](https://help.overdrive.com/en-us/0577.html) files are currently downloadable from your library's OverDrive site and are meant for use with OverDrive's [now legacy app](https://company.overdrive.com/2021/08/09/important-update-regarding-libby-and-the-overdrive-app/).
-
 ```
 usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
                 [-k] [-f] [--nobookfolder]
@@ -357,6 +355,8 @@ options:
 ```
 
 </details>
+
+[`.odm`](https://help.overdrive.com/en-us/0577.html) files have to be downloaded from your library's OverDrive site and are meant for use with OverDrive's [now legacy app](https://company.overdrive.com/2021/08/09/important-update-regarding-libby-and-the-overdrive-app/).
 
 
 ### Examples
