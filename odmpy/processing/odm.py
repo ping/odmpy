@@ -73,6 +73,20 @@ RESERVE_ID_RE = re.compile(
 #
 
 
+def _patch_for_parse_error(text: str) -> str:
+    # [TODO]: Find a more generic solution instead of patching entities, maybe lxml?
+    # Ref: https://github.com/ping/odmpy/issues/19
+    return "<!DOCTYPE xml [{patch}]>{text}".format(
+        patch="".join(
+            [
+                f'<!ENTITY {entity} "{replacement}">'
+                for entity, replacement in UNSUPPORTED_PARSER_ENTITIES.items()
+            ]
+        ),
+        text=text,
+    )
+
+
 def process_odm(
     odm_file: str,
     args: argparse.Namespace,
@@ -105,18 +119,7 @@ def process_odm(
         try:
             metadata = ET.fromstring(text)
         except ET.ParseError:
-            # [TODO]: Find a more generic solution instead of patching entities, maybe lxml?
-            # Ref: https://github.com/ping/odmpy/issues/19
-            patched_text = "<!DOCTYPE xml [{patch}]>{text}".format(
-                patch="".join(
-                    [
-                        f'<!ENTITY {entity} "{replacement}">'
-                        for entity, replacement in UNSUPPORTED_PARSER_ENTITIES.items()
-                    ]
-                ),
-                text=text,
-            )
-            metadata = ET.fromstring(patched_text)
+            metadata = ET.fromstring(_patch_for_parse_error(text))
         break
 
     if not metadata:
@@ -493,12 +496,15 @@ def process_odm(
                 if frame.description != "OverDrive MediaMarkers":
                     continue
                 if frame.text:
+                    frame_text = re.sub(r"\s&\s", " &amp; ", frame.text)
                     try:
-                        tree = ET.fromstring(frame.text)
+                        tree = ET.fromstring(frame_text)
                     except UnicodeEncodeError:
                         tree = ET.fromstring(
-                            frame.text.encode("ascii", "ignore").decode("ascii")
+                            frame_text.encode("ascii", "ignore").decode("ascii")
                         )
+                    except ET.ParseError:
+                        tree = ET.fromstring(_patch_for_parse_error(frame_text))
 
                     for marker in tree.iter("Marker"):  # type: ET.Element
                         marker_name = get_element_text(marker.find("Name")).strip()
