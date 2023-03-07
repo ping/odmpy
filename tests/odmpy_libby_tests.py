@@ -56,7 +56,7 @@ class OdmpyLibbyTests(unittest.TestCase):
         `odmpy libby --exportloans`
         """
         try:
-            run(["libby", "--check"], be_quiet=True)
+            run(["--noversioncheck", "libby", "--check"], be_quiet=True)
         except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
 
@@ -64,7 +64,10 @@ class OdmpyLibbyTests(unittest.TestCase):
             self.test_downloads_dir,
             f"test_loans_{int(datetime.utcnow().timestamp()*1000)}.json",
         )
-        run(["libby", "--exportloans", loans_file_name], be_quiet=True)
+        run(
+            ["--noversioncheck", "libby", "--exportloans", loans_file_name],
+            be_quiet=True,
+        )
         self.assertTrue(os.path.exists(loans_file_name))
         with open(loans_file_name, "r", encoding="utf-8") as f:
             loans = json.load(f)
@@ -156,7 +159,7 @@ class OdmpyLibbyTests(unittest.TestCase):
         `odmpy libby --ebooks --select N`
         """
         try:
-            run(["libby", "--check"], be_quiet=True)
+            run(["--noversioncheck", "libby", "--check"], be_quiet=True)
         except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
         ts = int(datetime.utcnow().timestamp() * 1000)
@@ -185,6 +188,7 @@ class OdmpyLibbyTests(unittest.TestCase):
         try:
             run(
                 [
+                    "--noversioncheck",
                     "libby",
                     "--ebooks",
                     "--downloaddir",
@@ -206,7 +210,7 @@ class OdmpyLibbyTests(unittest.TestCase):
         `odmpy libby --ebooks --select N`
         """
         try:
-            run(["libby", "--check"], be_quiet=True)
+            run(["--noversioncheck", "libby", "--check"], be_quiet=True)
         except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
         ts = int(datetime.utcnow().timestamp() * 1000)
