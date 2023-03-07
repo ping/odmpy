@@ -313,3 +313,18 @@ class OdmpyTests(unittest.TestCase):
             finally:
                 # close this to prevent "ResourceWarning: unclosed socket" error
                 od.session.close()
+
+    @responses.activate
+    def test_odm_return(self):
+        """
+        `odmpy ret test.odm`
+        """
+        responses.get("https://ping.github.io/odmpy/test_data")
+        run(
+            [
+                "--noversioncheck",
+                "ret",
+                os.path.join(self.test_data_dir, self.test_file),
+            ],
+            be_quiet=True,
+        )

@@ -33,7 +33,6 @@ from functools import reduce
 from typing import Any, Union, Dict, List
 
 import eyed3  # type: ignore[import]
-import requests
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 from tqdm import tqdm
@@ -767,34 +766,35 @@ def process_odm(
             json.dump(debug_meta, outfile, indent=2)
 
 
-def process_odm_return(odm_file: str, logger: logging.Logger) -> None:
+def process_odm_return(args: argparse.Namespace, logger: logging.Logger) -> None:
     """
     Return the audiobook loan using the specified odm file
 
-    :param odm_file:
     :param logger:
+    :param args:
     :return:
     """
-    xml_doc = ET.parse(odm_file)
+    xml_doc = ET.parse(args.odm_file)
     root = xml_doc.getroot()
 
-    logger.info(f"Returning {odm_file} ...")
+    logger.info(f"Returning {args.odm_file} ...")
     early_return_url = get_element_text(root.find("EarlyReturnURL"))
     if not early_return_url:
         raise OdmpyRuntimeError("Unable to get EarlyReturnURL")
+    sess = init_session(args.retries)
     try:
-        early_return_res = requests.get(
-            early_return_url, headers={"User-Agent": UA_LONG}, timeout=10
+        early_return_res = sess.get(
+            early_return_url, headers={"User-Agent": UA_LONG}, timeout=args.timeout
         )
         early_return_res.raise_for_status()
-        logger.info(f"Loan returned successfully: {odm_file}")
+        logger.info(f"Loan returned successfully: {args.odm_file}")
     except HTTPError as he:
         if he.response.status_code == 403:
             logger.warning("Loan is probably already returned.")
             return
         logger.error(f"HTTPError: {str(he)}")
         logger.debug(he.response.content)
-        raise OdmpyRuntimeError(f"HTTP error returning odm {odm_file}")
+        raise OdmpyRuntimeError(f"HTTP error returning odm {args.odm_file, }")
     except ConnectionError as ce:
         logger.error(f"ConnectionError: {str(ce)}")
-        raise OdmpyRuntimeError(f"Connection error returning odm {odm_file}")
+        raise OdmpyRuntimeError(f"Connection error returning odm {args.odm_file, }")

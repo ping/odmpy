@@ -28,6 +28,8 @@ echo '======================================================================'
 TEST_ODM="test_ref24.odm" coverage run --append -m unittest -v tests.OdmpyTests.test_cover_fail_ref24
 # test for #26 opf generation
 TEST_ODM="test1.odm" coverage run --append -m unittest -v tests.OdmpyTests.test_opf
+# test odm return
+TEST_ODM="test1.odm" coverage run --append -m unittest -v tests.OdmpyTests.test_odm_return
 
 # Tests for `odmpy libby` command
 coverage run --append -m unittest -v tests.OdmpyLibbyTests

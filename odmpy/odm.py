@@ -1081,7 +1081,7 @@ def run(
 
         # Return Book
         if args.command_name == OdmpyCommands.Return:
-            process_odm_return(args.odm_file, logger)
+            process_odm_return(args, logger)
             return
 
         if args.command_name in (OdmpyCommands.Download, OdmpyCommands.Information):
