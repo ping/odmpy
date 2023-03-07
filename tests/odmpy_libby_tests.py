@@ -44,84 +44,12 @@ class OdmpyLibbyTests(unittest.TestCase):
         if os.path.isdir(self.test_downloads_dir):
             shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
 
-    @responses.activate
-    def test_settings(self):
-        settings_folder = os.path.join(self.test_downloads_dir, "settings")
-        if not os.path.exists(settings_folder):
-            os.makedirs(settings_folder)
-        with self.assertRaises(LibbyNotConfiguredError):
-            run(["libby", "--settings", settings_folder, "--check"], be_quiet=True)
-
-        with self.assertRaises(OdmpyRuntimeError):
-            run(
-                [
-                    "libby",
-                    "--settings",
-                    settings_folder,
-                    "--exportloans",
-                    os.path.join(self.test_downloads_dir, "x.json"),
-                ],
-                be_quiet=True,
-            )
-
-        with open(
-            os.path.join(self.test_data_dir, "magazine", "sync.json"),
-            "r",
-            encoding="utf-8",
-        ) as s:
-            responses.get(
-                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
-            )
-        # generate fake settings
-        libby_settings = os.path.join(settings_folder, "libby.json")
-        with open(libby_settings, "w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "chip": "12345",
-                    "identity": "abcdefgh",
-                    "syncable": False,
-                    "primary": True,
-                    "__odmpy_sync_code": "12345678",
-                },
-                f,
-            )
-        run_command = ["libby", "--settings", settings_folder, "--check"]
-        run(run_command, be_quiet=True)
-        with open(libby_settings, "r", encoding="utf-8") as f:
-            settings = json.load(f)
-            self.assertNotIn("__odmpy_sync_code", settings)
-            self.assertIn("__libby_sync_code", settings)
-
     def test_settings_clear(self):
         settings_folder = self._generate_fake_settings()
         settings_file = os.path.join(settings_folder, "libby.json")
         self.assertTrue(os.path.exists(settings_file))
         run(["libby", "--settings", settings_folder, "--reset"], be_quiet=True)
         self.assertFalse(os.path.exists(settings_file))
-
-    @responses.activate
-    @patch("builtins.input", lambda _: "")
-    def test_inputs_nodownloads(self):
-        settings_folder = self._generate_fake_settings()
-
-        with open(
-            os.path.join(self.test_data_dir, "magazine", "sync.json"),
-            "r",
-            encoding="utf-8",
-        ) as s:
-            responses.get(
-                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
-            )
-        with StringIO() as out:
-            stream_handler = logging.StreamHandler(out)
-            stream_handler.setLevel(logging.DEBUG)
-            run(
-                ["libby", "--settings", settings_folder],
-                be_quiet=True,
-                injected_stream_handler=stream_handler,
-            )
-            self.assertIn("No downloadable loans found.", out.getvalue())
-            logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     def test_libby_export(self):
         """
@@ -904,7 +832,7 @@ class OdmpyLibbyTests(unittest.TestCase):
             txt
         ),
     )
-    def test_libby_setup(self):
+    def test_mock_libby_setup(self):
         settings_folder = os.path.join(self.test_downloads_dir, "settings")
         if not os.path.exists(settings_folder):
             os.makedirs(settings_folder)
@@ -937,7 +865,7 @@ class OdmpyLibbyTests(unittest.TestCase):
             txt
         ),
     )
-    def test_libby_setup_fail(self):
+    def test_mock_libby_setup_fail(self):
         settings_folder = os.path.join(self.test_downloads_dir, "settings")
         if not os.path.exists(settings_folder):
             os.makedirs(settings_folder)
@@ -971,7 +899,7 @@ class OdmpyLibbyTests(unittest.TestCase):
             txt
         ),
     )
-    def test_libby_setup_sync_fail(self):
+    def test_mock_libby_setup_sync_fail(self):
         settings_folder = os.path.join(self.test_downloads_dir, "settings")
         if not os.path.exists(settings_folder):
             os.makedirs(settings_folder)
@@ -1003,8 +931,32 @@ class OdmpyLibbyTests(unittest.TestCase):
             logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     @responses.activate
+    @patch("builtins.input", lambda _: "")
+    def test_mock_inputs_nodownloads(self):
+        settings_folder = self._generate_fake_settings()
+
+        with open(
+            os.path.join(self.test_data_dir, "magazine", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        with StringIO() as out:
+            stream_handler = logging.StreamHandler(out)
+            stream_handler.setLevel(logging.DEBUG)
+            run(
+                ["libby", "--settings", settings_folder],
+                be_quiet=True,
+                injected_stream_handler=stream_handler,
+            )
+            self.assertIn("No downloadable loans found.", out.getvalue())
+            logging.getLogger(run.__module__).removeHandler(stream_handler)
+
+    @responses.activate
     @patch("builtins.input", lambda _: "1")
-    def test_inputs_found(self):
+    def test_mock_inputs_loans_found(self):
         settings_folder = self._generate_fake_settings()
         self._setup_audiobook_direct_responses()
         test_folder = "test"
@@ -1037,3 +989,51 @@ class OdmpyLibbyTests(unittest.TestCase):
                 glob.glob(f"{os.path.join(download_dir, test_folder)}/*part-*.mp3")
             )
             logging.getLogger(run.__module__).removeHandler(stream_handler)
+
+    @responses.activate
+    def test_mock_settings(self):
+        settings_folder = os.path.join(self.test_downloads_dir, "settings")
+        if not os.path.exists(settings_folder):
+            os.makedirs(settings_folder)
+        with self.assertRaises(LibbyNotConfiguredError):
+            run(["libby", "--settings", settings_folder, "--check"], be_quiet=True)
+
+        with self.assertRaises(OdmpyRuntimeError):
+            run(
+                [
+                    "libby",
+                    "--settings",
+                    settings_folder,
+                    "--exportloans",
+                    os.path.join(self.test_downloads_dir, "x.json"),
+                ],
+                be_quiet=True,
+            )
+
+        with open(
+            os.path.join(self.test_data_dir, "magazine", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        # generate fake settings
+        libby_settings = os.path.join(settings_folder, "libby.json")
+        with open(libby_settings, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "chip": "12345",
+                    "identity": "abcdefgh",
+                    "syncable": False,
+                    "primary": True,
+                    "__odmpy_sync_code": "12345678",
+                },
+                f,
+            )
+        run_command = ["libby", "--settings", settings_folder, "--check"]
+        run(run_command, be_quiet=True)
+        with open(libby_settings, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+            self.assertNotIn("__odmpy_sync_code", settings)
+            self.assertIn("__libby_sync_code", settings)
