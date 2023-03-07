@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/libby.py: 84.7%</title>
+    <title>Coverage for odmpy/libby.py: 87.4%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/libby.py</b>:
-            <span class="pc_cov">84.7%</span>
+            <span class="pc_cov">87.4%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">301 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">255<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">46<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">263<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">38<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_libby_errors_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-06 16:59 +0000
+            created at 2023-03-07 00:38 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -613,9 +613,9 @@
     <p class="pln"><span class="n"><a id="t531" href="#t531">531</a></span><span class="t">            <span class="nam">iter</span><span class="op">(</span><span class="op">[</span><span class="nam">f</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span> <span class="key">for</span> <span class="nam">f</span> <span class="key">in</span> <span class="nam">loan</span><span class="op">[</span><span class="str">"formats"</span><span class="op">]</span> <span class="key">if</span> <span class="nam">f</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"isLockedIn"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">,</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t532" href="#t532">532</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t533" href="#t533">533</a></span><span class="t">        <span class="key">if</span> <span class="nam">locked_in_format</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t534" href="#t534">534</a></span><span class="t">            <span class="key">if</span> <span class="nam">locked_in_format</span> <span class="key">in</span> <span class="nam">DOWNLOADABLE_FORMATS</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t535" href="#t535">535</a></span><span class="t">                <span class="key">return</span> <span class="nam">locked_in_format</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t536" href="#t536">536</a></span><span class="t">            <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t534" href="#t534">534</a></span><span class="t">            <span class="key">if</span> <span class="nam">locked_in_format</span> <span class="key">in</span> <span class="nam">DOWNLOADABLE_FORMATS</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t535" href="#t535">535</a></span><span class="t">                <span class="key">return</span> <span class="nam">locked_in_format</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t536" href="#t536">536</a></span><span class="t">            <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t537" href="#t537">537</a></span><span class="t">                <span class="str">f'Loan is locked to a non-downloadable format "{locked_in_format}"'</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t538" href="#t538">538</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t539" href="#t539">539</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -630,7 +630,7 @@
     <p class="run"><span class="n"><a id="t548" href="#t548">548</a></span><span class="t">            <span class="key">elif</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">is_open_ebook_loan</span><span class="op">(</span><span class="nam">loan</span><span class="op">)</span> <span class="key">and</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">has_format</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t549" href="#t549">549</a></span><span class="t">                <span class="nam">loan</span><span class="op">,</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookEPubOpen</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t550" href="#t550">550</a></span><span class="t">            <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t551" href="#t551">551</a></span><span class="t">                <span class="key">return</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookEPubOpen</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t551" href="#t551">551</a></span><span class="t">                <span class="key">return</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookEPubOpen</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t552" href="#t552">552</a></span><span class="t">            <span class="key">elif</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">is_downloadable_magazine_loan</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t553" href="#t553">553</a></span><span class="t">                <span class="nam">loan</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t554" href="#t554">554</a></span><span class="t">            <span class="op">)</span> <span class="key">and</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">has_format</span><span class="op">(</span><span class="nam">loan</span><span class="op">,</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">MagazineOverDrive</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -639,14 +639,14 @@
     <p class="pln"><span class="n"><a id="t557" href="#t557">557</a></span><span class="t">                <span class="nam">loan</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t558" href="#t558">558</a></span><span class="t">            <span class="op">)</span> <span class="key">and</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">has_format</span><span class="op">(</span><span class="nam">loan</span><span class="op">,</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookEPubAdobe</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t559" href="#t559">559</a></span><span class="t">                <span class="key">return</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookEPubAdobe</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t560" href="#t560">560</a></span><span class="t">            <span class="key">elif</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">is_downloadable_ebook_loan</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t560" href="#t560">560</a></span><span class="t">            <span class="key">elif</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">is_downloadable_ebook_loan</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t561" href="#t561">561</a></span><span class="t">                <span class="nam">loan</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t562" href="#t562">562</a></span><span class="t">            <span class="op">)</span> <span class="key">and</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">has_format</span><span class="op">(</span><span class="nam">loan</span><span class="op">,</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookPDFOpen</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t563" href="#t563">563</a></span><span class="t">                <span class="key">return</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookPDFOpen</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t564" href="#t564">564</a></span><span class="t">            <span class="key">elif</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">is_downloadable_ebook_loan</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t563" href="#t563">563</a></span><span class="t">                <span class="key">return</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookPDFOpen</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t564" href="#t564">564</a></span><span class="t">            <span class="key">elif</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">is_downloadable_ebook_loan</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t565" href="#t565">565</a></span><span class="t">                <span class="nam">loan</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t566" href="#t566">566</a></span><span class="t">            <span class="op">)</span> <span class="key">and</span> <span class="nam">LibbyClient</span><span class="op">.</span><span class="nam">has_format</span><span class="op">(</span><span class="nam">loan</span><span class="op">,</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookPDFAdobe</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t567" href="#t567">567</a></span><span class="t">                <span class="key">return</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookPDFAdobe</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t567" href="#t567">567</a></span><span class="t">                <span class="key">return</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookPDFAdobe</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t568" href="#t568">568</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t569" href="#t569">569</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="str">"Unable to find a downloadable format"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t570" href="#t570">570</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -979,7 +979,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_libby_errors_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-06 16:59 +0000
+            created at 2023-03-07 00:38 +0000
         </p>
     </div>
 </footer>
