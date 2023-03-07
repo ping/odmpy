@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/odm.py: 77.8%</title>
+    <title>Coverage for odmpy/odm.py: 82.8%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/odm.py</b>:
-            <span class="pc_cov">77.8%</span>
+            <span class="pc_cov">82.8%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">338 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">263<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">75<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">280<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">58<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-07 00:38 +0000
+            created at 2023-03-07 03:22 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -837,10 +837,10 @@
     <p class="run"><span class="n"><a id="t755" href="#t755">755</a></span><span class="t">                <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t756" href="#t756">756</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t757" href="#t757">757</a></span><span class="t">            <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">command_name</span> <span class="op">==</span> <span class="nam">OdmpyCommands</span><span class="op">.</span><span class="nam">LibbyRenew</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t758" href="#t758">758</a></span><span class="t">                <span class="nam">audiobook_loans</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t758" href="#t758">758</a></span><span class="t">                <span class="nam">audiobook_loans</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t759" href="#t759">759</a></span><span class="t">                    <span class="nam">loan</span> <span class="key">for</span> <span class="nam">loan</span> <span class="key">in</span> <span class="nam">audiobook_loans</span> <span class="key">if</span> <span class="nam">libby_client</span><span class="op">.</span><span class="nam">is_renewable</span><span class="op">(</span><span class="nam">loan</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t760" href="#t760">760</a></span><span class="t">                <span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t761" href="#t761">761</a></span><span class="t">                <span class="key">if</span> <span class="key">not</span> <span class="nam">audiobook_loans</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t761" href="#t761">761</a></span><span class="t">                <span class="key">if</span> <span class="key">not</span> <span class="nam">audiobook_loans</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t762" href="#t762">762</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"No renewable loans found."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t763" href="#t763">763</a></span><span class="t">                    <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t764" href="#t764">764</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -1003,9 +1003,9 @@
     <p class="pln"><span class="n"><a id="t921" href="#t921">921</a></span><span class="t">            <span class="com"># Loans display and user choice prompt</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t922" href="#t922">922</a></span><span class="t">            <span class="nam">libby_mode</span> <span class="op">=</span> <span class="str">"download"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t923" href="#t923">923</a></span><span class="t">            <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">command_name</span> <span class="op">==</span> <span class="nam">OdmpyCommands</span><span class="op">.</span><span class="nam">LibbyReturn</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t924" href="#t924">924</a></span><span class="t">                <span class="nam">libby_mode</span> <span class="op">=</span> <span class="str">"return"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t924" href="#t924">924</a></span><span class="t">                <span class="nam">libby_mode</span> <span class="op">=</span> <span class="str">"return"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t925" href="#t925">925</a></span><span class="t">            <span class="key">elif</span> <span class="nam">args</span><span class="op">.</span><span class="nam">command_name</span> <span class="op">==</span> <span class="nam">OdmpyCommands</span><span class="op">.</span><span class="nam">LibbyRenew</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t926" href="#t926">926</a></span><span class="t">                <span class="nam">libby_mode</span> <span class="op">=</span> <span class="str">"renew"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t926" href="#t926">926</a></span><span class="t">                <span class="nam">libby_mode</span> <span class="op">=</span> <span class="str">"renew"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t927" href="#t927">927</a></span><span class="t">            <span class="key">while</span> <span class="key">True</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t928" href="#t928">928</a></span><span class="t">                <span class="nam">user_loan_choice_input</span> <span class="op">=</span> <span class="nam">input</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t929" href="#t929">929</a></span><span class="t">                    <span class="str">f'\n{colored(libby_mode.title(), "magenta", attrs=["bold"])}. '</span>&nbsp;</span><span class="r"></span></p>
@@ -1037,30 +1037,30 @@
     <p class="pln"><span class="n"><a id="t955" href="#t955">955</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t956" href="#t956">956</a></span><span class="t">            <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">command_name</span> <span class="op">==</span> <span class="nam">OdmpyCommands</span><span class="op">.</span><span class="nam">LibbyReturn</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t957" href="#t957">957</a></span><span class="t">                <span class="com"># do returns</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t958" href="#t958">958</a></span><span class="t">                <span class="key">for</span> <span class="nam">c</span> <span class="key">in</span> <span class="nam">loan_choices</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t959" href="#t959">959</a></span><span class="t">                    <span class="nam">selected_loan</span> <span class="op">=</span> <span class="nam">audiobook_loans</span><span class="op">[</span><span class="nam">int</span><span class="op">(</span><span class="nam">c</span><span class="op">)</span> <span class="op">-</span> <span class="num">1</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t960" href="#t960">960</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t958" href="#t958">958</a></span><span class="t">                <span class="key">for</span> <span class="nam">c</span> <span class="key">in</span> <span class="nam">loan_choices</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t959" href="#t959">959</a></span><span class="t">                    <span class="nam">selected_loan</span> <span class="op">=</span> <span class="nam">audiobook_loans</span><span class="op">[</span><span class="nam">int</span><span class="op">(</span><span class="nam">c</span><span class="op">)</span> <span class="op">-</span> <span class="num">1</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t960" href="#t960">960</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t961" href="#t961">961</a></span><span class="t">                        <span class="str">'Returning loan "%s"...'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t962" href="#t962">962</a></span><span class="t">                        <span class="nam">colored</span><span class="op">(</span><span class="nam">selected_loan</span><span class="op">[</span><span class="str">"title"</span><span class="op">]</span><span class="op">,</span> <span class="str">"blue"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t963" href="#t963">963</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t964" href="#t964">964</a></span><span class="t">                    <span class="nam">libby_client</span><span class="op">.</span><span class="nam">return_loan</span><span class="op">(</span><span class="nam">selected_loan</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t965" href="#t965">965</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t964" href="#t964">964</a></span><span class="t">                    <span class="nam">libby_client</span><span class="op">.</span><span class="nam">return_loan</span><span class="op">(</span><span class="nam">selected_loan</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t965" href="#t965">965</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t966" href="#t966">966</a></span><span class="t">                        <span class="str">'Returned "%s".'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t967" href="#t967">967</a></span><span class="t">                        <span class="nam">colored</span><span class="op">(</span><span class="nam">selected_loan</span><span class="op">[</span><span class="str">"title"</span><span class="op">]</span><span class="op">,</span> <span class="str">"blue"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t968" href="#t968">968</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t969" href="#t969">969</a></span><span class="t">                <span class="key">return</span>  <span class="com"># end libby return command</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t969" href="#t969">969</a></span><span class="t">                <span class="key">return</span>  <span class="com"># end libby return command</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t970" href="#t970">970</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t971" href="#t971">971</a></span><span class="t">            <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">command_name</span> <span class="op">==</span> <span class="nam">OdmpyCommands</span><span class="op">.</span><span class="nam">LibbyRenew</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t972" href="#t972">972</a></span><span class="t">                <span class="com"># do renewals</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t973" href="#t973">973</a></span><span class="t">                <span class="key">for</span> <span class="nam">c</span> <span class="key">in</span> <span class="nam">loan_choices</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t974" href="#t974">974</a></span><span class="t">                    <span class="nam">selected_loan</span> <span class="op">=</span> <span class="nam">audiobook_loans</span><span class="op">[</span><span class="nam">int</span><span class="op">(</span><span class="nam">c</span><span class="op">)</span> <span class="op">-</span> <span class="num">1</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t975" href="#t975">975</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t973" href="#t973">973</a></span><span class="t">                <span class="key">for</span> <span class="nam">c</span> <span class="key">in</span> <span class="nam">loan_choices</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t974" href="#t974">974</a></span><span class="t">                    <span class="nam">selected_loan</span> <span class="op">=</span> <span class="nam">audiobook_loans</span><span class="op">[</span><span class="nam">int</span><span class="op">(</span><span class="nam">c</span><span class="op">)</span> <span class="op">-</span> <span class="num">1</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t975" href="#t975">975</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t976" href="#t976">976</a></span><span class="t">                        <span class="str">'Renewing loan "%s"...'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t977" href="#t977">977</a></span><span class="t">                        <span class="nam">colored</span><span class="op">(</span><span class="nam">selected_loan</span><span class="op">[</span><span class="str">"title"</span><span class="op">]</span><span class="op">,</span> <span class="str">"blue"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t978" href="#t978">978</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t979" href="#t979">979</a></span><span class="t">                    <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t980" href="#t980">980</a></span><span class="t">                        <span class="nam">_</span> <span class="op">=</span> <span class="nam">libby_client</span><span class="op">.</span><span class="nam">renew_loan</span><span class="op">(</span><span class="nam">selected_loan</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t981" href="#t981">981</a></span><span class="t">                        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t979" href="#t979">979</a></span><span class="t">                    <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t980" href="#t980">980</a></span><span class="t">                        <span class="nam">_</span> <span class="op">=</span> <span class="nam">libby_client</span><span class="op">.</span><span class="nam">renew_loan</span><span class="op">(</span><span class="nam">selected_loan</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t981" href="#t981">981</a></span><span class="t">                        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t982" href="#t982">982</a></span><span class="t">                            <span class="str">'Renewed "%s".'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t983" href="#t983">983</a></span><span class="t">                            <span class="nam">colored</span><span class="op">(</span><span class="nam">selected_loan</span><span class="op">[</span><span class="str">"title"</span><span class="op">]</span><span class="op">,</span> <span class="str">"blue"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t984" href="#t984">984</a></span><span class="t">                        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -1094,7 +1094,7 @@
     <p class="pln"><span class="n"><a id="t1012" href="#t1012">1012</a></span><span class="t">                                    <span class="nam">ps</span><span class="op">(</span><span class="nam">hold</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"estimatedWaitDays"</span><span class="op">,</span> <span class="num">0</span><span class="op">)</span><span class="op">,</span> <span class="str">"day"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1013" href="#t1013">1013</a></span><span class="t">                                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1014" href="#t1014">1014</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t1015" href="#t1015">1015</a></span><span class="t">                <span class="key">return</span>  <span class="com"># end libby renew command</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1015" href="#t1015">1015</a></span><span class="t">                <span class="key">return</span>  <span class="com"># end libby renew command</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1016" href="#t1016">1016</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t1017" href="#t1017">1017</a></span><span class="t">            <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">command_name</span> <span class="op">==</span> <span class="nam">OdmpyCommands</span><span class="op">.</span><span class="nam">Libby</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1018" href="#t1018">1018</a></span><span class="t">                <span class="com"># do downloads</span>&nbsp;</span><span class="r"></span></p>
@@ -1198,7 +1198,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-07 00:38 +0000
+            created at 2023-03-07 03:22 +0000
         </p>
     </div>
 </footer>
