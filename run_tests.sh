@@ -30,6 +30,8 @@ TEST_ODM="test_ref24.odm" coverage run --append -m unittest -v tests.OdmpyTests.
 TEST_ODM="test1.odm" coverage run --append -m unittest -v tests.OdmpyTests.test_opf
 # test odm return
 TEST_ODM="test1.odm" coverage run --append -m unittest -v tests.OdmpyTests.test_odm_return
+TEST_ODM="test1.odm" coverage run --append -m unittest -v tests.OdmpyTests.test_odm_return_fail
+TEST_ODM="test1.odm" coverage run --append -m unittest -v tests.OdmpyTests.test_odm_return_error
 
 # Tests for `odmpy libby` command
 coverage run --append -m unittest -v tests.OdmpyLibbyTests

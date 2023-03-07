@@ -10,11 +10,13 @@ import re
 import shutil
 import unittest
 import warnings
+from http import HTTPStatus
 from io import StringIO
 
 from lxml import etree  # type: ignore[import]
 import responses
 
+from odmpy.errors import OdmpyRuntimeError
 from odmpy.odm import run
 from odmpy.overdrive import OverDriveClient
 from odmpy.utils import strip_color_codes
@@ -328,3 +330,46 @@ class OdmpyTests(unittest.TestCase):
             ],
             be_quiet=True,
         )
+
+    @responses.activate
+    def test_odm_return_fail(self):
+        """
+        `odmpy ret test.odm`
+        """
+        responses.get(
+            "https://ping.github.io/odmpy/test_data", status=HTTPStatus.FORBIDDEN
+        )
+        with StringIO() as out:
+            stream_handler = logging.StreamHandler(out)
+            stream_handler.setLevel(logging.DEBUG)
+
+            run(
+                [
+                    "--noversioncheck",
+                    "ret",
+                    os.path.join(self.test_data_dir, self.test_file),
+                ],
+                be_quiet=True,
+                injected_stream_handler=stream_handler,
+            )
+            self.assertIn("Loan is probably already returned.", out.getvalue())
+            logging.getLogger(run.__module__).removeHandler(stream_handler)
+
+    @responses.activate
+    def test_odm_return_error(self):
+        """
+        `odmpy ret test.odm`
+        """
+        responses.get(
+            "https://ping.github.io/odmpy/test_data", status=HTTPStatus.BAD_REQUEST
+        )
+        with self.assertRaises(OdmpyRuntimeError) as context:
+            run(
+                [
+                    "--noversioncheck",
+                    "ret",
+                    os.path.join(self.test_data_dir, self.test_file),
+                ],
+                be_quiet=True,
+            )
+        self.assertIn("HTTP error returning odm", str(context.exception))
