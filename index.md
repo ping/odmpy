@@ -321,6 +321,7 @@ supports direct from Libby downloads through the `libby` command.
 # view available options
 odmpy libby -h
 ```
+
 </details>
 
 <details><summary>Return an .odm</summary>
@@ -336,6 +337,7 @@ positional arguments:
 options:
   -h, --help  show this help message and exit
 ```
+
 </details>
 
 <details><summary>Information about an .odm</summary>
@@ -353,7 +355,9 @@ options:
   -f {text,json}, --format {text,json}
                         Format for output.
 ```
+
 </details>
+
 
 ### Examples
 
