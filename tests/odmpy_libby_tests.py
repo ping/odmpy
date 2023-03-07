@@ -1037,3 +1037,54 @@ class OdmpyLibbyTests(unittest.TestCase):
             settings = json.load(f)
             self.assertNotIn("__odmpy_sync_code", settings)
             self.assertIn("__libby_sync_code", settings)
+
+    @responses.activate
+    @patch("builtins.input", lambda _: "1")
+    def test_mock_libby_return(self):
+        settings_folder = self._generate_fake_settings()
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as f:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync",
+                content_type="application/json",
+                json=json.load(f),
+            )
+            responses.delete(
+                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999",
+                content_type="application/json",
+                json={},
+            )
+
+        run_command = ["libbyreturn", "--settings", settings_folder]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+
+    @responses.activate
+    @patch("builtins.input", lambda _: "1")
+    def test_mock_libby_renew(self):
+        settings_folder = self._generate_fake_settings()
+        with open(
+            os.path.join(self.test_data_dir, "audiobook", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as f:
+            sync_state = json.load(f)
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync",
+                content_type="application/json",
+                json=sync_state,
+            )
+            responses.put(
+                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999",
+                content_type="application/json",
+                json=sync_state["loans"][0],
+            )
+
+        run_command = ["libbyrenew", "--settings", settings_folder]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
