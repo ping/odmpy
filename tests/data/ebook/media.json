@@ -6,8 +6,15 @@
       "id": "1000"
     }
   ],
-  "bisacCodes": [],
-  "bisac": [],
+  "bisacCodes": [
+    "FIC000000"
+  ],
+  "bisac": [
+    {
+      "description": "Test",
+      "code": "FIC000000"
+    }
+  ],
   "levels": [],
   "creators": [
     {
@@ -82,10 +89,17 @@
     "name": "Tests",
     "id": "12345"
   },
+  "detailedSeries": {
+    "rank": 3,
+    "seriesId": 123456,
+    "readingOrder": "3",
+    "seriesName": "The Test Series"
+  },
   "id": "9999999",
   "firstCreatorName": "Test Author",
   "firstCreatorSortName": "Author, Test",
   "title": "Test EBook",
+  "subtitle": "Test Subtitle",
   "sortTitle": "Test EBook",
   "edition": "Jan 20 2023",
   "publishDateText": "Jan 19 2023  7:00PM",
