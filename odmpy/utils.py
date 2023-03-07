@@ -37,6 +37,12 @@ STRIP_COLOR_CODE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 
 def strip_color_codes(text: str) -> str:
+    """
+    Strips the ansi color formatting characters from the supplied text.
+
+    :param text:
+    :return:
+    """
     return STRIP_COLOR_CODE_RE.sub("", text)
 
 
