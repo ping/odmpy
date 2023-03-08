@@ -99,6 +99,108 @@
       "reserveId": "12345a67-b8c9-12de-a1b2-cd345678efa9",
       "websiteId": "99",
       "cardId": "123456789"
+    },
+    {
+      "firstCreatorId": 999999,
+      "renewableOn": "2023-03-02T00:00:00Z",
+      "checkoutDate": "2023-03-02T00:00:00Z",
+      "expireDate": "2023-03-31T00:00:00Z",
+      "expires": "2023-03-31T00:00:00Z",
+      "isLuckyDayCheckout": false,
+      "isAdvantageFiltered": false,
+      "isHoldable": true,
+      "isOwned": true,
+      "isAssigned": false,
+      "isBundledChild": false,
+      "isFormatLockedIn": false,
+      "isReturnable": true,
+      "luckyDayOwnedCopies": 0,
+      "luckyDayAvailableCopies": 0,
+      "ownedCopies": 0,
+      "availableCopies": 0,
+      "checkoutId": 9999999999,
+      "otherFormats": [],
+      "subjects": [
+        {
+          "name": "Science",
+          "id": "9999"
+        }
+      ],
+      "type": {
+        "name": "eBook",
+        "id": "ebook"
+      },
+      "covers": {
+        "cover150Wide": {
+          "width": 150,
+          "height": 200,
+          "href": "http://localhost/mock/cover.jpg"
+        },
+        "cover300Wide": {
+          "width": 300,
+          "height": 400,
+          "href": "http://localhost/mock/cover.jpg"
+        },
+        "cover510Wide": {
+          "width": 510,
+          "height": 680,
+          "href": "http://localhost/mock/cover.jpg"
+        }
+      },
+      "formats": [
+        {
+          "identifiers": [
+            {
+              "value": "9789999999999",
+              "type": "ISBN"
+            }
+          ],
+          "isLockedIn": false,
+          "id": "ebook-overdrive",
+          "name": "OverDrive Read",
+          "fulfillmentType": "bifocal"
+        },
+        {
+          "identifiers": [
+            {
+              "value": "9789999999999",
+              "type": "ISBN"
+            }
+          ],
+          "isLockedIn": false,
+          "id": "ebook-epub-adobe",
+          "name": "EPUB eBook",
+          "isbn": "9789999999999"
+        },
+        {
+          "identifiers": [
+            {
+              "value": "9789999999999",
+              "type": "ISBN"
+            }
+          ],
+          "id": "ebook-epub-open",
+          "name": "Open EPUB eBook",
+          "isbn": "9789999999999"
+        }
+      ],
+      "publisherAccount": {
+        "name": "Tests",
+        "id": "12345"
+      },
+      "id": "9999990",
+      "firstCreatorName": "Test Author",
+      "firstCreatorSortName": "Author, Test",
+      "title": "Test Open EBook",
+      "sortTitle": "Test Open EBook",
+      "edition": "Jan 20 2023",
+      "publishDateText": "Jan 10 2023  7:00PM",
+      "holdsCount": 0,
+      "availabilityType": "always",
+      "series": "Test EBook",
+      "reserveId": "12345a67-b8c9-12de-a1b2-cd345678efa9",
+      "websiteId": "99",
+      "cardId": "123456789"
     }
   ]
 }

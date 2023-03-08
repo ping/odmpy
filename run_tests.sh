@@ -47,3 +47,5 @@ coverage run --append -m unittest -v tests.UtilsTests
 
 # Tests for odmpy.processing.shared
 coverage run --append -m unittest -v tests.ProcessingSharedTests
+
+coverage run --append -m odmpy --version

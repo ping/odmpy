@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime
 from http import HTTPStatus
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import ebooklib  # type: ignore[import]
 import responses
@@ -440,7 +440,7 @@ class OdmpyLibbyTests(BaseTestCase):
             test_folder,
             "--bookfileformat",
             "ebook",
-            "--latest",
+            "--select",
             "1",
             "--hideprogress",
         ]
@@ -598,6 +598,54 @@ class OdmpyLibbyTests(BaseTestCase):
             None,
         )
         self.assertTrue(nav)
+
+    @responses.activate
+    @patch("urllib.request.OpenerDirector.open")
+    def test_mock_libby_download_ebook_open(self, mock_opener):
+        settings_folder = self._generate_fake_settings()
+        with open(
+            os.path.join(self.test_data_dir, "ebook", "sync.json"),
+            "r",
+            encoding="utf-8",
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        responses.get(
+            "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999990/fulfill/ebook-epub-open",
+            status=302,
+            headers={"Location": "https://openepub-gk.cdn.overdrive.com/9999990"},
+        )
+        with open(os.path.join(self.test_data_dir, "ebook", "dummy.epub"), "rb") as a:
+            opener_open = MagicMock()
+            opener_open.getcode.return_value = 200
+            opener_open.read.return_value = a.read()
+            mock_opener.return_value = opener_open
+
+            test_folder = "test"
+            download_dir = self.test_downloads_dir
+
+            run_command = [
+                "libby",
+                "--settings",
+                settings_folder,
+                "--ebooks",
+                "--downloaddir",
+                download_dir,
+                "--bookfolderformat",
+                test_folder,
+                "--bookfileformat",
+                "ebook",
+                "--latest",
+                "1",
+                "--hideprogress",
+            ]
+            if self.is_verbose:
+                run_command.insert(0, "--verbose")
+            run(run_command, be_quiet=not self.is_verbose)
+            self.assertTrue(
+                os.path.exists(os.path.join(download_dir, test_folder, "ebook.epub"))
+            )
 
     def _setup_audiobook_direct_responses(self):
         with open(
