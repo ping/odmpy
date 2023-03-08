@@ -1,9 +1,7 @@
 import logging
-import sys
-import unittest
-from http.client import HTTPConnection
 
 from odmpy.overdrive import OverDriveClient
+from tests.base import BaseTestCase
 
 test_logger = logging.getLogger(__name__)
 test_logger.setLevel(logging.WARNING)
@@ -14,21 +12,13 @@ requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
 
 
-class OverDriveClientTests(unittest.TestCase):
+class OverDriveClientTests(BaseTestCase):
     def setUp(self):
-        self.logger = test_logger
-        # hijack unittest -v arg to toggle log verbosity in test
-        is_verbose = "-vv" in sys.argv
-        if is_verbose:
-            self.logger.setLevel(logging.DEBUG)
-            client_logger.setLevel(logging.DEBUG)
-            requests_logger.setLevel(logging.DEBUG)
-            HTTPConnection.debuglevel = 1
-            logging.basicConfig(stream=sys.stdout)
-
+        super().setUp()
         self.client = OverDriveClient(retry=1)
 
     def tearDown(self) -> None:
+        super().tearDown()
         self.client.session.close()
 
     def test_media(self):

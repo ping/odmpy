@@ -6,20 +6,17 @@
 import json
 import logging
 import os
-import re
-import shutil
-import unittest
-import warnings
 from http import HTTPStatus
 from io import StringIO
 
-from lxml import etree  # type: ignore[import]
 import responses
+from lxml import etree  # type: ignore[import]
 
 from odmpy.errors import OdmpyRuntimeError
 from odmpy.odm import run
 from odmpy.overdrive import OverDriveClient
 from odmpy.utils import strip_color_codes
+from .base import BaseTestCase
 from .data import (
     get_expected_result,
 )
@@ -30,29 +27,14 @@ eyed3_log.setLevel(logging.ERROR)
 
 # [i] USE run_tests.sh
 
-strip_color_codes_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
-
-class OdmpyTests(unittest.TestCase):
+class OdmpyTests(BaseTestCase):
     def setUp(self):
-        warnings.filterwarnings(
-            action="ignore", message="unclosed", category=ResourceWarning
-        )
+        super().setUp()
         try:
             self.test_file = os.environ["TEST_ODM"]
         except KeyError:
             raise RuntimeError("TEST_ODM environment var not defined.")
-
-        self.test_data_dir = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "data"
-        )
-        self.test_downloads_dir = os.path.join(self.test_data_dir, "downloads")
-        if not os.path.exists(self.test_downloads_dir):
-            os.makedirs(self.test_downloads_dir)
-
-    def tearDown(self) -> None:
-        if os.path.isdir(self.test_downloads_dir):
-            shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
 
     def test_info(self):
         """
@@ -95,7 +77,7 @@ class OdmpyTests(unittest.TestCase):
                 be_quiet=True,
                 injected_stream_handler=stream_handler,
             )
-            info = json.loads(strip_color_codes_re.sub("", out.getvalue()))
+            info = json.loads(strip_color_codes(out.getvalue()))
             for tag in [
                 "title",
                 "creators",

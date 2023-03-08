@@ -1,15 +1,11 @@
 import logging
 import os
-import sys
 import unittest
 from collections import OrderedDict
 from datetime import datetime, timezone, timedelta
 from http import HTTPStatus
-from http.client import HTTPConnection
 
 import responses
-
-from odmpy.libby_errors import ClientBadRequestError, ClientError
 
 from odmpy.libby import (
     LibbyClient,
@@ -19,6 +15,8 @@ from odmpy.libby import (
     parse_part_path,
     LibbyFormats,
 )
+from odmpy.libby_errors import ClientBadRequestError, ClientError
+from tests.base import BaseTestCase
 
 test_logger = logging.getLogger(__name__)
 test_logger.setLevel(logging.WARNING)
@@ -27,17 +25,9 @@ requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
 
 
-class LibbyClientTests(unittest.TestCase):
+class LibbyClientTests(BaseTestCase):
     def setUp(self):
-        self.logger = test_logger
-        # hijack unittest -v arg to toggle log verbosity in test
-        is_verbose = "-vv" in sys.argv
-        if is_verbose:
-            self.logger.setLevel(logging.DEBUG)
-            requests_logger.setLevel(logging.DEBUG)
-            HTTPConnection.debuglevel = 1
-            logging.basicConfig(stream=sys.stdout)
-
+        super().setUp()
         try:
             token = os.environ["LIBBY_TEST_TOKEN"]
             self.client = LibbyClient(
@@ -55,6 +45,7 @@ class LibbyClientTests(unittest.TestCase):
             )
 
     def tearDown(self) -> None:
+        super().tearDown()
         self.client.libby_session.close()
 
     def test_parse_part_path(self):

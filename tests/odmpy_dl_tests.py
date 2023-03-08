@@ -1,15 +1,13 @@
 import json
 import os.path
-import shutil
 import subprocess
-import unittest
-import warnings
 
 import eyed3  # type: ignore[import]
 import responses
 
 from odmpy import constants
 from odmpy.odm import run
+from .base import BaseTestCase
 from .data import (
     part_title_formats,
     album_artists,
@@ -19,24 +17,13 @@ from .data import (
 
 
 # Test non-interactive options
-class OdmpyDlTests(unittest.TestCase):
+class OdmpyDlTests(BaseTestCase):
     def setUp(self) -> None:
-        warnings.filterwarnings(
-            action="ignore", message="unclosed", category=ResourceWarning
-        )
+        super().setUp()
         try:
             self.test_file = os.environ["TEST_ODM"]
         except KeyError:
             self.test_file = ""
-
-        self.test_data_dir = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "data"
-        )
-        self.test_downloads_dir = os.path.join(self.test_data_dir, "downloads")
-
-    def tearDown(self) -> None:
-        if os.path.isdir(self.test_downloads_dir):
-            shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
 
     def _setup_common_responses(self):
         with open(

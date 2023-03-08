@@ -2,10 +2,7 @@ import glob
 import json
 import logging
 import os.path
-import shutil
-import sys
 import unittest
-import warnings
 from datetime import datetime
 from http import HTTPStatus
 from io import StringIO
@@ -20,30 +17,12 @@ from odmpy.errors import LibbyNotConfiguredError, OdmpyRuntimeError
 from odmpy.libby import LibbyClient, LibbyFormats
 from odmpy.odm import run
 
-
 # Test non-interactive options
 from odmpy.utils import strip_color_codes
+from .base import BaseTestCase
 
 
-class OdmpyLibbyTests(unittest.TestCase):
-    def setUp(self) -> None:
-        warnings.filterwarnings(
-            action="ignore", message="unclosed", category=ResourceWarning
-        )
-        self.test_data_dir = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "data"
-        )
-        self.test_downloads_dir = os.path.join(self.test_data_dir, "downloads")
-        if not os.path.isdir(self.test_downloads_dir):
-            os.makedirs(self.test_downloads_dir)
-
-        # hijack unittest -v arg to toggle log verbosity in test
-        self.is_verbose = "-vv" in sys.argv
-
-    def tearDown(self) -> None:
-        if os.path.isdir(self.test_downloads_dir):
-            shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
-
+class OdmpyLibbyTests(BaseTestCase):
     def test_settings_clear(self):
         settings_folder = self._generate_fake_settings()
         settings_file = os.path.join(settings_folder, "libby.json")
