@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/processing/odm.py: 80.9%</title>
+    <title>Coverage for odmpy/processing/odm.py: 83.0%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/processing/odm.py</b>:
-            <span class="pc_cov">80.9%</span>
+            <span class="pc_cov">83.0%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">324 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">262<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">62<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">269<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">55<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_shared_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-07 09:56 +0000
+            created at 2023-03-08 04:03 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -876,13 +876,13 @@
     <p class="pln"><span class="n"><a id="t794" href="#t794">794</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t795" href="#t795">795</a></span><span class="t">        <span class="nam">early_return_res</span><span class="op">.</span><span class="nam">raise_for_status</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t796" href="#t796">796</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">f"Loan returned successfully: {args.odm_file}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t797" href="#t797">797</a></span><span class="t">    <span class="key">except</span> <span class="nam">HTTPError</span> <span class="key">as</span> <span class="nam">he</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t798" href="#t798">798</a></span><span class="t">        <span class="key">if</span> <span class="nam">he</span><span class="op">.</span><span class="nam">response</span><span class="op">.</span><span class="nam">status_code</span> <span class="op">==</span> <span class="num">403</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t799" href="#t799">799</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">"Loan is probably already returned."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t800" href="#t800">800</a></span><span class="t">            <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t801" href="#t801">801</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="str">f"HTTPError: {str(he)}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t802" href="#t802">802</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">he</span><span class="op">.</span><span class="nam">response</span><span class="op">.</span><span class="nam">content</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t803" href="#t803">803</a></span><span class="t">        <span class="key">raise</span> <span class="nam">OdmpyRuntimeError</span><span class="op">(</span><span class="str">f"HTTP error returning odm {args.odm_file, }"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t797" href="#t797">797</a></span><span class="t">    <span class="key">except</span> <span class="nam">HTTPError</span> <span class="key">as</span> <span class="nam">he</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t798" href="#t798">798</a></span><span class="t">        <span class="key">if</span> <span class="nam">he</span><span class="op">.</span><span class="nam">response</span><span class="op">.</span><span class="nam">status_code</span> <span class="op">==</span> <span class="num">403</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t799" href="#t799">799</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">"Loan is probably already returned."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t800" href="#t800">800</a></span><span class="t">            <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t801" href="#t801">801</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="str">f"HTTPError: {str(he)}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t802" href="#t802">802</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">he</span><span class="op">.</span><span class="nam">response</span><span class="op">.</span><span class="nam">content</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t803" href="#t803">803</a></span><span class="t">        <span class="key">raise</span> <span class="nam">OdmpyRuntimeError</span><span class="op">(</span><span class="str">f"HTTP error returning odm {args.odm_file, }"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t804" href="#t804">804</a></span><span class="t">    <span class="key">except</span> <span class="nam">ConnectionError</span> <span class="key">as</span> <span class="nam">ce</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t805" href="#t805">805</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="str">f"ConnectionError: {str(ce)}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t806" href="#t806">806</a></span><span class="t">        <span class="key">raise</span> <span class="nam">OdmpyRuntimeError</span><span class="op">(</span><span class="str">f"Connection error returning odm {args.odm_file, }"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -895,7 +895,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_shared_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-07 09:56 +0000
+            created at 2023-03-08 04:03 +0000
         </p>
     </div>
 </footer>

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/libby.py: 89.4%</title>
+    <title>Coverage for odmpy/libby.py: 91.7%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/libby.py</b>:
-            <span class="pc_cov">89.4%</span>
+            <span class="pc_cov">91.7%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">301 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">269<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">32<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">276<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">25<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_libby_errors_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-07 09:56 +0000
+            created at 2023-03-08 04:03 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -756,13 +756,13 @@
     <p class="pln"><span class="n"><a id="t674" href="#t674">674</a></span><span class="t"><span class="str">        :param timeout:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t675" href="#t675">675</a></span><span class="t"><span class="str">        :return:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t676" href="#t676">676</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t677" href="#t677">677</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">headers</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t677" href="#t677">677</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">headers</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t678" href="#t678">678</a></span><span class="t">            <span class="nam">headers</span> <span class="op">=</span> <span class="op">{</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t679" href="#t679">679</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t680" href="#t680">680</a></span><span class="t">        <span class="nam">opener</span> <span class="op">=</span> <span class="nam">request</span><span class="op">.</span><span class="nam">build_opener</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t681" href="#t681">681</a></span><span class="t">        <span class="nam">req</span> <span class="op">=</span> <span class="nam">request</span><span class="op">.</span><span class="nam">Request</span><span class="op">(</span><span class="nam">endpoint</span><span class="op">,</span> <span class="nam">headers</span><span class="op">=</span><span class="nam">headers</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t682" href="#t682">682</a></span><span class="t">        <span class="nam">res</span> <span class="op">=</span> <span class="nam">opener</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="nam">req</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">=</span><span class="nam">timeout</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t683" href="#t683">683</a></span><span class="t">        <span class="key">return</span> <span class="nam">res</span><span class="op">.</span><span class="nam">read</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t680" href="#t680">680</a></span><span class="t">        <span class="nam">opener</span> <span class="op">=</span> <span class="nam">request</span><span class="op">.</span><span class="nam">build_opener</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t681" href="#t681">681</a></span><span class="t">        <span class="nam">req</span> <span class="op">=</span> <span class="nam">request</span><span class="op">.</span><span class="nam">Request</span><span class="op">(</span><span class="nam">endpoint</span><span class="op">,</span> <span class="nam">headers</span><span class="op">=</span><span class="nam">headers</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t682" href="#t682">682</a></span><span class="t">        <span class="nam">res</span> <span class="op">=</span> <span class="nam">opener</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="nam">req</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">=</span><span class="nam">timeout</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t683" href="#t683">683</a></span><span class="t">        <span class="key">return</span> <span class="nam">res</span><span class="op">.</span><span class="nam">read</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t684" href="#t684">684</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t685" href="#t685">685</a></span><span class="t">    <span class="key">def</span> <span class="nam">fulfill_loan_file</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">loan_id</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">card_id</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">format_id</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">bytes</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t686" href="#t686">686</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
@@ -782,13 +782,13 @@
     <p class="run"><span class="n"><a id="t700" href="#t700">700</a></span><span class="t">        <span class="nam">headers</span><span class="op">[</span><span class="str">"Accept"</span><span class="op">]</span> <span class="op">=</span> <span class="str">"*/*"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t701" href="#t701">701</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t702" href="#t702">702</a></span><span class="t">        <span class="key">if</span> <span class="nam">format_id</span> <span class="key">in</span> <span class="op">(</span><span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookEPubOpen</span><span class="op">,</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">EBookPDFOpen</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t703" href="#t703">703</a></span><span class="t">            <span class="nam">res_redirect</span><span class="op">:</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">Response</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">make_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t703" href="#t703">703</a></span><span class="t">            <span class="nam">res_redirect</span><span class="op">:</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">Response</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">make_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t704" href="#t704">704</a></span><span class="t">                <span class="str">f"card/{card_id}/loan/{loan_id}/fulfill/{format_id}"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t705" href="#t705">705</a></span><span class="t">                <span class="nam">headers</span><span class="op">=</span><span class="nam">headers</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t706" href="#t706">706</a></span><span class="t">                <span class="nam">return_res</span><span class="op">=</span><span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t707" href="#t707">707</a></span><span class="t">                <span class="nam">allow_redirects</span><span class="op">=</span><span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t708" href="#t708">708</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t709" href="#t709">709</a></span><span class="t">            <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_urlretrieve</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t709" href="#t709">709</a></span><span class="t">            <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_urlretrieve</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t710" href="#t710">710</a></span><span class="t">                <span class="nam">res_redirect</span><span class="op">.</span><span class="nam">headers</span><span class="op">[</span><span class="str">"Location"</span><span class="op">]</span><span class="op">,</span> <span class="nam">headers</span><span class="op">=</span><span class="nam">headers</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">timeout</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t711" href="#t711">711</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t712" href="#t712">712</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -979,7 +979,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_libby_errors_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-07 09:56 +0000
+            created at 2023-03-08 04:03 +0000
         </p>
     </div>
 </footer>

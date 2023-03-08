@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/odm.py: 83.4%</title>
+    <title>Coverage for odmpy/odm.py: 83.1%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/odm.py</b>:
-            <span class="pc_cov">83.4%</span>
+            <span class="pc_cov">83.1%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">338 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">282<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">56<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">281<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">57<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-07 09:56 +0000
+            created at 2023-03-08 04:03 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -696,7 +696,7 @@
     <p class="pln"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t">            <span class="com"># prevents FileNotFoundError when using libby odm-based downloads</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t615" href="#t615">615</a></span><span class="t">            <span class="com"># because the odm is first downloaded into the download dir</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t616" href="#t616">616</a></span><span class="t">            <span class="com"># without a book folder</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t617" href="#t617">617</a></span><span class="t">            <span class="nam">os</span><span class="op">.</span><span class="nam">makedirs</span><span class="op">(</span><span class="nam">args</span><span class="op">.</span><span class="nam">download_dir</span><span class="op">,</span> <span class="nam">exist_ok</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t617" href="#t617">617</a></span><span class="t">            <span class="nam">os</span><span class="op">.</span><span class="nam">makedirs</span><span class="op">(</span><span class="nam">args</span><span class="op">.</span><span class="nam">download_dir</span><span class="op">,</span> <span class="nam">exist_ok</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t618" href="#t618">618</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t619" href="#t619">619</a></span><span class="t">    <span class="key">if</span> <span class="nam">hasattr</span><span class="op">(</span><span class="nam">args</span><span class="op">,</span> <span class="str">"settings_folder"</span><span class="op">)</span> <span class="key">and</span> <span class="nam">args</span><span class="op">.</span><span class="nam">settings_folder</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t620" href="#t620">620</a></span><span class="t">        <span class="nam">args</span><span class="op">.</span><span class="nam">settings_folder</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">expanduser</span><span class="op">(</span><span class="nam">args</span><span class="op">.</span><span class="nam">settings_folder</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -1198,7 +1198,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-07 09:56 +0000
+            created at 2023-03-08 04:03 +0000
         </p>
     </div>
 </footer>
