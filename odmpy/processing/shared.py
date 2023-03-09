@@ -552,13 +552,13 @@ def extract_isbn(formats: List[Dict], format_types: List[str]) -> str:
             f
             for f in formats
             if f["id"] in format_types
-            and [i for i in f["identifiers"] if i["type"] == isbn_type]
+            and [i for i in f.get("identifiers", []) if i["type"] == isbn_type]
         ]:
             isbn = next(
                 iter(
                     [
                         identifier["value"]
-                        for identifier in media_format["identifiers"]
+                        for identifier in media_format.get("identifiers", [])
                         if identifier["type"] == isbn_type
                     ]
                 ),
