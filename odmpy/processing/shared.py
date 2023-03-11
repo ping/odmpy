@@ -156,6 +156,7 @@ def write_tags(
     part_number: int,
     total_parts: int,
     overdrive_id: str,
+    isbn: Optional[str] = None,
     overwrite_title: bool = False,
     always_overwrite: bool = False,
     delimiter: str = ";",
@@ -178,6 +179,7 @@ def write_tags(
     :param part_number:
     :param total_parts:
     :param overdrive_id:
+    :param isbn:
     :param overwrite_title:
     :param always_overwrite:
     :param delimiter:
@@ -238,6 +240,8 @@ def write_tags(
             overdrive_id,
             "OverDrive Media ID" if overdrive_id.isdigit() else "OverDrive Reserve ID",
         )
+    if isbn:
+        audiofile.tag.user_text_frames.set(isbn, "ISBN")
 
 
 def get_best_cover_url(loan: Dict) -> Optional[str]:

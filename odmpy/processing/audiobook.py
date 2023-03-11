@@ -40,12 +40,14 @@ from .shared import (
     convert_to_m4b,
     create_opf,
     get_best_cover_url,
+    extract_isbn,
 )
 from ..errors import OdmpyRuntimeError
 from ..libby import (
     USER_AGENT,
     merge_toc,
     PartMeta,
+    LibbyFormats,
 )
 from ..overdrive import OverDriveClient
 from ..utils import slugify, plural_or_singular_noun as ps
@@ -272,6 +274,7 @@ def process_audiobook_loan(
                 part_number=part_number,
                 total_parts=len(download_parts),
                 overdrive_id=overdrive_media_id,
+                isbn=extract_isbn(loan.get("formats", []), [LibbyFormats.AudioBookMP3]),
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
@@ -359,6 +362,7 @@ def process_audiobook_loan(
             part_number=0,
             total_parts=0,
             overdrive_id=overdrive_media_id,
+            isbn=extract_isbn(loan.get("formats", []), [LibbyFormats.AudioBookMP3]),
             always_overwrite=args.overwrite_tags,
             delimiter=args.tag_delimiter,
         )
