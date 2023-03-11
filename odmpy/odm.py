@@ -953,7 +953,7 @@ def run(
                 # abort if no choices made
                 return
 
-            loan_choices = sorted(loan_choices, key=lambda c: int(c))
+            loan_choices = sorted(loan_choices, key=int)
 
             if args.command_name == OdmpyCommands.LibbyReturn:
                 # do returns
