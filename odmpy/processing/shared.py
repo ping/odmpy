@@ -532,6 +532,33 @@ def extract_authors_from_openbook(openbook: Dict) -> List[str]:
     )
 
 
+def extract_asin(formats: List[Dict]) -> str:
+    """
+    Extract Amazon's ASIN from media_info["formats"]
+
+    :param formats:
+    :return:
+    """
+    for media_format in [
+        f
+        for f in formats
+        if [i for i in f.get("identifiers", []) if i["type"] == "ASIN"]
+    ]:
+        asin = next(
+            iter(
+                [
+                    identifier["value"]
+                    for identifier in media_format.get("identifiers", [])
+                    if identifier["type"] == "ASIN"
+                ]
+            ),
+            "",
+        )
+        if asin:
+            return asin
+    return ""
+
+
 def extract_isbn(formats: List[Dict], format_types: List[str]) -> str:
     """
     Extract ISBN from media_info["formats"]
@@ -675,6 +702,24 @@ def build_opf_package(
             identifier.set("opf:scheme", "overdrive")
         if version == "3.0":
             identifier.text = media_info["id"]
+
+    asin = extract_asin(media_info["formats"])
+    if asin:
+        asin_tag = ET.SubElement(metadata, "dc:identifier")
+        asin_tag.text = asin
+        asin_tag.set("id", "mobi-asin")
+        if version == "2.0":
+            asin_tag.set("opf:scheme", "MOBI-ASIN")
+        if version == "3.0":
+            asin_tag_meta = ET.SubElement(
+                metadata,
+                "meta",
+                attrib={
+                    "refines": "#mobi-asin",
+                    "property": "identifier-type",
+                },
+            )
+            asin_tag_meta.text = "MOBI-ASIN"
 
     # add overdrive id and reserveId
     overdrive_id = ET.SubElement(metadata, "dc:identifier")

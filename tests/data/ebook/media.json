@@ -83,6 +83,17 @@
       "id": "ebook-epub-adobe",
       "name": "EPUB eBook",
       "isbn": "9789999999999"
+    },
+    {
+      "identifiers": [
+        {
+          "value": "B000000000",
+          "type": "ASIN"
+        }
+      ],
+      "id": "ebook-kindle",
+      "name": "Kindle Book",
+      "fulfillmentType": "kindle"
     }
   ],
   "publisherAccount": {
