@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-11 14:28 +0000
+            created at 2023-03-12 03:40 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -115,7 +115,7 @@
     <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">constants</span> <span class="key">import</span> <span class="nam">PERFORMER_FID</span><span class="op">,</span> <span class="nam">LANGUAGE_FID</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">errors</span> <span class="key">import</span> <span class="nam">OdmpyRuntimeError</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">libby</span> <span class="key">import</span> <span class="nam">USER_AGENT</span><span class="op">,</span> <span class="nam">LibbyFormats</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">slugify</span><span class="op">,</span> <span class="nam">sanitize_path</span><span class="op">,</span> <span class="nam">set_ele_attributes</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">slugify</span><span class="op">,</span> <span class="nam">sanitize_path</span><span class="op">,</span> <span class="nam">set_ele_attributes</span><span class="op">,</span> <span class="nam">file_root</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="com">#</span>&nbsp;</span><span class="r"></span></p>
@@ -1004,14 +1004,14 @@
     <p class="pln"><span class="n"><a id="t922" href="#t922">922</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t923" href="#t923">923</a></span><span class="t">    <span class="nam">spine</span> <span class="op">=</span> <span class="nam">ET</span><span class="op">.</span><span class="nam">SubElement</span><span class="op">(</span><span class="nam">package</span><span class="op">,</span> <span class="str">"spine"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t924" href="#t924">924</a></span><span class="t">    <span class="key">for</span> <span class="nam">f</span> <span class="key">in</span> <span class="nam">file_tracks</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t925" href="#t925">925</a></span><span class="t">        <span class="nam">file_name</span><span class="op">,</span> <span class="nam">_</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">splitext</span><span class="op">(</span><span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">basename</span><span class="op">(</span><span class="nam">f</span><span class="op">[</span><span class="str">"file"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t926" href="#t926">926</a></span><span class="t">        <span class="nam">file_id</span> <span class="op">=</span> <span class="nam">slugify</span><span class="op">(</span><span class="nam">file_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t925" href="#t925">925</a></span><span class="t">        <span class="nam">file_basename</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">basename</span><span class="op">(</span><span class="nam">f</span><span class="op">[</span><span class="str">"file"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t926" href="#t926">926</a></span><span class="t">        <span class="nam">file_id</span> <span class="op">=</span> <span class="nam">slugify</span><span class="op">(</span><span class="nam">file_root</span><span class="op">(</span><span class="nam">file_basename</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t927" href="#t927">927</a></span><span class="t">        <span class="nam">ET</span><span class="op">.</span><span class="nam">SubElement</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t928" href="#t928">928</a></span><span class="t">            <span class="nam">manifest</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t929" href="#t929">929</a></span><span class="t">            <span class="str">"item"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t930" href="#t930">930</a></span><span class="t">            <span class="nam">attrib</span><span class="op">=</span><span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t931" href="#t931">931</a></span><span class="t">                <span class="str">"id"</span><span class="op">:</span> <span class="nam">file_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t932" href="#t932">932</a></span><span class="t">                <span class="str">"href"</span><span class="op">:</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">basename</span><span class="op">(</span><span class="nam">f</span><span class="op">[</span><span class="str">"file"</span><span class="op">]</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t932" href="#t932">932</a></span><span class="t">                <span class="str">"href"</span><span class="op">:</span> <span class="nam">file_basename</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t933" href="#t933">933</a></span><span class="t">                <span class="str">"media-type"</span><span class="op">:</span> <span class="str">"audio/mpeg"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t934" href="#t934">934</a></span><span class="t">            <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t935" href="#t935">935</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -1029,7 +1029,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-11 14:28 +0000
+            created at 2023-03-12 03:40 +0000
         </p>
     </div>
 </footer>

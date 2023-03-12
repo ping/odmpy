@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/processing/audiobook.py: 82.3%</title>
+    <title>Coverage for odmpy/processing/audiobook.py: 82.2%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/processing/audiobook.py</b>:
-            <span class="pc_cov">82.3%</span>
+            <span class="pc_cov">82.2%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">158 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">130<span class="text"> run</span></button>
+            <span class="text">157 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">129<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">28<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_ebook_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-11 14:28 +0000
+            created at 2023-03-12 03:40 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -132,7 +132,7 @@
     <p class="pln"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">    <span class="nam">LibbyFormats</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">overdrive</span> <span class="key">import</span> <span class="nam">OverDriveClient</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">slugify</span><span class="op">,</span> <span class="nam">plural_or_singular_noun</span> <span class="key">as</span> <span class="nam">ps</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">slugify</span><span class="op">,</span> <span class="nam">plural_or_singular_noun</span> <span class="key">as</span> <span class="nam">ps</span><span class="op">,</span> <span class="nam">file_root</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t"><span class="com">#</span>&nbsp;</span><span class="r"></span></p>
@@ -522,48 +522,47 @@
     <p class="pln"><span class="n"><a id="t440" href="#t440">440</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t441" href="#t441">441</a></span><span class="t">    <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">generate_opf</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t442" href="#t442">442</a></span><span class="t">        <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">merge_output</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t443" href="#t443">443</a></span><span class="t">            <span class="nam">opf_file_root</span><span class="op">,</span> <span class="nam">_</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">splitext</span><span class="op">(</span><span class="nam">book_filename</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t444" href="#t444">444</a></span><span class="t">            <span class="nam">opf_file_path</span> <span class="op">=</span> <span class="str">f"{opf_file_root}.opf"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t445" href="#t445">445</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t446" href="#t446">446</a></span><span class="t">            <span class="nam">opf_file_path</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t447" href="#t447">447</a></span><span class="t">                <span class="nam">book_folder</span><span class="op">,</span> <span class="str">f"{slugify(title, allow_unicode=True)}.opf"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t448" href="#t448">448</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t449" href="#t449">449</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">exists</span><span class="op">(</span><span class="nam">opf_file_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t450" href="#t450">450</a></span><span class="t">            <span class="nam">od_client</span> <span class="op">=</span> <span class="nam">OverDriveClient</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t451" href="#t451">451</a></span><span class="t">                <span class="nam">user_agent</span><span class="op">=</span><span class="nam">USER_AGENT</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">=</span><span class="nam">args</span><span class="op">.</span><span class="nam">timeout</span><span class="op">,</span> <span class="nam">retry</span><span class="op">=</span><span class="nam">args</span><span class="op">.</span><span class="nam">retries</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t452" href="#t452">452</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t453" href="#t453">453</a></span><span class="t">            <span class="nam">media_info</span> <span class="op">=</span> <span class="nam">od_client</span><span class="op">.</span><span class="nam">media</span><span class="op">(</span><span class="nam">loan</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t454" href="#t454">454</a></span><span class="t">            <span class="nam">create_opf</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t455" href="#t455">455</a></span><span class="t">                <span class="nam">media_info</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t456" href="#t456">456</a></span><span class="t">                <span class="nam">cover_filename</span> <span class="key">if</span> <span class="nam">keep_cover</span> <span class="key">else</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t457" href="#t457">457</a></span><span class="t">                <span class="nam">file_tracks</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t458" href="#t458">458</a></span><span class="t">                <span class="key">if</span> <span class="key">not</span> <span class="nam">args</span><span class="op">.</span><span class="nam">merge_output</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t459" href="#t459">459</a></span><span class="t">                <span class="key">else</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t460" href="#t460">460</a></span><span class="t">                    <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t461" href="#t461">461</a></span><span class="t">                        <span class="str">"file"</span><span class="op">:</span> <span class="nam">book_filename</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t462" href="#t462">462</a></span><span class="t">                        <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">merge_format</span> <span class="op">==</span> <span class="str">"mp3"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t463" href="#t463">463</a></span><span class="t">                        <span class="key">else</span> <span class="nam">book_m4b_filename</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t464" href="#t464">464</a></span><span class="t">                    <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t465" href="#t465">465</a></span><span class="t">                <span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t466" href="#t466">466</a></span><span class="t">                <span class="nam">opf_file_path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t467" href="#t467">467</a></span><span class="t">                <span class="nam">logger</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t468" href="#t468">468</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t469" href="#t469">469</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t470" href="#t470">470</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"Already saved %s"</span><span class="op">,</span> <span class="nam">colored</span><span class="op">(</span><span class="nam">opf_file_path</span><span class="op">,</span> <span class="str">"magenta"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t471" href="#t471">471</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t472" href="#t472">472</a></span><span class="t">    <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">write_json</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t473" href="#t473">473</a></span><span class="t">        <span class="key">with</span> <span class="nam">open</span><span class="op">(</span><span class="nam">debug_filename</span><span class="op">,</span> <span class="str">"w"</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">outfile</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t474" href="#t474">474</a></span><span class="t">            <span class="nam">json</span><span class="op">.</span><span class="nam">dump</span><span class="op">(</span><span class="nam">debug_meta</span><span class="op">,</span> <span class="nam">outfile</span><span class="op">,</span> <span class="nam">indent</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t475" href="#t475">475</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t476" href="#t476">476</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">args</span><span class="op">.</span><span class="nam">is_debug_mode</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t477" href="#t477">477</a></span><span class="t">        <span class="com"># clean up</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t478" href="#t478">478</a></span><span class="t">        <span class="key">for</span> <span class="nam">file_name</span> <span class="key">in</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t479" href="#t479">479</a></span><span class="t">            <span class="str">"openbook.json"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t480" href="#t480">480</a></span><span class="t">            <span class="str">"loan.json"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t481" href="#t481">481</a></span><span class="t">        <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t482" href="#t482">482</a></span><span class="t">            <span class="nam">target</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">book_folder</span><span class="op">,</span> <span class="nam">file_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t483" href="#t483">483</a></span><span class="t">            <span class="key">if</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">exists</span><span class="op">(</span><span class="nam">target</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t484" href="#t484">484</a></span><span class="t">                <span class="nam">os</span><span class="op">.</span><span class="nam">remove</span><span class="op">(</span><span class="nam">target</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t443" href="#t443">443</a></span><span class="t">            <span class="nam">opf_file_path</span> <span class="op">=</span> <span class="str">f"{file_root(book_filename)}.opf"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t444" href="#t444">444</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t445" href="#t445">445</a></span><span class="t">            <span class="nam">opf_file_path</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t446" href="#t446">446</a></span><span class="t">                <span class="nam">book_folder</span><span class="op">,</span> <span class="str">f"{slugify(title, allow_unicode=True)}.opf"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t447" href="#t447">447</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t448" href="#t448">448</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">exists</span><span class="op">(</span><span class="nam">opf_file_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t449" href="#t449">449</a></span><span class="t">            <span class="nam">od_client</span> <span class="op">=</span> <span class="nam">OverDriveClient</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t450" href="#t450">450</a></span><span class="t">                <span class="nam">user_agent</span><span class="op">=</span><span class="nam">USER_AGENT</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">=</span><span class="nam">args</span><span class="op">.</span><span class="nam">timeout</span><span class="op">,</span> <span class="nam">retry</span><span class="op">=</span><span class="nam">args</span><span class="op">.</span><span class="nam">retries</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t451" href="#t451">451</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t452" href="#t452">452</a></span><span class="t">            <span class="nam">media_info</span> <span class="op">=</span> <span class="nam">od_client</span><span class="op">.</span><span class="nam">media</span><span class="op">(</span><span class="nam">loan</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t453" href="#t453">453</a></span><span class="t">            <span class="nam">create_opf</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t454" href="#t454">454</a></span><span class="t">                <span class="nam">media_info</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t455" href="#t455">455</a></span><span class="t">                <span class="nam">cover_filename</span> <span class="key">if</span> <span class="nam">keep_cover</span> <span class="key">else</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t456" href="#t456">456</a></span><span class="t">                <span class="nam">file_tracks</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t457" href="#t457">457</a></span><span class="t">                <span class="key">if</span> <span class="key">not</span> <span class="nam">args</span><span class="op">.</span><span class="nam">merge_output</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t458" href="#t458">458</a></span><span class="t">                <span class="key">else</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t459" href="#t459">459</a></span><span class="t">                    <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t460" href="#t460">460</a></span><span class="t">                        <span class="str">"file"</span><span class="op">:</span> <span class="nam">book_filename</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t461" href="#t461">461</a></span><span class="t">                        <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">merge_format</span> <span class="op">==</span> <span class="str">"mp3"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t462" href="#t462">462</a></span><span class="t">                        <span class="key">else</span> <span class="nam">book_m4b_filename</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t463" href="#t463">463</a></span><span class="t">                    <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t464" href="#t464">464</a></span><span class="t">                <span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t465" href="#t465">465</a></span><span class="t">                <span class="nam">opf_file_path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t466" href="#t466">466</a></span><span class="t">                <span class="nam">logger</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t467" href="#t467">467</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t468" href="#t468">468</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t469" href="#t469">469</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"Already saved %s"</span><span class="op">,</span> <span class="nam">colored</span><span class="op">(</span><span class="nam">opf_file_path</span><span class="op">,</span> <span class="str">"magenta"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t470" href="#t470">470</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t471" href="#t471">471</a></span><span class="t">    <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">write_json</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t472" href="#t472">472</a></span><span class="t">        <span class="key">with</span> <span class="nam">open</span><span class="op">(</span><span class="nam">debug_filename</span><span class="op">,</span> <span class="str">"w"</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">outfile</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t473" href="#t473">473</a></span><span class="t">            <span class="nam">json</span><span class="op">.</span><span class="nam">dump</span><span class="op">(</span><span class="nam">debug_meta</span><span class="op">,</span> <span class="nam">outfile</span><span class="op">,</span> <span class="nam">indent</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t474" href="#t474">474</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t475" href="#t475">475</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">args</span><span class="op">.</span><span class="nam">is_debug_mode</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t476" href="#t476">476</a></span><span class="t">        <span class="com"># clean up</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t477" href="#t477">477</a></span><span class="t">        <span class="key">for</span> <span class="nam">file_name</span> <span class="key">in</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t478" href="#t478">478</a></span><span class="t">            <span class="str">"openbook.json"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t479" href="#t479">479</a></span><span class="t">            <span class="str">"loan.json"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t480" href="#t480">480</a></span><span class="t">        <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t481" href="#t481">481</a></span><span class="t">            <span class="nam">target</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">book_folder</span><span class="op">,</span> <span class="nam">file_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t482" href="#t482">482</a></span><span class="t">            <span class="key">if</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">exists</span><span class="op">(</span><span class="nam">target</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t483" href="#t483">483</a></span><span class="t">                <span class="nam">os</span><span class="op">.</span><span class="nam">remove</span><span class="op">(</span><span class="nam">target</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -573,7 +572,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_ebook_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.1">coverage.py v7.2.1</a>,
-            created at 2023-03-11 14:28 +0000
+            created at 2023-03-12 03:40 +0000
         </p>
     </div>
 </footer>
