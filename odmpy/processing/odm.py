@@ -62,6 +62,7 @@ from ..utils import (
     parse_duration_to_milliseconds,
     get_element_text,
     plural_or_singular_noun as ps,
+    file_root,
 )
 
 RESERVE_ID_RE = re.compile(
@@ -731,8 +732,7 @@ def process_odm(
 
     if args.generate_opf:
         if args.merge_output:
-            opf_file_root, _ = os.path.splitext(book_filename)
-            opf_file_path = f"{opf_file_root}.opf"
+            opf_file_path = f"{file_root(book_filename)}.opf"
         else:
             opf_file_path = os.path.join(
                 book_folder, f"{slugify(title, allow_unicode=True)}.opf"

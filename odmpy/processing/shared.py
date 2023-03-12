@@ -33,7 +33,7 @@ from termcolor import colored
 from ..constants import PERFORMER_FID, LANGUAGE_FID
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyFormats
-from ..utils import slugify, sanitize_path, set_ele_attributes
+from ..utils import slugify, sanitize_path, set_ele_attributes, file_root
 
 
 #
@@ -922,14 +922,14 @@ def create_opf(
         )
     spine = ET.SubElement(package, "spine")
     for f in file_tracks:
-        file_name, _ = os.path.splitext(os.path.basename(f["file"]))
-        file_id = slugify(file_name)
+        file_basename = os.path.basename(f["file"])
+        file_id = slugify(file_root(file_basename))
         ET.SubElement(
             manifest,
             "item",
             attrib={
                 "id": file_id,
-                "href": os.path.basename(f["file"]),
+                "href": file_basename,
                 "media-type": "audio/mpeg",
             },
         )

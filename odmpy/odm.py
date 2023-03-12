@@ -51,7 +51,7 @@ from .processing.shared import (
     init_session,
     extract_authors_from_openbook,
 )
-from .utils import slugify, plural_or_singular_noun as ps
+from .utils import slugify, plural_or_singular_noun as ps, file_root
 
 #
 # Orchestrates the interaction between the CLI, APIs and the processing bits
@@ -337,8 +337,7 @@ def extract_loan_file(
             args=args,
             logger=logger,
         )
-        book_basename, _ = os.path.splitext(book_file_name)
-        loan_file_path = f"{book_basename}.{file_ext}"
+        loan_file_path = f"{file_root(book_file_name)}.{file_ext}"
         if format_id in (
             LibbyFormats.EBookOverdrive,
             LibbyFormats.MagazineOverDrive,

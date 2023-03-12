@@ -22,6 +22,7 @@ import re
 import unicodedata
 import xml.etree.ElementTree as ET
 from typing import Optional, Dict
+from urllib.parse import urlparse
 
 from mutagen.mp3 import MP3  # type: ignore[import]
 
@@ -34,6 +35,38 @@ TIMESTAMP_RE = re.compile(
 )
 ILLEGAL_WIN_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
 STRIP_COLOR_CODE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+
+
+def basename_from_url(url: str) -> str:
+    """
+    Returns the basename from an url.
+
+    :param url:
+    :return:
+    """
+    return os.path.basename(urlparse(url).path)
+
+
+def file_root(filename: str) -> str:
+    """
+    Returns the root portion of the filename.
+
+    :param filename:
+    :return:
+    """
+    name, _ = os.path.splitext(filename)
+    return name
+
+
+def file_ext(filename: str) -> str:
+    """
+    Returns the ext portion of the filename.
+
+    :param filename:
+    :return:
+    """
+    _, ext = os.path.splitext(filename)
+    return ext
 
 
 def strip_color_codes(text: str) -> str:

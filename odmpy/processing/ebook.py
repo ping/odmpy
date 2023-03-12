@@ -53,7 +53,7 @@ from ..libby import (
     LibbyMediaTypes,
 )
 from ..overdrive import OverDriveClient
-from ..utils import slugify
+from ..utils import slugify, basename_from_url, file_ext, file_root
 
 #
 # Main processing logic for libby direct ebook and magazine loans
@@ -233,10 +233,8 @@ def _sort_title_contents(a: Dict, b: Dict):
     :return:
     """
     extensions_rank = [".xhtml", ".html", ".htm", ".jpg", ".jpeg", ".png", ".gif"]
-    a_parsedurl = urlparse(a["url"])
-    b_parsedurl = urlparse(b["url"])
-    _, a_ext = os.path.splitext(os.path.basename(a_parsedurl.path))
-    _, b_ext = os.path.splitext(os.path.basename(b_parsedurl.path))
+    a_ext = file_ext(basename_from_url(a["url"]))
+    b_ext = file_ext(basename_from_url(b["url"]))
     try:
         a_index = extensions_rank.index(a_ext)
     except ValueError:
@@ -253,7 +251,7 @@ def _sort_title_contents(a: Dict, b: Dict):
     if a_ext != b_ext:
         return -1 if a_ext < b_ext else 1
 
-    return -1 if a_parsedurl.path < b_parsedurl.path else 1
+    return -1 if urlparse(a["url"]).path < urlparse(b["url"]).path else 1
 
 
 def _filter_content(entry: Dict, media_info: Dict, toc_pages: List[str]):
@@ -316,8 +314,7 @@ def process_ebook_loan(
         args=args,
         logger=logger,
     )
-    book_basename, _ = os.path.splitext(book_file_name)
-    epub_file_path = f"{book_basename}.epub"
+    epub_file_path = f"{file_root(book_file_name)}.epub"
     epub_version = "3.0"
 
     book_meta_name = "META-INF"
@@ -608,8 +605,7 @@ def process_ebook_loan(
     if args.generate_opf:
         # save opf before the manifest and spine elements get added
         # because those elements are meaningless outside an epub
-        opf_file_root, _ = os.path.splitext(epub_file_path)
-        export_opf_file = f"{opf_file_root}.opf"
+        export_opf_file = f"{file_root(epub_file_path)}.opf"
         ET.ElementTree(package).write(
             export_opf_file, xml_declaration=True, encoding="utf-8"
         )

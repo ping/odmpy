@@ -94,3 +94,17 @@ class UtilsTests(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError) as context:
             _ = cli_utils.valid_book_folder_file_format("%(X)s")
         self.assertIn("Invalid field 'X'", str(context.exception))
+
+    def test_basename_from_url(self):
+        self.assertEqual(
+            "test.html", utils.basename_from_url("http://localhost/x/test.html?x=1")
+        )
+        self.assertEqual(
+            "test.html", utils.basename_from_url("http://localhost/x/test.html#x=1")
+        )
+
+    def test_file_root(self):
+        self.assertEqual("test", utils.file_root("test.epub"))
+
+    def test_file_ext(self):
+        self.assertEqual(".epub", utils.file_ext("test.epub"))
