@@ -17,6 +17,7 @@
 #
 
 import argparse
+import datetime
 import logging
 import os
 import subprocess
@@ -850,13 +851,26 @@ def build_opf_package(
             meta_pubdate.set("property", "dcterms:modified")
             meta_pubdate.text = publish_date
 
-    if media_info.get("detailedSeries"):
-        series_info = media_info["detailedSeries"]
-        if series_info.get("seriesName"):
+    if (
+        media_info.get("detailedSeries")
+        or media_info.get("series")
+        or loan_format == LibbyFormats.MagazineOverDrive
+    ):
+        series_info = media_info.get("detailedSeries", {})
+        series_name = (
+            series_info.get("seriesName")
+            or media_info.get("series")
+            or (
+                media_info["title"]
+                if loan_format == LibbyFormats.MagazineOverDrive
+                else None
+            )
+        )
+        if series_name:
             ET.SubElement(
                 metadata,
                 "meta",
-                attrib={"name": "calibre:series", "content": series_info["seriesName"]},
+                attrib={"name": "calibre:series", "content": series_name},
             )
             if version == "3.0":
                 meta_series = ET.SubElement(
@@ -864,7 +878,7 @@ def build_opf_package(
                     "meta",
                     attrib={"id": "series-name", "property": "belongs-to-collection"},
                 )
-                meta_series.text = series_info["seriesName"]
+                meta_series.text = series_name
                 meta_series_type = ET.SubElement(
                     metadata,
                     "meta",
@@ -872,13 +886,24 @@ def build_opf_package(
                 )
                 meta_series_type.text = "series"
 
-        if series_info.get("readingOrder"):
+        reading_order = series_info.get("readingOrder", "")
+        if (
+            (not reading_order)
+            and loan_format == LibbyFormats.MagazineOverDrive
+            and media_info.get("estimatedReleaseDate")
+        ):
+            est_release_date = datetime.datetime.strptime(
+                media_info["estimatedReleaseDate"], "%Y-%m-%dT%H:%M:%SZ"
+            )
+            reading_order = f"{est_release_date:%y%j}"  # use release date to construct a pseudo reading order
+
+        if reading_order:
             ET.SubElement(
                 metadata,
                 "meta",
                 attrib={
                     "name": "calibre:series_index",
-                    "content": series_info["readingOrder"],
+                    "content": reading_order,
                 },
             )
             if version == "3.0":
@@ -887,7 +912,7 @@ def build_opf_package(
                     "meta",
                     attrib={"refines": "#series-name", "property": "group-position"},
                 )
-                meta_series_pos.text = series_info["readingOrder"]
+                meta_series_pos.text = reading_order
 
     return package
 
