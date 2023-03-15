@@ -20,8 +20,8 @@ import argparse
 import datetime
 import json
 import logging
-import os
 import shutil
+from pathlib import Path
 from typing import Optional, Any, Dict, List
 from typing import OrderedDict as OrderedDictType
 
@@ -50,7 +50,7 @@ from ..libby import (
     LibbyFormats,
 )
 from ..overdrive import OverDriveClient
-from ..utils import slugify, plural_or_singular_noun as ps, file_root
+from ..utils import slugify, plural_or_singular_noun as ps
 
 
 #
@@ -156,28 +156,27 @@ def process_audiobook_loan(
     )
 
     # check early if a merged file is already saved
-    if args.merge_output and os.path.isfile(
-        book_filename if args.merge_format == "mp3" else book_m4b_filename
+    if (
+        args.merge_output
+        and Path(
+            book_filename if args.merge_format == "mp3" else book_m4b_filename
+        ).exists()
     ):
         logger.warning(
             'Already saved "%s"',
             colored(
-                book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                str(book_filename if args.merge_format == "mp3" else book_m4b_filename),
                 "magenta",
             ),
         )
         return
 
     if args.is_debug_mode:
-        with open(os.path.join(book_folder, "loan.json"), "w", encoding="utf-8") as f:
+        with Path(book_folder, "loan.json").open("w", encoding="utf-8") as f:
             json.dump(loan, f, indent=2)
 
-        with open(
-            os.path.join(book_folder, "openbook.json"), "w", encoding="utf-8"
-        ) as f:
+        with Path(book_folder, "openbook.json").open("w", encoding="utf-8") as f:
             json.dump(openbook, f, indent=2)
-
-    debug_filename = os.path.join(book_folder, "debug.json")
 
     cover_filename, cover_bytes = generate_cover(
         book_folder=book_folder,
@@ -192,21 +191,21 @@ def process_audiobook_loan(
     audio_bitrate = 0
     for p in download_parts:
         part_number = p["spine-position"] + 1
-        part_filename = os.path.join(
+        part_filename = Path(
             book_folder,
             f"{slugify(f'{title} - Part {part_number:02d}', allow_unicode=True)}.mp3",
         )
-        part_tmp_filename = f"{part_filename}.part"
+        part_tmp_filename = part_filename.with_suffix(".part")
         part_file_size = p["file-length"]
         part_download_url = p["url"]
 
-        if os.path.isfile(part_filename):
-            logger.warning("Already saved %s", colored(part_filename, "magenta"))
+        if part_filename.exists():
+            logger.warning("Already saved %s", colored(str(part_filename), "magenta"))
         else:
             try:
                 already_downloaded_len = 0
-                if os.path.exists(part_tmp_filename):
-                    already_downloaded_len = os.stat(part_tmp_filename).st_size
+                if part_tmp_filename.exists():
+                    already_downloaded_len = part_tmp_filename.stat().st_size
 
                 part_download_res = session.get(
                     part_download_url,
@@ -229,8 +228,8 @@ def process_audiobook_loan(
                     desc=f"Part {part_number:2d}",
                     disable=args.hide_progress,
                 ) as res_raw:
-                    with open(
-                        part_tmp_filename, "ab" if already_downloaded_len else "wb"
+                    with part_tmp_filename.open(
+                        "ab" if already_downloaded_len else "wb"
                     ) as outfile:
                         shutil.copyfileobj(res_raw, outfile)
 
@@ -313,7 +312,7 @@ def process_audiobook_loan(
                         start_time,
                         end_time,
                         colored(m.title, "cyan"),
-                        colored(part_filename, "blue"),
+                        colored(str(part_filename), "blue"),
                     )
                 audiofile.tag.save()
 
@@ -323,15 +322,15 @@ def process_audiobook_loan(
             )
             keep_cover = True
 
-        logger.info('Saved "%s"', colored(part_filename, "magenta"))
+        logger.info('Saved "%s"', colored(str(part_filename), "magenta"))
         file_tracks.append({"file": part_filename})
 
-    debug_meta["file_tracks"] = file_tracks
+    debug_meta["file_tracks"] = [{"file": str(ft["file"])} for ft in file_tracks]
     if args.merge_output:
         logger.info(
             'Generating "%s"...',
             colored(
-                book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                str(book_filename if args.merge_format == "mp3" else book_m4b_filename),
                 "magenta",
             ),
         )
@@ -400,7 +399,7 @@ def process_audiobook_loan(
                     start_time,
                     end_time,
                     colored(m.title, "cyan"),
-                    colored(book_filename, "blue"),
+                    colored(str(book_filename), "blue"),
                 )
 
         audiofile.tag.save()
@@ -409,7 +408,11 @@ def process_audiobook_loan(
             logger.info(
                 'Merged files into "%s"',
                 colored(
-                    book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                    str(
+                        book_filename
+                        if args.merge_format == "mp3"
+                        else book_m4b_filename
+                    ),
                     "magenta",
                 ),
             )
@@ -428,24 +431,24 @@ def process_audiobook_loan(
         if not args.keep_mp3:
             for file_track in file_tracks:
                 try:
-                    os.remove(file_track["file"])
+                    file_track["file"].unlink()
                 except Exception as e:  # pylint: disable=broad-except
                     logger.warning(f'Error deleting "{file_track["file"]}": {str(e)}')
 
-    if not keep_cover and os.path.isfile(cover_filename):
+    if not keep_cover and cover_filename.exists():
         try:
-            os.remove(cover_filename)
+            cover_filename.unlink()
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(f'Error deleting "{cover_filename}": {str(e)}')
 
     if args.generate_opf:
         if args.merge_output:
-            opf_file_path = f"{file_root(book_filename)}.opf"
+            opf_file_path = book_filename.with_suffix(".opf")
         else:
-            opf_file_path = os.path.join(
-                book_folder, f"{slugify(title, allow_unicode=True)}.opf"
+            opf_file_path = book_folder.joinpath(
+                f"{slugify(title, allow_unicode=True)}.opf"
             )
-        if not os.path.exists(opf_file_path):
+        if not opf_file_path.exists():
             od_client = OverDriveClient(
                 user_agent=USER_AGENT, timeout=args.timeout, retry=args.retries
             )
@@ -466,10 +469,10 @@ def process_audiobook_loan(
                 logger,
             )
         else:
-            logger.info("Already saved %s", colored(opf_file_path, "magenta"))
+            logger.info("Already saved %s", colored(str(opf_file_path), "magenta"))
 
     if args.write_json:
-        with open(debug_filename, "w", encoding="utf-8") as outfile:
+        with book_folder.joinpath("debug.json").open("w", encoding="utf-8") as outfile:
             json.dump(debug_meta, outfile, indent=2)
 
     if not args.is_debug_mode:
@@ -478,6 +481,6 @@ def process_audiobook_loan(
             "openbook.json",
             "loan.json",
         ):
-            target = os.path.join(book_folder, file_name)
-            if os.path.exists(target):
-                os.remove(target)
+            target = book_folder.joinpath(file_name)
+            if target.exists():
+                target.unlink()

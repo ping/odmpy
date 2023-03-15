@@ -4,6 +4,7 @@ import platform
 import string
 import unittest
 from datetime import datetime
+from pathlib import Path
 from random import choices
 
 from odmpy import utils
@@ -44,8 +45,9 @@ class UtilsTests(unittest.TestCase):
             rf'{random_text}_{ts}<>:"/\|?*', sub_text=""
         )
         self.assertEqual(sanitized_path, f"{random_text}_{ts}")
-        os.makedirs(sanitized_path)
-        os.rmdir(sanitized_path)
+        p = Path(sanitized_path)
+        p.mkdir(parents=True)
+        p.rmdir()
 
     def test_slugify(self):
         self.assertEqual(
@@ -94,17 +96,3 @@ class UtilsTests(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError) as context:
             _ = cli_utils.valid_book_folder_file_format("%(X)s")
         self.assertIn("Invalid field 'X'", str(context.exception))
-
-    def test_basename_from_url(self):
-        self.assertEqual(
-            "test.html", utils.basename_from_url("http://localhost/x/test.html?x=1")
-        )
-        self.assertEqual(
-            "test.html", utils.basename_from_url("http://localhost/x/test.html#x=1")
-        )
-
-    def test_file_root(self):
-        self.assertEqual("test", utils.file_root("test.epub"))
-
-    def test_file_ext(self):
-        self.assertEqual(".epub", utils.file_ext("test.epub"))

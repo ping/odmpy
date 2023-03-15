@@ -40,17 +40,17 @@ class OdmpyTests(BaseTestCase):
         """
         `odmpy info test.odm`
         """
-        expected_file = os.path.join(
-            self.test_data_dir, "{}.info.expected.txt".format(self.test_file)
+        expected_file = self.test_data_dir.joinpath(
+            f"{self.test_file}.info.expected.txt"
         )
-        with open(expected_file, encoding="utf-8") as expected, StringIO() as out:
+        with expected_file.open("r", encoding="utf-8") as expected, StringIO() as out:
             stream_handler = logging.StreamHandler(out)
             stream_handler.setLevel(logging.DEBUG)
             run(
                 [
                     "--noversioncheck",
                     "info",
-                    os.path.join(self.test_data_dir, self.test_file),
+                    str(self.test_data_dir.joinpath(self.test_file)),
                 ],
                 be_quiet=True,
                 injected_stream_handler=stream_handler,
@@ -70,7 +70,7 @@ class OdmpyTests(BaseTestCase):
                 [
                     "--noversioncheck",
                     "info",
-                    os.path.join(self.test_data_dir, self.test_file),
+                    str(self.test_data_dir.joinpath(self.test_file)),
                     "--format",
                     "json",
                 ],
@@ -91,9 +91,7 @@ class OdmpyTests(BaseTestCase):
             logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     def _setup_common_responses(self):
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
-        ) as c:
+        with self.test_data_dir.joinpath("audiobook", "cover.jpg").open("rb") as c:
             img_bytes = c.read()
             # cover from OD API
             responses.get(
@@ -118,24 +116,22 @@ class OdmpyTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "dl",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
                 "--downloaddir",
-                self.test_downloads_dir,
+                str(self.test_downloads_dir),
                 "--keepcover",
                 "--hideprogress",
             ],
             be_quiet=True,
         )
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
-        self.assertTrue(os.path.isdir(expected_result.book_folder))
+        self.assertTrue(expected_result.book_folder.is_dir())
         for i in range(1, expected_result.total_parts + 1):
-            book_file = os.path.join(
-                expected_result.book_folder, expected_result.mp3_name_format.format(i)
+            book_file = expected_result.book_folder.joinpath(
+                expected_result.mp3_name_format.format(i)
             )
-            self.assertTrue(os.path.isfile(book_file))
-        self.assertFalse(
-            os.path.isfile(os.path.join(expected_result.book_folder, "cover.jpg"))
-        )
+            self.assertTrue(book_file.exists())
+        self.assertFalse(expected_result.book_folder.joinpath("cover.jpg").exists())
 
     @responses.activate
     def test_opf(self):
@@ -147,9 +143,9 @@ class OdmpyTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "dl",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
                 "--downloaddir",
-                self.test_downloads_dir,
+                str(self.test_downloads_dir),
                 "--keepcover",
                 "--opf",
                 "--hideprogress",
@@ -159,14 +155,12 @@ class OdmpyTests(BaseTestCase):
         expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
 
         # schema file has been edited to remove the legacy toc attribute for spine
-        schema_file = os.path.join(self.test_data_dir, "opf.schema.xml")
-        test_file = os.path.join(
-            expected_result.book_folder, "ceremonies-for-christmas.opf"
-        )
-        self.assertTrue(os.path.isfile(test_file))
+        schema_file = self.test_data_dir.joinpath("opf.schema.xml")
+        test_file = expected_result.book_folder.joinpath("ceremonies-for-christmas.opf")
+        self.assertTrue(test_file.exists())
 
-        with open(test_file, encoding="utf-8") as actual, open(
-            schema_file, "r", encoding="utf-8"
+        with test_file.open("r", encoding="utf-8") as actual, schema_file.open(
+            "r", encoding="utf-8"
         ) as schema:
             # pylint: disable=c-extension-no-member
             actual_opf = etree.parse(actual)
@@ -308,7 +302,7 @@ class OdmpyTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "ret",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
             ],
             be_quiet=True,
         )
@@ -329,7 +323,7 @@ class OdmpyTests(BaseTestCase):
                 [
                     "--noversioncheck",
                     "ret",
-                    os.path.join(self.test_data_dir, self.test_file),
+                    str(self.test_data_dir.joinpath(self.test_file)),
                 ],
                 be_quiet=True,
                 injected_stream_handler=stream_handler,
@@ -350,7 +344,7 @@ class OdmpyTests(BaseTestCase):
                 [
                     "--noversioncheck",
                     "ret",
-                    os.path.join(self.test_data_dir, self.test_file),
+                    str(self.test_data_dir.joinpath(self.test_file)),
                 ],
                 be_quiet=True,
             )

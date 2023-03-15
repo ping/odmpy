@@ -24,14 +24,15 @@ import logging
 import mimetypes
 import os
 import platform
+import posixpath as zip_path
 import re
 import shutil
 import xml.etree.ElementTree as ET
 import zipfile
 from functools import cmp_to_key
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Optional
 from urllib.parse import urlparse, urljoin
-import posixpath as zip_path
 
 import bs4.element
 import requests
@@ -53,7 +54,7 @@ from ..libby import (
     LibbyMediaTypes,
 )
 from ..overdrive import OverDriveClient
-from ..utils import slugify, basename_from_url, file_ext, file_root
+from ..utils import slugify
 
 #
 # Main processing logic for libby direct ebook and magazine loans
@@ -233,8 +234,8 @@ def _sort_title_contents(a: Dict, b: Dict):
     :return:
     """
     extensions_rank = [".xhtml", ".html", ".htm", ".jpg", ".jpeg", ".png", ".gif"]
-    a_ext = file_ext(basename_from_url(a["url"]))
-    b_ext = file_ext(basename_from_url(b["url"]))
+    a_ext = Path(a["url"]).suffix
+    b_ext = Path(b["url"]).suffix
     try:
         a_index = extensions_rank.index(a_ext)
     except ValueError:
@@ -286,7 +287,7 @@ def _filter_content(entry: Dict, media_info: Dict, toc_pages: List[str]):
 
 def process_ebook_loan(
     loan: Dict,
-    cover_path: str,
+    cover_path: Optional[Path],
     openbook: Dict,
     rosters: List[Dict],
     libby_client: LibbyClient,
@@ -314,16 +315,16 @@ def process_ebook_loan(
         args=args,
         logger=logger,
     )
-    epub_file_path = f"{file_root(book_file_name)}.epub"
+    epub_file_path = book_file_name.with_suffix(".epub")
     epub_version = "3.0"
 
     book_meta_name = "META-INF"
     book_content_name = "OEBPS"
-    book_meta_folder = os.path.join(book_folder, book_meta_name)
-    book_content_folder = os.path.join(book_folder, book_content_name)
+    book_meta_folder = book_folder.joinpath(book_meta_name)
+    book_content_folder = book_folder.joinpath(book_content_name)
     for d in (book_meta_folder, book_content_folder):
-        if not os.path.exists(d):
-            os.makedirs(d)
+        if not d.exists():
+            d.mkdir(parents=True, exist_ok=True)
 
     od_client = OverDriveClient(
         user_agent=USER_AGENT, timeout=args.timeout, retry=args.retries
@@ -331,20 +332,16 @@ def process_ebook_loan(
     media_info = od_client.media(loan["id"])
 
     if args.is_debug_mode:
-        with open(os.path.join(book_folder, "media.json"), "w", encoding="utf-8") as f:
+        with book_folder.joinpath("media.json").open("w", encoding="utf-8") as f:
             json.dump(media_info, f, indent=2)
 
-        with open(os.path.join(book_folder, "loan.json"), "w", encoding="utf-8") as f:
+        with book_folder.joinpath("loan.json").open("w", encoding="utf-8") as f:
             json.dump(loan, f, indent=2)
 
-        with open(
-            os.path.join(book_folder, "rosters.json"), "w", encoding="utf-8"
-        ) as f:
+        with book_folder.joinpath("rosters.json").open("w", encoding="utf-8") as f:
             json.dump(rosters, f, indent=2)
 
-        with open(
-            os.path.join(book_folder, "openbook.json"), "w", encoding="utf-8"
-        ) as f:
+        with book_folder.joinpath("openbook.json").open("w", encoding="utf-8") as f:
             json.dump(openbook, f, indent=2)
 
     title_contents: Dict = next(
@@ -411,8 +408,8 @@ def process_ebook_loan(
         entry_url = entry["url"]
         parsed_entry_url = urlparse(entry_url)
         media_type, _ = mimetypes.guess_type(parsed_entry_url.path[1:])
-        asset_folder = os.path.join(
-            book_content_folder, os.path.dirname(parsed_entry_url.path[1:])
+        asset_folder = book_content_folder.joinpath(
+            Path(parsed_entry_url.path[1:]).parent
         )
         if media_type == "application/x-dtbncx+xml":
             has_ncx = True
@@ -432,24 +429,18 @@ def process_ebook_loan(
             # toc actually exists
             cover_img_manifest_id = manifest_entry["id"]
 
-        if not os.path.exists(asset_folder):
-            os.makedirs(asset_folder)
-        asset_file_path = os.path.join(
-            asset_folder, os.path.basename(parsed_entry_url.path)
-        )
+        if not asset_folder.exists():
+            asset_folder.mkdir(parents=True, exist_ok=True)
+        asset_file_path = asset_folder.joinpath(Path(parsed_entry_url.path).name)
 
         soup = None
-        if os.path.exists(asset_file_path):
-            progress_bar.set_description(
-                f"Already saved {os.path.basename(parsed_entry_url.path)}"
-            )
+        if asset_file_path.exists():
+            progress_bar.set_description(f"Already saved {asset_file_path.name}")
             if media_type in ("application/xhtml+xml", "text/html"):
-                with open(asset_file_path, "r", encoding="utf-8") as f_asset:
+                with asset_file_path.open("r", encoding="utf-8") as f_asset:
                     soup = BeautifulSoup(f_asset, features="html.parser")
         else:
-            progress_bar.set_description(
-                f"Downloading {os.path.basename(parsed_entry_url.path)}"
-            )
+            progress_bar.set_description(f"Downloading {asset_file_path.name}")
             # use the libby client session because the required
             # auth cookies are set there
             res: requests.Response = libby_client.make_request(
@@ -487,13 +478,11 @@ def process_ebook_loan(
                     and manifest_entry["id"] == _sanitise_opf_id(cover_toc_item["path"])
                 ):
                     img_src = os.path.relpath(
-                        os.path.join(
-                            book_content_folder, cover_toc_item["featureImage"]
-                        ),
+                        book_content_folder.joinpath(cover_toc_item["featureImage"]),
                         start=asset_folder,
                     )
                     if is_windows:
-                        img_src = img_src.replace(os.sep, "/")
+                        img_src = Path(img_src).as_posix()
                     # patch the svg based cover for magazines
                     cover_svg = soup.find("svg")
                     if cover_svg:
@@ -558,8 +547,8 @@ def process_ebook_loan(
         # we give the nav an id-stamped file name to avoid accidentally overwriting
         # an existing file name
         nav_file_name = f'nav_{loan["id"]}.xhtml'
-        with open(
-            os.path.join(book_content_folder, nav_file_name), "w", encoding="utf-8"
+        with book_content_folder.joinpath(nav_file_name).open(
+            "w", encoding="utf-8"
         ) as f_nav:
             f_nav.write(str(nav_soup).strip())
         manifest_entries.append(
@@ -579,7 +568,7 @@ def process_ebook_loan(
         toc_ncx_name = f'toc_{loan["id"]}.ncx'
         tree = ET.ElementTree(ncx)
         tree.write(
-            os.path.join(book_content_folder, toc_ncx_name),
+            book_content_folder.joinpath(toc_ncx_name),
             xml_declaration=True,
             encoding="utf-8",
         )
@@ -594,7 +583,7 @@ def process_ebook_loan(
 
     # create epub OPF
     opf_file_name = "package.opf"
-    opf_file_path = os.path.join(book_content_folder, opf_file_name)
+    opf_file_path = book_content_folder.joinpath(opf_file_name)
     package = build_opf_package(
         media_info,
         version=epub_version,
@@ -605,11 +594,11 @@ def process_ebook_loan(
     if args.generate_opf:
         # save opf before the manifest and spine elements get added
         # because those elements are meaningless outside an epub
-        export_opf_file = f"{file_root(epub_file_path)}.opf"
+        export_opf_file = epub_file_path.with_suffix(".opf")
         ET.ElementTree(package).write(
             export_opf_file, xml_declaration=True, encoding="utf-8"
         )
-        logger.info('Saved "%s"', colored(export_opf_file, "magenta"))
+        logger.info('Saved "%s"', colored(str(export_opf_file), "magenta"))
 
     # add manifest
     manifest = ET.SubElement(package, "manifest")
@@ -633,7 +622,7 @@ def process_ebook_loan(
         # we give the cover a timestamped file name to avoid accidentally overwriting
         # an existing file name
         cover_image_name = f"cover_{int(datetime.datetime.now().timestamp())}.jpg"
-        shutil.copyfile(cover_path, os.path.join(book_content_folder, cover_image_name))
+        shutil.copyfile(cover_path, book_content_folder.joinpath(cover_image_name))
         ET.SubElement(
             manifest,
             "item",
@@ -699,7 +688,7 @@ def process_ebook_loan(
     if args.is_debug_mode:
         from xml.dom import minidom
 
-        with open(opf_file_path, "w", encoding="utf-8") as f:
+        with opf_file_path.open("w", encoding="utf-8") as f:
             f.write(
                 minidom.parseString(ET.tostring(package, "utf-8")).toprettyxml(
                     indent="\t"
@@ -711,7 +700,7 @@ def process_ebook_loan(
     logger.debug('Saved "%s"', opf_file_path)
 
     # create container.xml
-    container_file_path = os.path.join(book_meta_folder, "container.xml")
+    container_file_path = book_meta_folder.joinpath("container.xml")
     container = ET.Element(
         "container",
         attrib={
@@ -746,20 +735,20 @@ def process_ebook_loan(
         ):
             if is_windows:
                 # patch for windows because zipFile requires "/" separator but windows os.sep is "\"
-                folder_name = folder_name.replace(os.sep, "/")
+                folder_name = Path(folder_name).as_posix()
                 folder_name = folder_name.encode("CP437", errors="replace").decode(
                     "CP437"
                 )
             epub_zip.write(book_meta_folder, arcname=folder_name)
             for path, _, files in os.walk(root_start):
                 for file in files:
-                    zip_target_file = os.path.join(path, file)
+                    zip_target_file = Path(path, file)
                     zip_archive_name = os.path.relpath(
                         zip_target_file, start=book_folder
                     )
                     if is_windows:
                         # patch for windows because zipFile requires "/" separator but windows os.sep is "\"
-                        zip_archive_name = zip_archive_name.replace(os.sep, "/")
+                        zip_archive_name = Path(zip_archive_name).as_posix()
                         zip_archive_name = zip_archive_name.encode(
                             "CP437", errors="replace"
                         ).decode("CP437")
@@ -767,7 +756,7 @@ def process_ebook_loan(
                         'epub: Added "%s" as "%s"', zip_target_file, zip_archive_name
                     )
                     epub_zip.write(zip_target_file, zip_archive_name)
-    logger.info('Saved "%s"', colored(epub_file_path, "magenta", attrs=["bold"]))
+    logger.info('Saved "%s"', colored(str(epub_file_path), "magenta", attrs=["bold"]))
 
     # clean up
     if not args.is_debug_mode:
@@ -778,8 +767,8 @@ def process_ebook_loan(
             "loan.json",
             "rosters.json",
         ):
-            target = os.path.join(book_folder, file_name)
-            if os.path.exists(target):
-                os.remove(target)
+            target = book_folder.joinpath(file_name)
+            if target.exists():
+                target.unlink()
         for folder in (book_content_folder, book_meta_folder):
             shutil.rmtree(folder, ignore_errors=True)

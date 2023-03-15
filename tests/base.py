@@ -1,10 +1,10 @@
 import logging
-import os
 import shutil
 import sys
 import unittest
 import warnings
 from http.client import HTTPConnection
+from pathlib import Path
 
 test_logger = logging.getLogger(__name__)
 test_logger.setLevel(logging.WARNING)
@@ -18,12 +18,10 @@ class BaseTestCase(unittest.TestCase):
         warnings.filterwarnings(
             action="ignore", message="unclosed", category=ResourceWarning
         )
-        self.test_data_dir = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "data"
-        )
-        self.test_downloads_dir = os.path.join(self.test_data_dir, "downloads")
-        if not os.path.isdir(self.test_downloads_dir):
-            os.makedirs(self.test_downloads_dir)
+        self.test_data_dir = Path(__file__).absolute().parent.joinpath("data")
+        self.test_downloads_dir = self.test_data_dir.joinpath("downloads")
+        if not self.test_downloads_dir.exists():
+            self.test_downloads_dir.mkdir(parents=True, exist_ok=True)
 
         self.logger = test_logger
         # hijack unittest -v arg to toggle log verbosity in test
@@ -35,5 +33,5 @@ class BaseTestCase(unittest.TestCase):
             logging.basicConfig(stream=sys.stdout)
 
     def tearDown(self) -> None:
-        if os.path.isdir(self.test_downloads_dir):
+        if self.test_downloads_dir.exists():
             shutil.rmtree(self.test_downloads_dir, ignore_errors=True)

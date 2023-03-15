@@ -1,5 +1,5 @@
 import json
-import os.path
+import os
 import subprocess
 
 import eyed3  # type: ignore[import]
@@ -26,9 +26,7 @@ class OdmpyDlTests(BaseTestCase):
             self.test_file = ""
 
     def _setup_common_responses(self):
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
-        ) as c:
+        with self.test_data_dir.joinpath("audiobook", "cover.jpg").open("rb") as c:
             img_bytes = c.read()
             # cover from OD API
             responses.get(
@@ -52,23 +50,21 @@ class OdmpyDlTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "dl",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
                 "--downloaddir",
-                self.test_downloads_dir,
+                str(self.test_downloads_dir),
                 "--keepcover",
                 "--hideprogress",
             ],
             be_quiet=True,
         )
-        self.assertTrue(os.path.isdir(expected_result.book_folder))
+        self.assertTrue(expected_result.book_folder.exists())
         for i in range(1, expected_result.total_parts + 1):
-            book_file = os.path.join(
-                expected_result.book_folder, expected_result.mp3_name_format.format(i)
+            book_file = expected_result.book_folder.joinpath(
+                expected_result.mp3_name_format.format(i)
             )
-            self.assertTrue(os.path.isfile(book_file))
-        self.assertTrue(
-            os.path.isfile(os.path.join(expected_result.book_folder, "cover.jpg"))
-        )
+            self.assertTrue(book_file.exists())
+        self.assertTrue(expected_result.book_folder.joinpath("cover.jpg").exists())
 
     @responses.activate
     def test_add_chapters(self):
@@ -84,9 +80,9 @@ class OdmpyDlTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "dl",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
                 "--downloaddir",
-                self.test_downloads_dir,
+                str(self.test_downloads_dir),
                 "--chapters",
                 "--hideprogress",
             ],
@@ -94,8 +90,8 @@ class OdmpyDlTests(BaseTestCase):
         )
         marker_count = 0
         for i in range(1, expected_result.total_parts + 1):
-            book_file = os.path.join(
-                expected_result.book_folder, expected_result.mp3_name_format.format(i)
+            book_file = expected_result.book_folder.joinpath(
+                expected_result.mp3_name_format.format(i)
             )
             audio = eyed3.load(book_file)
             self.assertTrue(audio.tag)
@@ -135,27 +131,26 @@ class OdmpyDlTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "dl",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
                 "--downloaddir",
-                self.test_downloads_dir,
+                str(self.test_downloads_dir),
                 "--merge",
                 "--hideprogress",
             ],
             be_quiet=True,
         )
-        mp3_file = os.path.join(
-            expected_result.book_folder,
-            "{}.mp3".format(expected_result.merged_book_basename),
+        mp3_file = expected_result.book_folder.joinpath(
+            f"{expected_result.merged_book_basename}.mp3"
         )
-        self.assertTrue(os.path.isfile(mp3_file))
+        self.assertTrue(mp3_file.exists())
 
         run(
             [
                 "--noversioncheck",
                 "dl",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
                 "--downloaddir",
-                self.test_downloads_dir,
+                str(self.test_downloads_dir),
                 "--merge",
                 "--mergeformat",
                 "m4b",
@@ -163,11 +158,10 @@ class OdmpyDlTests(BaseTestCase):
             ],
             be_quiet=True,
         )
-        m4b_file = os.path.join(
-            expected_result.book_folder,
-            "{}.m4b".format(expected_result.merged_book_basename),
+        m4b_file = expected_result.book_folder.joinpath(
+            f"{expected_result.merged_book_basename}.m4b"
         )
-        self.assertTrue(os.path.isfile(m4b_file))
+        self.assertTrue(m4b_file.exists())
 
     @responses.activate
     def test_merge_formats_add_chapters(self):
@@ -183,20 +177,19 @@ class OdmpyDlTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "dl",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
                 "--downloaddir",
-                self.test_downloads_dir,
+                str(self.test_downloads_dir),
                 "--merge",
                 "--chapters",
                 "--hideprogress",
             ],
             be_quiet=True,
         )
-        mp3_file = os.path.join(
-            expected_result.book_folder,
-            "{}.mp3".format(expected_result.merged_book_basename),
+        mp3_file = expected_result.book_folder.joinpath(
+            f"{expected_result.merged_book_basename}.mp3"
         )
-        self.assertTrue(os.path.isfile(mp3_file))
+        self.assertTrue(mp3_file.exists())
         ffprobe_cmd = [
             "ffprobe",
             "-v",
@@ -206,7 +199,7 @@ class OdmpyDlTests(BaseTestCase):
             "-show_format",
             "-show_streams",
             "-show_chapters",
-            mp3_file,
+            str(mp3_file),
         ]
         cmd_result = subprocess.run(
             ffprobe_cmd, capture_output=True, text=True, check=True, encoding="utf-8"
@@ -243,9 +236,9 @@ class OdmpyDlTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "dl",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
                 "--downloaddir",
-                self.test_downloads_dir,
+                str(self.test_downloads_dir),
                 "--merge",
                 "--mergeformat",
                 "m4b",
@@ -254,11 +247,10 @@ class OdmpyDlTests(BaseTestCase):
             ],
             be_quiet=True,
         )
-        m4b_file = os.path.join(
-            expected_result.book_folder,
-            "{}.m4b".format(expected_result.merged_book_basename),
+        m4b_file = expected_result.book_folder.joinpath(
+            f"{expected_result.merged_book_basename}.m4b"
         )
-        self.assertTrue(os.path.isfile(m4b_file))
+        self.assertTrue(m4b_file.exists())
         ffprobe_cmd = [
             "ffprobe",
             "-v",
@@ -268,7 +260,7 @@ class OdmpyDlTests(BaseTestCase):
             "-show_format",
             "-show_streams",
             "-show_chapters",
-            m4b_file,
+            str(m4b_file),
         ]
         cmd_result = subprocess.run(
             ffprobe_cmd, capture_output=True, text=True, check=True, encoding="utf-8"
@@ -308,18 +300,16 @@ class OdmpyDlTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "dl",
-                os.path.join(self.test_data_dir, self.test_file),
+                str(self.test_data_dir.joinpath(self.test_file)),
                 "--downloaddir",
-                self.test_downloads_dir,
+                str(self.test_downloads_dir),
                 "--merge",
                 "--nobookfolder",
                 "--hideprogress",
             ],
             be_quiet=True,
         )
-        mp3_file = os.path.join(
-            self.test_data_dir,
-            "downloads",
-            "{}.mp3".format(expected_result.merged_book_basename),
+        mp3_file = self.test_data_dir.joinpath(
+            "downloads", f"{expected_result.merged_book_basename}.mp3"
         )
-        self.assertTrue(os.path.isfile(mp3_file))
+        self.assertTrue(mp3_file.exists())

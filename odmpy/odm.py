@@ -21,10 +21,10 @@ import datetime
 import io
 import json
 import logging
-import os
 import sys
 import time
 from http.client import HTTPConnection
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from termcolor import colored
@@ -51,7 +51,7 @@ from .processing.shared import (
     init_session,
     extract_authors_from_openbook,
 )
-from .utils import slugify, plural_or_singular_noun as ps, file_root
+from .utils import slugify, plural_or_singular_noun as ps
 
 #
 # Orchestrates the interaction between the CLI, APIs and the processing bits
@@ -262,7 +262,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
 
 def extract_loan_file(
     libby_client: LibbyClient, selected_loan: Dict, args: argparse.Namespace
-) -> str:
+) -> Optional[Path]:
     """
     Extracts the ODM / ACSM / EPUB(open) file
 
@@ -282,13 +282,12 @@ def extract_loan_file(
             )
         else:
             logger.error(colored(err_msg, "red"))
-        return ""
+        return None
 
     file_ext = "odm"
     file_name = f'{selected_loan["title"]} {selected_loan["id"]}'
-    loan_file_path = os.path.join(
-        args.download_dir,
-        f"{slugify(file_name, allow_unicode=True)}.{file_ext}",
+    loan_file_path = Path(
+        args.download_dir, f"{slugify(file_name, allow_unicode=True)}.{file_ext}"
     )
     if (
         args.libby_direct
@@ -308,7 +307,7 @@ def extract_loan_file(
     if format_id in (LibbyFormats.EBookOverdrive, LibbyFormats.MagazineOverDrive):
         _, openbook, rosters = libby_client.process_ebook(selected_loan)
 
-    cover_path = ""
+    cover_path = None
     if format_id in (
         LibbyFormats.EBookEPubAdobe,
         LibbyFormats.EBookEPubOpen,
@@ -337,11 +336,15 @@ def extract_loan_file(
             args=args,
             logger=logger,
         )
-        loan_file_path = f"{file_root(book_file_name)}.{file_ext}"
-        if format_id in (
-            LibbyFormats.EBookOverdrive,
-            LibbyFormats.MagazineOverDrive,
-        ) and not os.path.exists(loan_file_path):
+        loan_file_path = book_file_name.with_suffix(f".{file_ext}")
+        if (
+            format_id
+            in (
+                LibbyFormats.EBookOverdrive,
+                LibbyFormats.MagazineOverDrive,
+            )
+            and not loan_file_path.exists()
+        ):
             # we need the cover for embedding
             cover_path, _ = generate_cover(
                 book_folder=book_folder,
@@ -354,7 +357,7 @@ def extract_loan_file(
 
     # don't re-download odm if it already exists so that we don't
     # needlessly use up the fulfillment limits
-    if not os.path.exists(loan_file_path):
+    if not loan_file_path.exists():
         if format_id in (LibbyFormats.EBookOverdrive, LibbyFormats.MagazineOverDrive):
             process_ebook_loan(
                 loan=selected_loan,
@@ -371,12 +374,12 @@ def extract_loan_file(
                 odm_res_content = libby_client.fulfill_loan_file(
                     selected_loan["id"], selected_loan["cardId"], format_id
                 )
-                with open(loan_file_path, "wb") as f:
+                with loan_file_path.open("wb") as f:
                     f.write(odm_res_content)
                     logger.info(
                         "Downloaded %s to %s",
                         file_ext,
-                        colored(loan_file_path, "magenta"),
+                        colored(str(loan_file_path), "magenta"),
                     )
             except ClientError as ce:
                 if ce.http_status == 400 and libby_client.is_downloadable_ebook_loan(
@@ -389,18 +392,18 @@ def extract_loan_file(
                         ),
                         colored("You may have sent the loan to a Kindle.", "red"),
                     )
-                    return ""
+                    return None
                 raise
     else:
         logger.info(
             "Already downloaded %s file %s",
             file_ext,
-            colored(loan_file_path, "magenta"),
+            colored(str(loan_file_path), "magenta"),
         )
 
-    if os.path.exists(cover_path) and not args.always_keep_cover:
+    if cover_path and cover_path.exists() and not args.always_keep_cover:
         # clean up
-        os.remove(cover_path)
+        cover_path.unlink()
 
     return loan_file_path
 
@@ -608,17 +611,18 @@ def run(
         HTTPConnection.debuglevel = 1
 
     if hasattr(args, "download_dir") and args.download_dir:
-        args.download_dir = os.path.expanduser(args.download_dir)
-        if not os.path.exists(args.download_dir):
+        download_dir = Path(args.download_dir)
+        if not download_dir.exists():
             # prevents FileNotFoundError when using libby odm-based downloads
             # because the odm is first downloaded into the download dir
             # without a book folder
-            os.makedirs(args.download_dir, exist_ok=True)
+            download_dir.mkdir(parents=True, exist_ok=True)
+        args.download_dir = str(download_dir.expanduser())
 
     if hasattr(args, "settings_folder") and args.settings_folder:
-        args.settings_folder = os.path.expanduser(args.settings_folder)
+        args.settings_folder = str(Path(args.settings_folder).expanduser())
     if hasattr(args, "export_loans_path") and args.export_loans_path:
-        args.export_loans_path = os.path.expanduser(args.export_loans_path)
+        args.export_loans_path = str(Path(args.export_loans_path).expanduser())
 
     # suppress warnings
     logging.getLogger("eyed3").setLevel(
@@ -1091,7 +1095,7 @@ def run(
                     'Opening odm "%s"...',
                     colored(args.odm_file, "blue"),
                 )
-            process_odm(args.odm_file, args, logger)
+            process_odm(Path(args.odm_file), args, logger)
             return
 
     except OdmpyRuntimeError as run_err:

@@ -23,14 +23,14 @@ import hashlib
 import json
 import logging
 import math
-import os
 import re
 import shutil
 import uuid
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from functools import reduce
-from typing import Any, Union, Dict, List
+from pathlib import Path
+from typing import Any, Union, Dict, List, Optional
 
 import eyed3  # type: ignore[import]
 from requests.exceptions import HTTPError, ConnectionError
@@ -62,7 +62,6 @@ from ..utils import (
     parse_duration_to_milliseconds,
     get_element_text,
     plural_or_singular_noun as ps,
-    file_root,
 )
 
 RESERVE_ID_RE = re.compile(
@@ -89,7 +88,7 @@ def _patch_for_parse_error(text: str) -> str:
 
 
 def process_odm(
-    odm_file: str,
+    odm_file: Optional[Path],
     args: argparse.Namespace,
     logger: logging.Logger,
     cleanup_odm_license: bool = False,
@@ -283,24 +282,27 @@ def process_odm(
     )
 
     # check early if a merged file is already saved
-    if args.merge_output and os.path.isfile(
-        book_filename if args.merge_format == "mp3" else book_m4b_filename
+    if (
+        args.merge_output
+        and (
+            book_filename if args.merge_format == "mp3" else book_m4b_filename
+        ).exists()
     ):
         logger.warning(
             'Already saved "%s"',
             colored(
-                book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                str(book_filename if args.merge_format == "mp3" else book_m4b_filename),
                 "magenta",
             ),
         )
-        if cleanup_odm_license and os.path.isfile(odm_file):
+        if cleanup_odm_license and odm_file.exists():
             try:
-                os.remove(odm_file)
+                odm_file.unlink()
             except Exception as e:  # pylint: disable=broad-except
                 logger.warning(f'Error deleting "{odm_file}": {str(e)}')
         return
 
-    debug_filename = os.path.join(book_folder, "debug.json")
+    debug_filename = book_folder.joinpath("debug.json")
 
     cover_filename, cover_bytes = generate_cover(
         book_folder=book_folder,
@@ -328,12 +330,8 @@ def process_odm(
     # Extract license:
     # License file is downloadable only once per odm,
     # so we keep it in case downloads fail
-    _, odm_filename = os.path.split(odm_file)
-    license_file = os.path.join(
-        args.download_dir, odm_filename.replace(".odm", ".license")
-    )
-
-    if os.path.isfile(license_file):
+    license_file = Path(args.download_dir, odm_file.with_suffix(".license").name)
+    if license_file.exists():
         logger.warning(f"Already downloaded license file: {license_file}")
     else:
         # download license file
@@ -356,7 +354,7 @@ def process_odm(
         )
         try:
             license_res.raise_for_status()
-            with open(license_file, "wb") as outfile:
+            with license_file.open("wb") as outfile:
                 for chunk in license_res.iter_content(1024):
                     outfile.write(chunk)
             logger.debug(f"Saved license file {license_file}")
@@ -387,7 +385,7 @@ def process_odm(
     if not license_client_id:
         raise ValueError("Unable to find ClientID in License.SignedInfo")
 
-    with open(license_file, "r", encoding="utf-8") as lic_file:
+    with license_file.open("r", encoding="utf-8") as lic_file:
         lic_file_contents = lic_file.read()
 
     track_count = 0
@@ -397,23 +395,22 @@ def process_odm(
     audio_bitrate = 0
     for p in download_parts:
         part_number = int(p["number"])
-        part_filename = os.path.join(
-            book_folder,
-            f"{slugify(f'{title} - Part {part_number:02d}', allow_unicode=True)}.mp3",
+        part_filename = book_folder.joinpath(
+            f"{slugify(f'{title} - Part {part_number:02d}', allow_unicode=True)}.mp3"
         )
-        part_tmp_filename = f"{part_filename}.part"
+        part_tmp_filename = part_filename.with_suffix(".part")
         part_file_size = int(p["filesize"])
         part_url_filename = p["filename"]
         part_download_url = f"{download_baseurl}/{part_url_filename}"
         part_markers = []
 
-        if os.path.isfile(part_filename):
-            logger.warning("Already saved %s", colored(part_filename, "magenta"))
+        if part_filename.exists():
+            logger.warning("Already saved %s", colored(str(part_filename), "magenta"))
         else:
             try:
                 already_downloaded_len = 0
-                if os.path.exists(part_tmp_filename):
-                    already_downloaded_len = os.stat(part_tmp_filename).st_size
+                if part_tmp_filename.exists():
+                    already_downloaded_len = part_tmp_filename.stat().st_size
 
                 part_download_res = session.get(
                     part_download_url,
@@ -438,8 +435,8 @@ def process_odm(
                     desc=f"Part {part_number:2d}",
                     disable=args.hide_progress,
                 ) as res_raw:
-                    with open(
-                        part_tmp_filename, "ab" if already_downloaded_len else "wb"
+                    with part_tmp_filename.open(
+                        "ab" if already_downloaded_len else "wb"
                     ) as outfile:
                         shutil.copyfileobj(res_raw, outfile)
 
@@ -570,7 +567,7 @@ def process_odm(
                         start_time,
                         end_time,
                         colored(str(gm["text"]), "cyan"),
-                        colored(part_filename, "blue"),
+                        colored(str(part_filename), "blue"),
                     )
 
                 audiofile.tag.save()
@@ -581,7 +578,7 @@ def process_odm(
             )
             keep_cover = True
 
-        logger.info('Saved "%s"', colored(part_filename, "magenta"))
+        logger.info('Saved "%s"', colored(str(part_filename), "magenta"))
 
         file_tracks.append(
             {
@@ -598,7 +595,7 @@ def process_odm(
         logger.info(
             'Generating "%s"...',
             colored(
-                book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                str(book_filename if args.merge_format == "mp3" else book_m4b_filename),
                 "magenta",
             ),
         )
@@ -684,7 +681,7 @@ def process_odm(
                     start_time,
                     end_time,
                     colored(str(mm["text"]), "cyan"),
-                    colored(book_filename, "blue"),
+                    colored(str(book_filename), "blue"),
                 )
 
         audiofile.tag.save()
@@ -693,7 +690,11 @@ def process_odm(
             logger.info(
                 'Merged files into "%s"',
                 colored(
-                    book_filename if args.merge_format == "mp3" else book_m4b_filename,
+                    str(
+                        book_filename
+                        if args.merge_format == "mp3"
+                        else book_m4b_filename
+                    ),
                     "magenta",
                 ),
             )
@@ -712,32 +713,33 @@ def process_odm(
         if not args.keep_mp3:
             for f in file_tracks:
                 try:
-                    os.remove(f["file"])
+                    f["file"].unlink()
                 except Exception as e:  # pylint: disable=broad-except
                     logger.warning(f'Error deleting "{f["file"]}": {str(e)}')
 
     if cleanup_odm_license:
         for target_file in [odm_file, license_file]:
-            if os.path.isfile(target_file):
+            if target_file and target_file.exists():
                 try:
-                    os.remove(target_file)
+                    target_file.unlink()
                 except Exception as e:  # pylint: disable=broad-except
                     logger.warning(f'Error deleting "{target_file}": {str(e)}')
 
-    if not keep_cover and os.path.isfile(cover_filename):
+    if not keep_cover and cover_filename.exists():
         try:
-            os.remove(cover_filename)
+            cover_filename.unlink()
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(f'Error deleting "{cover_filename}": {str(e)}')
 
     if args.generate_opf:
         if args.merge_output:
-            opf_file_path = f"{file_root(book_filename)}.opf"
+            opf_file_path = book_filename.with_suffix(".opf")
         else:
-            opf_file_path = os.path.join(
-                book_folder, f"{slugify(title, allow_unicode=True)}.opf"
+            opf_file_path = book_folder.joinpath(
+                f"{slugify(title, allow_unicode=True)}.opf"
             )
-        if not os.path.exists(opf_file_path):
+
+        if not opf_file_path.exists():
             mobj = RESERVE_ID_RE.match(overdrive_media_id)
             if not mobj:
                 logger.warning(
@@ -765,10 +767,10 @@ def process_odm(
                     logger,
                 )
         else:
-            logger.info("Already saved %s", colored(opf_file_path, "magenta"))
+            logger.info("Already saved %s", colored(str(opf_file_path), "magenta"))
 
     if args.write_json:
-        with open(debug_filename, "w", encoding="utf-8") as outfile:
+        with debug_filename.open("w", encoding="utf-8") as outfile:
             json.dump(debug_meta, outfile, indent=2)
 
 

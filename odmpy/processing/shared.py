@@ -19,9 +19,9 @@
 import argparse
 import datetime
 import logging
-import os
 import subprocess
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 from urllib.parse import urlparse
 
@@ -34,7 +34,7 @@ from termcolor import colored
 from ..constants import PERFORMER_FID, LANGUAGE_FID
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyFormats
-from ..utils import slugify, sanitize_path, set_ele_attributes, file_root
+from ..utils import slugify, sanitize_path, set_ele_attributes
 
 
 #
@@ -59,7 +59,7 @@ def generate_names(
     edition: str,
     args: argparse.Namespace,
     logger: logging.Logger,
-) -> Tuple[str, str, str]:
+) -> Tuple[Path, Path, Path]:
     """
     Creates the download folder if necessary and generates the merged book names
 
@@ -90,24 +90,18 @@ def generate_names(
         }
     )
     # declare book folder/file names here together, so that we can catch problems from too long names
-    book_folder = os.path.join(args.download_dir, book_folder_name)
+    book_folder = Path(args.download_dir, book_folder_name)
     if args.no_book_folder:
-        book_folder = args.download_dir
+        book_folder = Path(args.download_dir)
 
     # for merged mp3
-    book_filename = os.path.join(
-        book_folder,
-        f"{book_file_format}.mp3",
-    )
+    book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
     # for merged m4b
-    book_m4b_filename = os.path.join(
-        book_folder,
-        f"{book_file_format}.m4b",
-    )
+    book_m4b_filename = book_folder.joinpath(f"{book_file_format}.m4b")
 
-    if not os.path.exists(book_folder):
+    if not book_folder.exists():
         try:
-            os.makedirs(book_folder)
+            book_folder.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
             # ref http://www.ioplex.com/~miallen/errcmpp.html
             if exc.errno not in (36, 63) or args.no_book_folder:
@@ -120,11 +114,11 @@ def generate_names(
                 "Author": sanitize_path(authors[0]) if authors else "",
                 "Series": sanitize_path(series or ""),
             }
-            book_folder = os.path.join(args.download_dir, book_folder_name)
+            book_folder = Path(args.download_dir, book_folder_name)
             logger.warning(
                 f'Book folder name is too long. Files will be saved in "{book_folder}" instead.'
             )
-            os.makedirs(book_folder, exist_ok=True)
+            book_folder.mkdir(parents=True, exist_ok=True)
 
             # create book name with just one author
             book_file_format = sanitize_path(
@@ -136,8 +130,8 @@ def generate_names(
                     "Edition": edition,
                 }
             )
-            book_filename = os.path.join(book_folder, f"{book_file_format}.mp3")
-            book_m4b_filename = os.path.join(book_folder, f"{book_file_format}.m4b")
+            book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
+            book_m4b_filename = book_folder.joinpath(f"{book_file_format}.m4b")
     return book_folder, book_filename, book_m4b_filename
 
 
@@ -256,13 +250,13 @@ def get_best_cover_url(loan: Dict) -> Optional[str]:
 
 
 def generate_cover(
-    book_folder: str,
+    book_folder: Path,
     cover_url: Optional[str],
     session: requests.Session,
     timeout: int,
     logger: logging.Logger,
     force_square: bool = True,
-) -> Tuple[str, Optional[bytes]]:
+) -> Tuple[Path, Optional[bytes]]:
     """
     Get the book cover
 
@@ -274,8 +268,8 @@ def generate_cover(
     :param force_square:
     :return:
     """
-    cover_filename = os.path.join(book_folder, "cover.jpg")
-    if not os.path.isfile(cover_filename) and cover_url:
+    cover_filename = book_folder.joinpath("cover.jpg")
+    if not cover_filename.exists() and cover_url:
         try:
             if force_square:
                 square_cover_url_params = {
@@ -299,7 +293,7 @@ def generate_cover(
                     cover_url, headers={"User-Agent": USER_AGENT}, timeout=timeout
                 )
             cover_res.raise_for_status()
-            with open(cover_filename, "wb") as outfile:
+            with cover_filename.open("wb") as outfile:
                 outfile.write(cover_res.content)
         except requests.exceptions.HTTPError as he:
             if not force_square:
@@ -320,7 +314,7 @@ def generate_cover(
                         timeout=timeout,
                     )
                     cover_res.raise_for_status()
-                    with open(cover_filename, "wb") as outfile:
+                    with cover_filename.open("wb") as outfile:
                         outfile.write(cover_res.content)
                 except requests.exceptions.HTTPError as he2:
                     logger.warning(
@@ -329,15 +323,15 @@ def generate_cover(
                     )
 
     cover_bytes: Optional[bytes] = None
-    if os.path.isfile(cover_filename):
-        with open(cover_filename, "rb") as f:
+    if cover_filename.exists():
+        with cover_filename.open("rb") as f:
             cover_bytes = f.read()
 
     return cover_filename, cover_bytes
 
 
 def merge_into_mp3(
-    book_filename: str,
+    book_filename: Path,
     file_tracks: List[Dict],
     audio_bitrate: int,
     ffmpeg_loglevel: str,
@@ -357,7 +351,7 @@ def merge_into_mp3(
     """
 
     # We can't directly generate a m4b here even if specified because eyed3 doesn't support m4b/mp4
-    temp_book_filename = f"{book_filename}.part"
+    temp_book_filename = book_filename.with_suffix(".part")
     cmd = [
         "ffmpeg",
         "-y",
@@ -371,7 +365,7 @@ def merge_into_mp3(
     cmd.extend(
         [
             "-i",
-            f"concat:{'|'.join([ft['file'] for ft in file_tracks])}",
+            f"concat:{'|'.join([str(ft['file']) for ft in file_tracks])}",
             "-acodec",
             "copy",
             "-b:a",
@@ -380,7 +374,7 @@ def merge_into_mp3(
             else "64k",  # explicitly set audio bitrate
             "-f",
             "mp3",
-            temp_book_filename,
+            str(temp_book_filename),
         ]
     )
     exit_code = subprocess.call(cmd)
@@ -392,13 +386,13 @@ def merge_into_mp3(
     # Switch to using os.replace() instead of os.rename() to avoid
     # issues with remnant files between tests
     # Ref: https://github.com/ping/odmpy/issues/31
-    os.replace(temp_book_filename, book_filename)
+    temp_book_filename.replace(book_filename)
 
 
 def convert_to_m4b(
-    book_filename: str,
-    book_m4b_filename: str,
-    cover_filename: str,
+    book_filename: Path,
+    book_m4b_filename: Path,
+    cover_filename: Path,
     audio_bitrate: int,
     ffmpeg_loglevel: str,
     hide_progress: str,
@@ -416,7 +410,7 @@ def convert_to_m4b(
     :param logger:
     :return:
     """
-    temp_book_m4b_filename = f"{book_m4b_filename}.part"
+    temp_book_m4b_filename = book_m4b_filename.with_suffix(".part")
     cmd = [
         "ffmpeg",
         "-y",
@@ -430,11 +424,11 @@ def convert_to_m4b(
     cmd.extend(
         [
             "-i",
-            book_filename,
+            str(book_filename),
         ]
     )
-    if os.path.isfile(cover_filename):
-        cmd.extend(["-i", cover_filename])
+    if cover_filename.exists():
+        cmd.extend(["-i", str(cover_filename)])
 
     cmd.extend(
         [
@@ -448,7 +442,7 @@ def convert_to_m4b(
             else "64k",  # explicitly set audio bitrate
         ]
     )
-    if os.path.isfile(cover_filename):
+    if cover_filename.exists():
         cmd.extend(
             [
                 "-map",
@@ -460,24 +454,24 @@ def convert_to_m4b(
             ]
         )
 
-    cmd.extend(["-f", "mp4", temp_book_m4b_filename])
+    cmd.extend(["-f", "mp4", str(temp_book_m4b_filename)])
     exit_code = subprocess.call(cmd)
     if exit_code:
         logger.error(f"ffmpeg exited with the code: {exit_code!s}")
         logger.error(f"Command: {' '.join(cmd)!s}")
         raise OdmpyRuntimeError("ffmpeg exited with a non-zero code")
 
-    os.rename(temp_book_m4b_filename, book_m4b_filename)
-    logger.info('Merged files into "%s"', colored(book_m4b_filename, "magenta"))
+    temp_book_m4b_filename.rename(book_m4b_filename)
+    logger.info('Merged files into "%s"', colored(str(book_m4b_filename), "magenta"))
     try:
-        os.remove(book_filename)
+        book_filename.unlink()
     except Exception as e:  # pylint: disable=broad-except
         logger.warning(f'Error deleting "{book_filename}": {str(e)}')
 
 
 def remux_mp3(
-    part_tmp_filename: str,
-    part_filename: str,
+    part_tmp_filename: Path,
+    part_filename: Path,
     ffmpeg_loglevel: str,
     logger: logging.Logger,
 ) -> None:
@@ -498,24 +492,24 @@ def remux_mp3(
         "-loglevel",
         ffmpeg_loglevel,
         "-i",
-        part_tmp_filename,
+        str(part_tmp_filename),
         "-c:a",
         "copy",
         "-c:v",
         "copy",
-        part_filename,
+        str(part_filename),
     ]
     try:
         exit_code = subprocess.call(cmd)
         if exit_code:
             logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
             logger.warning(f"Command: {' '.join(cmd)!s}")
-            os.rename(part_tmp_filename, part_filename)
+            part_tmp_filename.rename(part_filename)
         else:
-            os.remove(part_tmp_filename)
+            part_tmp_filename.unlink()
     except Exception as ffmpeg_ex:  # pylint: disable=broad-except
         logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
-        os.rename(part_tmp_filename, part_filename)
+        part_tmp_filename.rename(part_filename)
 
 
 def extract_authors_from_openbook(openbook: Dict) -> List[str]:
@@ -919,9 +913,9 @@ def build_opf_package(
 
 def create_opf(
     media_info: Dict,
-    cover_filename: Optional[str],
+    cover_filename: Optional[Path],
     file_tracks: List[Dict],
-    opf_file_path: str,
+    opf_file_path: Path,
     logger: logging.Logger,
 ) -> None:
     """
@@ -941,20 +935,19 @@ def create_opf(
             "item",
             attrib={
                 "id": "cover",
-                "href": os.path.basename(cover_filename),
+                "href": cover_filename.name,
                 "media-type": "image/jpeg",
             },
         )
     spine = ET.SubElement(package, "spine")
     for f in file_tracks:
-        file_basename = os.path.basename(f["file"])
-        file_id = slugify(file_root(file_basename))
+        file_id = slugify(f["file"].stem)
         ET.SubElement(
             manifest,
             "item",
             attrib={
                 "id": file_id,
-                "href": file_basename,
+                "href": f["file"].name,
                 "media-type": "audio/mpeg",
             },
         )
@@ -962,4 +955,4 @@ def create_opf(
 
     tree = ET.ElementTree(package)
     tree.write(opf_file_path, xml_declaration=True, encoding="utf-8")
-    logger.info('Saved "%s"', colored(opf_file_path, "magenta"))
+    logger.info('Saved "%s"', colored(str(opf_file_path), "magenta"))

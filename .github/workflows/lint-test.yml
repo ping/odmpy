@@ -111,7 +111,6 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v3
         with:
-          ref: "master"
           fetch-depth: 1
           path: "source"
       - name: Download a single artifact

@@ -1,11 +1,11 @@
-import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List
 
 
 @dataclass
 class ExpectedResult:
-    book_folder: str
+    book_folder: Path
     merged_book_basename: str
     mp3_name_format: str
     total_parts: int
@@ -13,9 +13,9 @@ class ExpectedResult:
     chapter_durations_sec: List[int]
 
 
-def get_expected_result(test_downloads_dir: str, test_file: str) -> ExpectedResult:
+def get_expected_result(test_downloads_dir: Path, test_file: str) -> ExpectedResult:
     return ExpectedResult(
-        book_folder=os.path.join(test_downloads_dir, book_folders[test_file]),
+        book_folder=test_downloads_dir.joinpath(book_folders[test_file]),
         merged_book_basename=merged_book_basenames[test_file],
         mp3_name_format=mp3_name_formats[test_file],
         total_parts=book_parts[test_file],

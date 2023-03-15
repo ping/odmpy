@@ -17,12 +17,12 @@
 #
 import json
 import logging
-import os
 import re
 import sys
 from collections import OrderedDict
 from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
 from typing import Optional, NamedTuple, Dict, List, Tuple
 from typing import OrderedDict as OrderedDictType
 from urllib import request
@@ -263,25 +263,20 @@ class LibbyClient(object):
         if not logger:
             logger = logging.getLogger(__name__)
         self.logger = logger
-        self.settings_folder = settings_folder
-        if self.settings_folder and not os.path.exists(self.settings_folder):
-            os.makedirs(self.settings_folder, exist_ok=True)
-        self.temp_folder = (
-            os.path.join(self.settings_folder, "temp") if self.settings_folder else None
-        )
-        if self.temp_folder and not os.path.exists(self.temp_folder):
-            os.makedirs(self.temp_folder, exist_ok=True)
+        self.settings_folder = Path(settings_folder) if settings_folder else None
+        if self.settings_folder and not self.settings_folder.exists():
+            self.settings_folder.mkdir(parents=True, exist_ok=True)
 
         self.timeout = timeout
         self.identity_token = identity_token
         self.identity = {}
         self.identity_settings_file = (
-            os.path.join(self.settings_folder, "libby.json")
+            self.settings_folder.joinpath("libby.json")
             if self.settings_folder
             else None
         )
-        if self.identity_settings_file and os.path.exists(self.identity_settings_file):
-            with open(self.identity_settings_file, "r", encoding="utf-8") as f:
+        if self.identity_settings_file and self.identity_settings_file.exists():
+            with self.identity_settings_file.open("r", encoding="utf-8") as f:
                 self.identity = json.load(f)
 
         # migrate old sync code storage key
@@ -289,7 +284,7 @@ class LibbyClient(object):
             if not self.identity.get("__libby_sync_code"):
                 self.identity["__libby_sync_code"] = self.identity["__odmpy_sync_code"]
             del self.identity["__odmpy_sync_code"]
-            with open(self.identity_settings_file, "w", encoding="utf-8") as f:
+            with self.identity_settings_file.open("w", encoding="utf-8") as f:
                 json.dump(self.identity, f)
 
         self.max_retries = max_retries
@@ -393,8 +388,8 @@ class LibbyClient(object):
 
         :return:
         """
-        if self.identity_settings_file and os.path.exists(self.identity_settings_file):
-            os.remove(self.identity_settings_file)
+        if self.identity_settings_file and self.identity_settings_file.exists():
+            self.identity_settings_file.unlink()
         self.identity = {}
 
     def has_chip(self) -> bool:

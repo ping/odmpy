@@ -1,11 +1,10 @@
-import glob
 import json
 import logging
-import os.path
 import unittest
 from datetime import datetime
 from http import HTTPStatus
 from io import StringIO
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import ebooklib  # type: ignore[import]
@@ -25,10 +24,10 @@ from .base import BaseTestCase
 class OdmpyLibbyTests(BaseTestCase):
     def test_settings_clear(self):
         settings_folder = self._generate_fake_settings()
-        settings_file = os.path.join(settings_folder, "libby.json")
-        self.assertTrue(os.path.exists(settings_file))
-        run(["libby", "--settings", settings_folder, "--reset"], be_quiet=True)
-        self.assertFalse(os.path.exists(settings_file))
+        settings_file = settings_folder.joinpath("libby.json")
+        self.assertTrue(settings_file.exists())
+        run(["libby", "--settings", str(settings_folder), "--reset"], be_quiet=True)
+        self.assertFalse(settings_file.exists())
 
     def test_libby_export(self):
         """
@@ -39,16 +38,15 @@ class OdmpyLibbyTests(BaseTestCase):
         except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
 
-        loans_file_name = os.path.join(
-            self.test_downloads_dir,
+        loans_file_name = self.test_downloads_dir.joinpath(
             f"test_loans_{int(datetime.utcnow().timestamp()*1000)}.json",
         )
         run(
-            ["--noversioncheck", "libby", "--exportloans", loans_file_name],
+            ["--noversioncheck", "libby", "--exportloans", str(loans_file_name)],
             be_quiet=True,
         )
-        self.assertTrue(os.path.exists(loans_file_name))
-        with open(loans_file_name, "r", encoding="utf-8") as f:
+        self.assertTrue(loans_file_name.exists())
+        with loans_file_name.open("r", encoding="utf-8") as f:
             loans = json.load(f)
             for loan in loans:
                 self.assertIn("id", loan)
@@ -64,12 +62,12 @@ class OdmpyLibbyTests(BaseTestCase):
             self.skipTest("Libby not setup.")
 
         ts = int(datetime.utcnow().timestamp() * 1000)
-        loans_file_name = os.path.join(self.test_downloads_dir, f"test_loans_{ts}.json")
-        download_folder = os.path.join(self.test_downloads_dir, f"test_downloads_{ts}")
-        os.makedirs(download_folder)
-        run(["libby", "--exportloans", loans_file_name], be_quiet=True)
-        self.assertTrue(os.path.exists(loans_file_name))
-        with open(loans_file_name, "r", encoding="utf-8") as f:
+        loans_file_name = self.test_downloads_dir.joinpath(f"test_loans_{ts}.json")
+        download_folder = self.test_downloads_dir.joinpath(f"test_downloads_{ts}")
+        download_folder.mkdir(parents=True, exist_ok=True)
+        run(["libby", "--exportloans", str(loans_file_name)], be_quiet=True)
+        self.assertTrue(loans_file_name.exists())
+        with loans_file_name.open("r", encoding="utf-8") as f:
             loans = json.load(f)
         if not loans:
             self.skipTest("No loans.")
@@ -81,7 +79,7 @@ class OdmpyLibbyTests(BaseTestCase):
                     "libby",
                     "--direct",
                     "--downloaddir",
-                    download_folder,
+                    str(download_folder),
                     "--select",
                     str(len(loans)),
                     "--hideprogress",
@@ -91,7 +89,7 @@ class OdmpyLibbyTests(BaseTestCase):
         except KeyboardInterrupt:
             self.fail("Test aborted")
 
-        self.assertTrue(glob.glob(f"{download_folder}/*/*.mp3"))
+        self.assertTrue(download_folder.glob("*/*.mp3"))
 
     @unittest.skip("Takes too long")  # turn on/off at will
     def test_libby_download_latest(self):
@@ -103,12 +101,12 @@ class OdmpyLibbyTests(BaseTestCase):
         except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
         ts = int(datetime.utcnow().timestamp() * 1000)
-        loans_file_name = os.path.join(self.test_downloads_dir, f"test_loans_{ts}.json")
-        download_folder = os.path.join(self.test_downloads_dir, f"test_downloads_{ts}")
-        os.makedirs(download_folder)
-        run(["libby", "--exportloans", loans_file_name], be_quiet=True)
-        self.assertTrue(os.path.exists(loans_file_name))
-        with open(loans_file_name, "r", encoding="utf-8") as f:
+        loans_file_name = self.test_downloads_dir.joinpath(f"test_loans_{ts}.json")
+        download_folder = self.test_downloads_dir.joinpath(f"test_downloads_{ts}")
+        download_folder.mkdir(parents=True, exist_ok=True)
+        run(["libby", "--exportloans", str(loans_file_name)], be_quiet=True)
+        self.assertTrue(loans_file_name.exists())
+        with loans_file_name.open("r", encoding="utf-8") as f:
             loans = json.load(f)
         if not loans:
             self.skipTest("No loans.")
@@ -120,7 +118,7 @@ class OdmpyLibbyTests(BaseTestCase):
                     "libby",
                     "--direct",
                     "--downloaddir",
-                    download_folder,
+                    str(download_folder),
                     "--latest",
                     "1",
                     "--hideprogress",
@@ -130,7 +128,7 @@ class OdmpyLibbyTests(BaseTestCase):
         except KeyboardInterrupt:
             self.fail("Test aborted")
 
-        self.assertTrue(glob.glob(f"{download_folder}/*/*.mp3"))
+        self.assertTrue(download_folder.glob("*/*.mp3"))
 
     @unittest.skip("Takes too long")  # turn on/off at will
     def test_libby_download_ebook(self):
@@ -142,12 +140,12 @@ class OdmpyLibbyTests(BaseTestCase):
         except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
         ts = int(datetime.utcnow().timestamp() * 1000)
-        loans_file_name = os.path.join(self.test_downloads_dir, f"test_loans_{ts}.json")
-        download_folder = os.path.join(self.test_downloads_dir, f"test_downloads_{ts}")
-        os.makedirs(download_folder)
-        run(["libby", "--ebooks", "--exportloans", loans_file_name], be_quiet=True)
-        self.assertTrue(os.path.exists(loans_file_name))
-        with open(loans_file_name, "r", encoding="utf-8") as f:
+        loans_file_name = self.test_downloads_dir.joinpath(f"test_loans_{ts}.json")
+        download_folder = self.test_downloads_dir.joinpath(f"test_downloads_{ts}")
+        download_folder.mkdir(parents=True, exist_ok=True)
+        run(["libby", "--ebooks", "--exportloans", str(loans_file_name)], be_quiet=True)
+        self.assertTrue(loans_file_name.exists())
+        with loans_file_name.open("r", encoding="utf-8") as f:
             loans = json.load(f)
         if not loans:
             self.skipTest("No loans.")
@@ -171,7 +169,7 @@ class OdmpyLibbyTests(BaseTestCase):
                     "libby",
                     "--ebooks",
                     "--downloaddir",
-                    download_folder,
+                    str(download_folder),
                     "--select",
                     str(selected_index),
                 ],
@@ -180,8 +178,7 @@ class OdmpyLibbyTests(BaseTestCase):
         except KeyboardInterrupt:
             self.fail("Test aborted")
 
-        acsm_file = glob.glob(f"{download_folder}/*/*.acsm")
-        self.assertTrue(acsm_file)
+        self.assertTrue(download_folder.glob("*/*.acsm"))
 
     @unittest.skip("Takes too long")  # turn on/off at will
     def test_libby_download_ebook_direct(self):
@@ -193,12 +190,12 @@ class OdmpyLibbyTests(BaseTestCase):
         except LibbyNotConfiguredError:
             self.skipTest("Libby not setup.")
         ts = int(datetime.utcnow().timestamp() * 1000)
-        loans_file_name = os.path.join(self.test_downloads_dir, f"test_loans_{ts}.json")
-        download_folder = os.path.join(self.test_downloads_dir, f"test_downloads_{ts}")
-        os.makedirs(download_folder)
-        run(["libby", "--ebooks", "--exportloans", loans_file_name], be_quiet=True)
-        self.assertTrue(os.path.exists(loans_file_name))
-        with open(loans_file_name, "r", encoding="utf-8") as f:
+        loans_file_name = self.test_downloads_dir.joinpath(f"test_loans_{ts}.json")
+        download_folder = self.test_downloads_dir.joinpath(f"test_downloads_{ts}")
+        download_folder.mkdir(parents=True, exist_ok=True)
+        run(["libby", "--ebooks", "--exportloans", str(loans_file_name)], be_quiet=True)
+        self.assertTrue(loans_file_name.exists())
+        with loans_file_name.open("r", encoding="utf-8") as f:
             loans = json.load(f)
         if not loans:
             self.skipTest("No loans.")
@@ -222,7 +219,7 @@ class OdmpyLibbyTests(BaseTestCase):
                     "--ebooks",
                     "--direct",
                     "--downloaddir",
-                    download_folder,
+                    str(download_folder),
                     "--select",
                     str(selected_index),
                     # "--hideprogress",
@@ -232,18 +229,15 @@ class OdmpyLibbyTests(BaseTestCase):
         except KeyboardInterrupt:
             self.fail("Test aborted")
 
-        epub_file = glob.glob(f"{download_folder}/*/*.epub")
-        self.assertTrue(epub_file)
+        self.assertTrue(download_folder.glob("*/*.epub"))
 
-    def _generate_fake_settings(self) -> str:
-        settings_folder = os.path.join(self.test_downloads_dir, "settings")
-        if not os.path.exists(settings_folder):
-            os.makedirs(settings_folder)
+    def _generate_fake_settings(self) -> Path:
+        settings_folder = self.test_downloads_dir.joinpath("settings")
+        if not settings_folder.exists():
+            settings_folder.mkdir(parents=True, exist_ok=True)
 
         # generate fake settings
-        with open(
-            os.path.join(settings_folder, "libby.json"), "w", encoding="utf-8"
-        ) as f:
+        with settings_folder.joinpath("libby.json").open("w", encoding="utf-8") as f:
             json.dump(
                 {
                     "chip": "12345",
@@ -260,27 +254,21 @@ class OdmpyLibbyTests(BaseTestCase):
     def test_mock_libby_download_magazine(self):
         settings_folder = self._generate_fake_settings()
 
-        with open(
-            os.path.join(self.test_data_dir, "magazine", "sync.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("magazine", "sync.json").open(
+            "r", encoding="utf-8"
         ) as s:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
             )
-        with open(
-            os.path.join(self.test_data_dir, "magazine", "rosters.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("magazine", "rosters.json").open(
+            "r", encoding="utf-8"
         ) as r:
             responses.get(
                 "http://localhost/mock/rosters.json",
                 json=json.load(r),
             )
-        with open(
-            os.path.join(self.test_data_dir, "magazine", "openbook.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("magazine", "openbook.json").open(
+            "r", encoding="utf-8"
         ) as o:
             responses.get(
                 "http://localhost/mock/openbook.json",
@@ -301,16 +289,14 @@ class OdmpyLibbyTests(BaseTestCase):
                 },
             },
         )
-        with open(
-            os.path.join(self.test_data_dir, "magazine", "media.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("magazine", "media.json").open(
+            "r", encoding="utf-8"
         ) as m:
             responses.get(
                 "https://thunder.api.overdrive.com/v2/media/9999999?x-client-id=dewey",
                 json=json.load(m),
             )
-        with open(os.path.join(self.test_data_dir, "magazine", "cover.jpg"), "rb") as c:
+        with self.test_data_dir.joinpath("magazine", "cover.jpg").open("rb") as c:
             # this is the cover from OD API
             responses.get(
                 "http://localhost/mock/cover.jpg",
@@ -323,10 +309,8 @@ class OdmpyLibbyTests(BaseTestCase):
             "stories/story-01.xhtml",
             "stories/story-02.xhtml",
         ):
-            with open(
-                os.path.join(self.test_data_dir, "magazine", "content", page),
-                "r",
-                encoding="utf-8",
+            with self.test_data_dir.joinpath("magazine", "content", page).open(
+                "r", encoding="utf-8"
             ) as f:
                 responses.get(
                     f"http://localhost/{page}",
@@ -334,8 +318,8 @@ class OdmpyLibbyTests(BaseTestCase):
                     body=f.read(),
                 )
         for img in ("assets/cover.jpg",):
-            with open(
-                os.path.join(self.test_data_dir, "magazine", "content", img), "rb"
+            with self.test_data_dir.joinpath("magazine", "content", img).open(
+                "rb"
             ) as f:
                 responses.get(
                     f"http://localhost/{img}",
@@ -344,15 +328,14 @@ class OdmpyLibbyTests(BaseTestCase):
                 )
 
         test_folder = "test"
-        download_dir = self.test_downloads_dir
 
         run_command = [
             "libby",
             "--settings",
-            settings_folder,
+            str(settings_folder),
             "--magazines",
             "--downloaddir",
-            download_dir,
+            str(self.test_downloads_dir),
             "--bookfolderformat",
             test_folder,
             "--bookfileformat",
@@ -366,10 +349,10 @@ class OdmpyLibbyTests(BaseTestCase):
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
         self.assertTrue(
-            os.path.exists(os.path.join(download_dir, test_folder, "magazine.opf"))
+            self.test_downloads_dir.joinpath(test_folder, "magazine.opf").exists()
         )
-        epub_file_path = os.path.join(download_dir, test_folder, "magazine.epub")
-        self.assertTrue(os.path.exists(epub_file_path))
+        epub_file_path = self.test_downloads_dir.joinpath(test_folder, "magazine.epub")
+        self.assertTrue(epub_file_path.exists())
 
         book = epub.read_epub(epub_file_path, {"ignore_ncx": True})
         stories = [
@@ -389,12 +372,9 @@ class OdmpyLibbyTests(BaseTestCase):
             None,
         )
         self.assertTrue(cover)
-        with open(
-            os.path.join(
-                self.test_data_dir, "magazine", "content", "assets", "cover.jpg"
-            ),
-            "rb",
-        ) as f:
+        with self.test_data_dir.joinpath(
+            "magazine", "content", "assets", "cover.jpg"
+        ).open("rb") as f:
             self.assertEqual(f.read(), cover.get_content())
 
         nav = next(
@@ -407,18 +387,14 @@ class OdmpyLibbyTests(BaseTestCase):
     def test_mock_libby_download_ebook_acsm(self):
         settings_folder = self._generate_fake_settings()
 
-        with open(
-            os.path.join(self.test_data_dir, "ebook", "sync.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("ebook", "sync.json").open(
+            "r", encoding="utf-8"
         ) as s:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
             )
-        with open(
-            os.path.join(self.test_data_dir, "ebook", "ebook.acsm"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("ebook", "ebook.acsm").open(
+            "r", encoding="utf-8"
         ) as a:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999/fulfill/ebook-epub-adobe",
@@ -427,15 +403,14 @@ class OdmpyLibbyTests(BaseTestCase):
             )
 
         test_folder = "test"
-        download_dir = self.test_downloads_dir
 
         run_command = [
             "libby",
             "--settings",
-            settings_folder,
+            str(settings_folder),
             "--ebooks",
             "--downloaddir",
-            download_dir,
+            str(self.test_downloads_dir),
             "--bookfolderformat",
             test_folder,
             "--bookfileformat",
@@ -448,34 +423,28 @@ class OdmpyLibbyTests(BaseTestCase):
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
         self.assertTrue(
-            os.path.exists(os.path.join(download_dir, test_folder, "ebook.acsm"))
+            self.test_downloads_dir.joinpath(test_folder, "ebook.acsm").exists()
         )
 
     @responses.activate
     def test_mock_libby_download_ebook_direct(self):
         settings_folder = self._generate_fake_settings()
 
-        with open(
-            os.path.join(self.test_data_dir, "ebook", "sync.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("ebook", "sync.json").open(
+            "r", encoding="utf-8"
         ) as s:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
             )
-        with open(
-            os.path.join(self.test_data_dir, "ebook", "rosters.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("ebook", "rosters.json").open(
+            "r", encoding="utf-8"
         ) as r:
             responses.get(
                 "http://localhost/mock/rosters.json",
                 json=json.load(r),
             )
-        with open(
-            os.path.join(self.test_data_dir, "ebook", "openbook.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("ebook", "openbook.json").open(
+            "r", encoding="utf-8"
         ) as o:
             responses.get(
                 "http://localhost/mock/openbook.json",
@@ -496,16 +465,14 @@ class OdmpyLibbyTests(BaseTestCase):
                 },
             },
         )
-        with open(
-            os.path.join(self.test_data_dir, "ebook", "media.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("ebook", "media.json").open(
+            "r", encoding="utf-8"
         ) as m:
             responses.get(
                 "https://thunder.api.overdrive.com/v2/media/9999999?x-client-id=dewey",
                 json=json.load(m),
             )
-        with open(os.path.join(self.test_data_dir, "magazine", "cover.jpg"), "rb") as c:
+        with self.test_data_dir.joinpath("ebook", "cover.jpg").open("rb") as c:
             # this is the cover from OD API
             responses.get(
                 "http://localhost/mock/cover.jpg",
@@ -518,10 +485,8 @@ class OdmpyLibbyTests(BaseTestCase):
             "pages/page-01.xhtml",
             "pages/page-02.xhtml",
         ):
-            with open(
-                os.path.join(self.test_data_dir, "ebook", "content", page),
-                "r",
-                encoding="utf-8",
+            with self.test_data_dir.joinpath("ebook", "content", page).open(
+                "r", encoding="utf-8"
             ) as f:
                 responses.get(
                     f"http://localhost/{page}",
@@ -529,9 +494,7 @@ class OdmpyLibbyTests(BaseTestCase):
                     body=f.read(),
                 )
         for img in ("assets/cover.jpg",):
-            with open(
-                os.path.join(self.test_data_dir, "ebook", "content", img), "rb"
-            ) as f:
+            with self.test_data_dir.joinpath("ebook", "content", img).open("rb") as f:
                 responses.get(
                     f"http://localhost/{img}",
                     content_type="image/jpeg",
@@ -539,15 +502,14 @@ class OdmpyLibbyTests(BaseTestCase):
                 )
 
         test_folder = "test"
-        download_dir = self.test_downloads_dir
 
         run_command = [
             "libby",
             "--settings",
-            settings_folder,
+            str(settings_folder),
             "--ebooks",
             "--downloaddir",
-            download_dir,
+            str(self.test_downloads_dir),
             "--bookfolderformat",
             test_folder,
             "--bookfileformat",
@@ -562,10 +524,10 @@ class OdmpyLibbyTests(BaseTestCase):
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
         self.assertTrue(
-            os.path.exists(os.path.join(download_dir, test_folder, "ebook.opf"))
+            self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
         )
-        epub_file_path = os.path.join(download_dir, test_folder, "ebook.epub")
-        self.assertTrue(os.path.exists(epub_file_path))
+        epub_file_path = self.test_downloads_dir.joinpath(test_folder, "ebook.epub")
+        self.assertTrue(epub_file_path.exists())
 
         book = epub.read_epub(epub_file_path, {"ignore_ncx": True})
         pages = [
@@ -587,10 +549,9 @@ class OdmpyLibbyTests(BaseTestCase):
             None,
         )
         self.assertTrue(cover)
-        with open(
-            os.path.join(self.test_data_dir, "ebook", "content", "assets", "cover.jpg"),
-            "rb",
-        ) as f:
+        with self.test_data_dir.joinpath(
+            "ebook", "content", "assets", "cover.jpg"
+        ).open("rb") as f:
             self.assertEqual(f.read(), cover.get_content())
 
         nav = next(
@@ -603,10 +564,8 @@ class OdmpyLibbyTests(BaseTestCase):
     @patch("urllib.request.OpenerDirector.open")
     def test_mock_libby_download_ebook_open(self, mock_opener):
         settings_folder = self._generate_fake_settings()
-        with open(
-            os.path.join(self.test_data_dir, "ebook", "sync.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("ebook", "sync.json").open(
+            "r", encoding="utf-8"
         ) as s:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
@@ -616,22 +575,21 @@ class OdmpyLibbyTests(BaseTestCase):
             status=302,
             headers={"Location": "https://openepub-gk.cdn.overdrive.com/9999990"},
         )
-        with open(os.path.join(self.test_data_dir, "ebook", "dummy.epub"), "rb") as a:
+        with self.test_data_dir.joinpath("ebook", "dummy.epub").open("rb") as a:
             opener_open = MagicMock()
             opener_open.getcode.return_value = 200
             opener_open.read.return_value = a.read()
             mock_opener.return_value = opener_open
 
             test_folder = "test"
-            download_dir = self.test_downloads_dir
 
             run_command = [
                 "libby",
                 "--settings",
-                settings_folder,
+                str(settings_folder),
                 "--ebooks",
                 "--downloaddir",
-                download_dir,
+                str(self.test_downloads_dir),
                 "--bookfolderformat",
                 test_folder,
                 "--bookfileformat",
@@ -644,22 +602,18 @@ class OdmpyLibbyTests(BaseTestCase):
                 run_command.insert(0, "--verbose")
             run(run_command, be_quiet=not self.is_verbose)
             self.assertTrue(
-                os.path.exists(os.path.join(download_dir, test_folder, "ebook.epub"))
+                self.test_downloads_dir.joinpath(test_folder, "ebook.epub").exists()
             )
 
     def _setup_audiobook_direct_responses(self):
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "sync.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("audiobook", "sync.json").open(
+            "r", encoding="utf-8"
         ) as s:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
             )
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "openbook.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("audiobook", "openbook.json").open(
+            "r", encoding="utf-8"
         ) as o:
             responses.get(
                 "http://localhost/mock/openbook.json",
@@ -680,10 +634,8 @@ class OdmpyLibbyTests(BaseTestCase):
                 },
             },
         )
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "media.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("audiobook", "media.json").open(
+            "r", encoding="utf-8"
         ) as m:
             json_text = m.read()
             responses.get(
@@ -694,9 +646,7 @@ class OdmpyLibbyTests(BaseTestCase):
                 "https://thunder.api.overdrive.com/v2/media/0fef5121-bb1f-42a5-b62a-d9fded939d50?x-client-id=dewey",
                 json=json.loads(json_text),
             )
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "cover.jpg"), "rb"
-        ) as c:
+        with self.test_data_dir.joinpath("audiobook", "cover.jpg").open("rb") as c:
             img_bytes = c.read()
             # this is the cover from OD API
             responses.get(
@@ -709,7 +659,7 @@ class OdmpyLibbyTests(BaseTestCase):
                 content_type="image/jpeg",
                 body=img_bytes,
             )
-        with open(os.path.join(self.test_data_dir, "audiobook", "book.mp3"), "rb") as c:
+        with self.test_data_dir.joinpath("audiobook", "book.mp3").open("rb") as c:
             responses.get(
                 "http://localhost/%7BAAAAAAAA-BBBB-CCCC-9999-ABCDEF123456%7Dbook.mp3",
                 content_type="audio/mp3",
@@ -720,10 +670,8 @@ class OdmpyLibbyTests(BaseTestCase):
     def test_mock_libby_download_audiobook_odm(self):
         settings_folder = self._generate_fake_settings()
         self._setup_audiobook_direct_responses()
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "book.odm"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("audiobook", "book.odm").open(
+            "r", encoding="utf-8"
         ) as b:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999/fulfill/audiobook-mp3",
@@ -733,14 +681,13 @@ class OdmpyLibbyTests(BaseTestCase):
         responses.add_passthru("https://ping.github.io/odmpy/test_data/")
 
         test_folder = "test"
-        download_dir = self.test_downloads_dir
 
         run_command = [
             "libby",
             "--settings",
-            settings_folder,
+            str(settings_folder),
             "--downloaddir",
-            download_dir,
+            str(self.test_downloads_dir),
             "--bookfolderformat",
             test_folder,
             "--bookfileformat",
@@ -754,24 +701,25 @@ class OdmpyLibbyTests(BaseTestCase):
         if self.is_verbose:
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
-        mp3_file_path = os.path.join(download_dir, test_folder, "ebook.mp3")
-        self.assertTrue(os.path.exists(mp3_file_path))
-        opf_file_path = os.path.join(download_dir, test_folder, "ebook.opf")
-        self.assertTrue(os.path.exists(opf_file_path))
+        self.assertTrue(
+            self.test_downloads_dir.joinpath(test_folder, "ebook.mp3").exists()
+        )
+        self.assertTrue(
+            self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
+        )
 
     @responses.activate
     def test_mock_libby_download_audiobook_direct(self):
         settings_folder = self._generate_fake_settings()
         self._setup_audiobook_direct_responses()
         test_folder = "test"
-        download_dir = self.test_downloads_dir
 
         run_command = [
             "libby",
             "--settings",
-            settings_folder,
+            str(settings_folder),
             "--downloaddir",
-            download_dir,
+            str(self.test_downloads_dir),
             "--bookfolderformat",
             test_folder,
             "--bookfileformat",
@@ -788,10 +736,11 @@ class OdmpyLibbyTests(BaseTestCase):
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
         self.assertTrue(
-            glob.glob(f"{os.path.join(download_dir, test_folder)}/*part-*.mp3")
+            self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
         )
-        opf_file_path = os.path.join(download_dir, test_folder, "test-audiobook.opf")
-        self.assertTrue(os.path.exists(opf_file_path))
+        self.assertTrue(
+            self.test_downloads_dir.joinpath(test_folder, "test-audiobook.opf").exists()
+        )
 
     @responses.activate
     def test_mock_libby_download_audiobook_direct_merge(self):
@@ -799,14 +748,13 @@ class OdmpyLibbyTests(BaseTestCase):
         self._setup_audiobook_direct_responses()
 
         test_folder = "test"
-        download_dir = self.test_downloads_dir
 
         run_command = [
             "libby",
             "--settings",
-            settings_folder,
+            str(settings_folder),
             "--downloaddir",
-            download_dir,
+            str(self.test_downloads_dir),
             "--bookfolderformat",
             test_folder,
             "--bookfileformat",
@@ -823,10 +771,12 @@ class OdmpyLibbyTests(BaseTestCase):
         if self.is_verbose:
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
-        mp3_file_path = os.path.join(download_dir, test_folder, "ebook.mp3")
-        self.assertTrue(os.path.exists(mp3_file_path))
-        opf_file_path = os.path.join(download_dir, test_folder, "ebook.opf")
-        self.assertTrue(os.path.exists(opf_file_path))
+        self.assertTrue(
+            self.test_downloads_dir.joinpath(test_folder, "ebook.mp3").exists()
+        )
+        self.assertTrue(
+            self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
+        )
 
     @responses.activate
     def test_mock_libby_exportloans(self):
@@ -836,16 +786,21 @@ class OdmpyLibbyTests(BaseTestCase):
         settings_folder = self._generate_fake_settings()
         self._setup_audiobook_direct_responses()
 
-        loans_file_name = os.path.join(
-            self.test_downloads_dir,
-            f"test_loans_{int(datetime.utcnow().timestamp()*1000)}.json",
+        loans_file_name = self.test_downloads_dir.joinpath(
+            f"test_loans_{int(datetime.utcnow().timestamp()*1000)}.json"
         )
         run(
-            ["libby", "--settings", settings_folder, "--exportloans", loans_file_name],
+            [
+                "libby",
+                "--settings",
+                str(settings_folder),
+                "--exportloans",
+                str(loans_file_name),
+            ],
             be_quiet=True,
         )
-        self.assertTrue(os.path.exists(loans_file_name))
-        with open(loans_file_name, "r", encoding="utf-8") as f:
+        self.assertTrue(loans_file_name.exists())
+        with loans_file_name.open("r", encoding="utf-8") as f:
             loans = json.load(f)
             for loan in loans:
                 self.assertIn("id", loan)
@@ -864,9 +819,9 @@ class OdmpyLibbyTests(BaseTestCase):
         ),
     )
     def test_mock_libby_setup(self):
-        settings_folder = os.path.join(self.test_downloads_dir, "settings")
-        if not os.path.exists(settings_folder):
-            os.makedirs(settings_folder)
+        settings_folder = self.test_downloads_dir.joinpath("settings")
+        if not settings_folder.exists():
+            settings_folder.mkdir(parents=True, exist_ok=True)
         responses.post(
             "https://sentry-read.svc.overdrive.com/chip?client=dewey",
             content_type="application/json",
@@ -882,7 +837,7 @@ class OdmpyLibbyTests(BaseTestCase):
             stream_handler = logging.StreamHandler(out)
             stream_handler.setLevel(logging.DEBUG)
             run(
-                ["libby", "--settings", settings_folder],
+                ["libby", "--settings", str(settings_folder)],
                 be_quiet=True,
                 injected_stream_handler=stream_handler,
             )
@@ -897,9 +852,9 @@ class OdmpyLibbyTests(BaseTestCase):
         ),
     )
     def test_mock_libby_setup_fail(self):
-        settings_folder = os.path.join(self.test_downloads_dir, "settings")
-        if not os.path.exists(settings_folder):
-            os.makedirs(settings_folder)
+        settings_folder = self.test_downloads_dir.joinpath("settings")
+        if not settings_folder.exists():
+            settings_folder.mkdir(parents=True, exist_ok=True)
         responses.post(
             "https://sentry-read.svc.overdrive.com/chip?client=dewey",
             content_type="application/json",
@@ -916,7 +871,7 @@ class OdmpyLibbyTests(BaseTestCase):
             stream_handler.setLevel(logging.DEBUG)
             with self.assertRaises(OdmpyRuntimeError) as context:
                 run(
-                    ["libby", "--settings", settings_folder],
+                    ["libby", "--settings", str(settings_folder)],
                     be_quiet=True,
                     injected_stream_handler=stream_handler,
                 )
@@ -931,9 +886,9 @@ class OdmpyLibbyTests(BaseTestCase):
         ),
     )
     def test_mock_libby_setup_sync_fail(self):
-        settings_folder = os.path.join(self.test_downloads_dir, "settings")
-        if not os.path.exists(settings_folder):
-            os.makedirs(settings_folder)
+        settings_folder = self.test_downloads_dir.joinpath("settings")
+        if not settings_folder.exists():
+            settings_folder.mkdir(parents=True, exist_ok=True)
         responses.post(
             "https://sentry-read.svc.overdrive.com/chip?client=dewey",
             content_type="application/json",
@@ -954,7 +909,7 @@ class OdmpyLibbyTests(BaseTestCase):
             stream_handler.setLevel(logging.DEBUG)
             with self.assertRaises(OdmpyRuntimeError) as context:
                 run(
-                    ["libby", "--settings", settings_folder],
+                    ["libby", "--settings", str(settings_folder)],
                     be_quiet=True,
                     injected_stream_handler=stream_handler,
                 )
@@ -966,10 +921,8 @@ class OdmpyLibbyTests(BaseTestCase):
     def test_mock_inputs_nodownloads(self):
         settings_folder = self._generate_fake_settings()
 
-        with open(
-            os.path.join(self.test_data_dir, "magazine", "sync.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("magazine", "sync.json").open(
+            "r", encoding="utf-8"
         ) as s:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
@@ -978,7 +931,7 @@ class OdmpyLibbyTests(BaseTestCase):
             stream_handler = logging.StreamHandler(out)
             stream_handler.setLevel(logging.DEBUG)
             run(
-                ["libby", "--settings", settings_folder],
+                ["libby", "--settings", str(settings_folder)],
                 be_quiet=True,
                 injected_stream_handler=stream_handler,
             )
@@ -991,14 +944,13 @@ class OdmpyLibbyTests(BaseTestCase):
         settings_folder = self._generate_fake_settings()
         self._setup_audiobook_direct_responses()
         test_folder = "test"
-        download_dir = self.test_downloads_dir
 
         run_command = [
             "libby",
             "--settings",
-            settings_folder,
+            str(settings_folder),
             "--downloaddir",
-            download_dir,
+            str(self.test_downloads_dir),
             "--bookfolderformat",
             test_folder,
             "--bookfileformat",
@@ -1017,41 +969,39 @@ class OdmpyLibbyTests(BaseTestCase):
             )
             self.assertIn("Found 1 loan.", strip_color_codes(out.getvalue()))
             self.assertTrue(
-                glob.glob(f"{os.path.join(download_dir, test_folder)}/*part-*.mp3")
+                self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
             )
             logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     @responses.activate
     def test_mock_settings(self):
-        settings_folder = os.path.join(self.test_downloads_dir, "settings")
-        if not os.path.exists(settings_folder):
-            os.makedirs(settings_folder)
+        settings_folder = self.test_downloads_dir.joinpath("settings")
+        if not settings_folder.exists():
+            settings_folder.mkdir(parents=True, exist_ok=True)
         with self.assertRaises(LibbyNotConfiguredError):
-            run(["libby", "--settings", settings_folder, "--check"], be_quiet=True)
+            run(["libby", "--settings", str(settings_folder), "--check"], be_quiet=True)
 
         with self.assertRaises(OdmpyRuntimeError):
             run(
                 [
                     "libby",
                     "--settings",
-                    settings_folder,
+                    str(settings_folder),
                     "--exportloans",
-                    os.path.join(self.test_downloads_dir, "x.json"),
+                    str(self.test_downloads_dir.joinpath("x.json")),
                 ],
                 be_quiet=True,
             )
 
-        with open(
-            os.path.join(self.test_data_dir, "magazine", "sync.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("magazine", "sync.json").open(
+            "r", encoding="utf-8"
         ) as s:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
             )
         # generate fake settings
-        libby_settings = os.path.join(settings_folder, "libby.json")
-        with open(libby_settings, "w", encoding="utf-8") as f:
+        libby_settings = settings_folder.joinpath("libby.json")
+        with libby_settings.open("w", encoding="utf-8") as f:
             json.dump(
                 {
                     "chip": "12345",
@@ -1062,9 +1012,9 @@ class OdmpyLibbyTests(BaseTestCase):
                 },
                 f,
             )
-        run_command = ["libby", "--settings", settings_folder, "--check"]
+        run_command = ["libby", "--settings", str(settings_folder), "--check"]
         run(run_command, be_quiet=True)
-        with open(libby_settings, "r", encoding="utf-8") as f:
+        with libby_settings.open("r", encoding="utf-8") as f:
             settings = json.load(f)
             self.assertNotIn("__odmpy_sync_code", settings)
             self.assertIn("__libby_sync_code", settings)
@@ -1073,10 +1023,8 @@ class OdmpyLibbyTests(BaseTestCase):
     @patch("builtins.input", lambda _: "1")
     def test_mock_libby_return(self):
         settings_folder = self._generate_fake_settings()
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "sync.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("audiobook", "sync.json").open(
+            "r", encoding="utf-8"
         ) as f:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/chip/sync",
@@ -1089,7 +1037,7 @@ class OdmpyLibbyTests(BaseTestCase):
                 json={},
             )
 
-        run_command = ["libbyreturn", "--settings", settings_folder]
+        run_command = ["libbyreturn", "--settings", str(settings_folder)]
         if self.is_verbose:
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
@@ -1098,10 +1046,8 @@ class OdmpyLibbyTests(BaseTestCase):
     @patch("builtins.input", lambda _: "1")
     def test_mock_libby_renew(self):
         settings_folder = self._generate_fake_settings()
-        with open(
-            os.path.join(self.test_data_dir, "audiobook", "sync.json"),
-            "r",
-            encoding="utf-8",
+        with self.test_data_dir.joinpath("audiobook", "sync.json").open(
+            "r", encoding="utf-8"
         ) as f:
             sync_state = json.load(f)
             responses.get(
@@ -1115,7 +1061,7 @@ class OdmpyLibbyTests(BaseTestCase):
                 json=sync_state["loans"][0],
             )
 
-        run_command = ["libbyrenew", "--settings", settings_folder]
+        run_command = ["libbyrenew", "--settings", str(settings_folder)]
         if self.is_verbose:
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
