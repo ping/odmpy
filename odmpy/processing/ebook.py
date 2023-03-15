@@ -307,7 +307,7 @@ def process_ebook_loan(
     :return:
     """
     is_windows = os.name == "nt" or platform.system().lower() == "windows"
-    book_folder, book_file_name, _ = generate_names(
+    book_folder, book_file_name = generate_names(
         title=loan["title"],
         series=loan.get("series") or "",
         authors=extract_authors_from_openbook(openbook),

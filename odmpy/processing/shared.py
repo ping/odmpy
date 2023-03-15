@@ -59,7 +59,7 @@ def generate_names(
     edition: str,
     args: argparse.Namespace,
     logger: logging.Logger,
-) -> Tuple[Path, Path, Path]:
+) -> Tuple[Path, Path]:
     """
     Creates the download folder if necessary and generates the merged book names
 
@@ -96,8 +96,6 @@ def generate_names(
 
     # for merged mp3
     book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
-    # for merged m4b
-    book_m4b_filename = book_folder.joinpath(f"{book_file_format}.m4b")
 
     if not book_folder.exists():
         try:
@@ -131,8 +129,7 @@ def generate_names(
                 }
             )
             book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
-            book_m4b_filename = book_folder.joinpath(f"{book_file_format}.m4b")
-    return book_folder, book_filename, book_m4b_filename
+    return book_folder, book_filename
 
 
 def write_tags(

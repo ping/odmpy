@@ -323,7 +323,7 @@ def extract_loan_file(
             if format_id == LibbyFormats.EBookPDFOpen
             else "epub"
         )
-        book_folder, book_file_name, _ = generate_names(
+        book_folder, book_file_name = generate_names(
             title=selected_loan["title"],
             series=selected_loan.get("series") or "",
             authors=extract_authors_from_openbook(openbook)

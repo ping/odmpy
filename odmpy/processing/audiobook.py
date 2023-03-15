@@ -146,7 +146,7 @@ def process_audiobook_loan(
         f'in {len(download_parts)} {ps(len(download_parts), "part")}...'
     )
 
-    book_folder, book_filename, book_m4b_filename = generate_names(
+    book_folder, book_filename = generate_names(
         title=title,
         series=series,
         authors=authors,
@@ -154,6 +154,7 @@ def process_audiobook_loan(
         args=args,
         logger=logger,
     )
+    book_m4b_filename = book_filename.with_suffix(".m4b")
 
     # check early if a merged file is already saved
     if (
