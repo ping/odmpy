@@ -22,7 +22,7 @@ import re
 import unicodedata
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional
 
 from mutagen.mp3 import MP3  # type: ignore[import]
 
@@ -80,18 +80,6 @@ def get_element_text(ele: Optional[ET.Element]) -> str:
     if (ele is not None) and ele.text:
         return ele.text or ""
     return ""
-
-
-def set_ele_attributes(ele: ET.Element, attributes: Dict) -> None:
-    """
-    Set multiple attributes on an Element
-
-    :param ele: Element
-    :param attributes:
-    :return:
-    """
-    for k, v in attributes.items():
-        ele.set(k, v)
 
 
 def parse_duration_to_milliseconds(text: str) -> int:

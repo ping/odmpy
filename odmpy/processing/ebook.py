@@ -734,9 +734,9 @@ def process_ebook_loan(
                 if p.is_dir():
                     continue
                 zip_archive_file = p.relative_to(book_folder)
+                # using posix path because zipfile requires "/" separators
+                # and may break on Windows otherwise
                 zip_archive_name = zip_archive_file.as_posix()
-                if is_windows:
-                    zip_archive_name.encode("CP437", errors="replace").decode("CP437")
                 zip_target_file = book_folder.joinpath(zip_archive_file)
                 epub_zip.write(zip_target_file, zip_archive_name)
                 logger.debug(

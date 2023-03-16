@@ -34,7 +34,7 @@ from termcolor import colored
 from ..constants import PERFORMER_FID, LANGUAGE_FID
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyFormats
-from ..utils import slugify, sanitize_path, set_ele_attributes
+from ..utils import slugify, sanitize_path
 
 
 #
@@ -380,9 +380,6 @@ def merge_into_mp3(
         logger.error(f"Command: {' '.join(cmd)!s}")
         raise OdmpyRuntimeError("ffmpeg exited with a non-zero code")
 
-    # Switch to using os.replace() instead of os.rename() to avoid
-    # issues with remnant files between tests
-    # Ref: https://github.com/ping/odmpy/issues/31
     temp_book_filename.replace(book_filename)
 
 
@@ -774,10 +771,9 @@ def build_opf_package(
             creator = ET.SubElement(metadata, "dc:creator")
             creator.text = c["name"]
             if version == "2.0":
-                creator_attributes = {"opf:role": opf_role}
+                creator.set("opf:role", opf_role)
                 if c.get("sortName"):
-                    creator_attributes["opf:file-as"] = c["sortName"]
-                set_ele_attributes(creator, creator_attributes)
+                    creator.set("opf:file-as", c["sortName"])
             if version == "3.0":
                 creator.set("id", f'creator_{c["id"]}')
                 if c.get("sortName"):
