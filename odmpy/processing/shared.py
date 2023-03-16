@@ -102,7 +102,8 @@ def generate_names(
             book_folder.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         # ref http://www.ioplex.com/~miallen/errcmpp.html
-        if exc.errno not in (36, 63) or args.no_book_folder:
+        # for Windows: OSError: [WinError 123] The filename, directory name, or volume label syntax is incorrect
+        if exc.errno not in (36, 63, 123) or args.no_book_folder:
             raise
 
         # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
