@@ -97,38 +97,39 @@ def generate_names(
     # for merged mp3
     book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
 
-    if not book_folder.exists():
-        try:
+    try:
+        if not book_folder.exists():
             book_folder.mkdir(parents=True, exist_ok=True)
-        except OSError as exc:
-            # ref http://www.ioplex.com/~miallen/errcmpp.html
-            if exc.errno not in (36, 63) or args.no_book_folder:
-                raise
+    except OSError as exc:
+        # ref http://www.ioplex.com/~miallen/errcmpp.html
+        if exc.errno not in (36, 63) or args.no_book_folder:
+            raise
 
-            # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
-            # create book folder with just the title and first author
-            book_folder_name = args.book_folder_format % {
-                "Title": sanitize_path(title),
-                "Author": sanitize_path(authors[0]) if authors else "",
-                "Series": sanitize_path(series or ""),
+        # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
+        # create book folder with just the title and first author
+        book_folder_name = args.book_folder_format % {
+            "Title": sanitize_path(title),
+            "Author": sanitize_path(authors[0]) if authors else "",
+            "Series": sanitize_path(series or ""),
+        }
+        book_folder = Path(args.download_dir, book_folder_name)
+        logger.warning(
+            f'Book folder name is too long. Files will be saved in "{book_folder}" instead.'
+        )
+        if not book_folder.exists():
+            book_folder.mkdir(parents=True, exist_ok=True)
+
+        # create book name with just one author
+        book_file_format = sanitize_path(
+            args.book_file_format
+            % {
+                "Title": title,
+                "Author": authors[0] if authors else "",
+                "Series": series or "",
+                "Edition": edition,
             }
-            book_folder = Path(args.download_dir, book_folder_name)
-            logger.warning(
-                f'Book folder name is too long. Files will be saved in "{book_folder}" instead.'
-            )
-            book_folder.mkdir(parents=True, exist_ok=True)
-
-            # create book name with just one author
-            book_file_format = sanitize_path(
-                args.book_file_format
-                % {
-                    "Title": title,
-                    "Author": authors[0] if authors else "",
-                    "Series": series or "",
-                    "Edition": edition,
-                }
-            )
-            book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
+        )
+        book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
     return book_folder, book_filename
 
 
