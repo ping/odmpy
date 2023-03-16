@@ -21,7 +21,6 @@ import datetime
 import json
 import logging
 import shutil
-from pathlib import Path
 from typing import Optional, Any, Dict, List
 from typing import OrderedDict as OrderedDictType
 
@@ -159,7 +158,7 @@ def process_audiobook_loan(
     # check early if a merged file is already saved
     if (
         args.merge_output
-        and Path(
+        and (
             book_filename if args.merge_format == "mp3" else book_m4b_filename
         ).exists()
     ):
@@ -173,10 +172,10 @@ def process_audiobook_loan(
         return
 
     if args.is_debug_mode:
-        with Path(book_folder, "loan.json").open("w", encoding="utf-8") as f:
+        with book_folder.joinpath("loan.json").open("w", encoding="utf-8") as f:
             json.dump(loan, f, indent=2)
 
-        with Path(book_folder, "openbook.json").open("w", encoding="utf-8") as f:
+        with book_folder.joinpath("openbook.json").open("w", encoding="utf-8") as f:
             json.dump(openbook, f, indent=2)
 
     cover_filename, cover_bytes = generate_cover(
@@ -192,9 +191,8 @@ def process_audiobook_loan(
     audio_bitrate = 0
     for p in download_parts:
         part_number = p["spine-position"] + 1
-        part_filename = Path(
-            book_folder,
-            f"{slugify(f'{title} - Part {part_number:02d}', allow_unicode=True)}.mp3",
+        part_filename = book_folder.joinpath(
+            f"{slugify(f'{title} - Part {part_number:02d}', allow_unicode=True)}.mp3"
         )
         part_tmp_filename = part_filename.with_suffix(".part")
         part_file_size = p["file-length"]
