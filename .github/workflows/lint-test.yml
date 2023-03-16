@@ -85,6 +85,11 @@ jobs:
         coverage lcov
         mv .coverage ".coverage.${{ matrix.os }}.${{ matrix.python-version }}"
       shell: bash
+    - name: Test installation process
+      run: |
+        python3 setup.py install
+        odmpy --version
+      shell: bash
     - name: Upload coverage artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -97,11 +102,6 @@ jobs:
         path-to-lcov: "coverage.lcov"
         flag-name: run-${{ matrix.os }}-${{ matrix.python-version }}
         parallel: true
-    - name: Test installation process
-      run: |
-        python3 setup.py install
-        odmpy --version
-      shell: bash
 
   coverage-report:
     runs-on: ubuntu-latest
