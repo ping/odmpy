@@ -377,7 +377,7 @@ def extract_loan_file(
                 with loan_file_path.open("wb") as f:
                     f.write(odm_res_content)
                     logger.info(
-                        "Downloaded %s to %s",
+                        'Downloaded %s to "%s"',
                         file_ext,
                         colored(str(loan_file_path), "magenta"),
                     )
