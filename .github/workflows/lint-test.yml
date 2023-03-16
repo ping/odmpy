@@ -125,6 +125,8 @@ jobs:
           cat 'coverage.md' >> $GITHUB_STEP_SUMMARY
           coverage html -d "$GITHUB_WORKSPACE/coverage/" --precision=1 --title="Coverage Report for ${GITHUB_SHA:0:7}"
           coverage-badge -o "$GITHUB_WORKSPACE/coverage/badge.svg" -f
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
       - name: Update coverage html report
         uses: actions/upload-artifact@v3
         with:
