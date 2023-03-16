@@ -90,6 +90,11 @@ jobs:
         name: coverage-results
         path: .coverage.*
         retention-days: 1
+    - name: Coveralls Parallel
+      uses: coverallsapp/github-action@v2
+      with:
+        flag-name: run-${{ matrix.os }}-${{ matrix.python-version }}
+        parallel: true
     - name: Test installation process
       run: |
         python3 setup.py install
@@ -113,6 +118,10 @@ jobs:
         with:
           fetch-depth: 1
           path: "source"
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
       - name: Download a single artifact
         uses: actions/download-artifact@v3
         with:
@@ -125,8 +134,6 @@ jobs:
           cat 'coverage.md' >> $GITHUB_STEP_SUMMARY
           coverage html -d "$GITHUB_WORKSPACE/coverage/" --precision=1 --title="Coverage Report for ${GITHUB_SHA:0:7}"
           coverage-badge -o "$GITHUB_WORKSPACE/coverage/badge.svg" -f
-      - name: Coveralls
-        uses: coverallsapp/github-action@v2
       - name: Update coverage html report
         uses: actions/upload-artifact@v3
         with:
