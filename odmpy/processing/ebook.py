@@ -729,33 +729,19 @@ def process_ebook_loan(
         epub_zip.writestr(
             "mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED
         )
-        for folder_name, root_start in (
-            (book_meta_name, book_meta_folder),
-            (book_content_name, book_content_folder),
-        ):
-            if is_windows:
-                # patch for windows because zipFile requires "/" separator but windows os.sep is "\"
-                folder_name = Path(folder_name).as_posix()
-                folder_name = folder_name.encode("CP437", errors="replace").decode(
-                    "CP437"
+        for root_start in (book_meta_folder, book_content_folder):
+            for p in root_start.glob("**/*"):
+                if p.is_dir():
+                    continue
+                zip_archive_file = p.relative_to(book_folder)
+                zip_archive_name = zip_archive_file.as_posix()
+                if is_windows:
+                    zip_archive_name.encode("CP437", errors="replace").decode("CP437")
+                zip_target_file = book_folder.joinpath(zip_archive_file)
+                epub_zip.write(zip_target_file, zip_archive_name)
+                logger.debug(
+                    'epub: Added "%s" as "%s"', zip_target_file, zip_archive_name
                 )
-            epub_zip.write(book_meta_folder, arcname=folder_name)
-            for path, _, files in os.walk(root_start):
-                for file in files:
-                    zip_target_file = Path(path, file)
-                    zip_archive_name = os.path.relpath(
-                        zip_target_file, start=book_folder
-                    )
-                    if is_windows:
-                        # patch for windows because zipFile requires "/" separator but windows os.sep is "\"
-                        zip_archive_name = Path(zip_archive_name).as_posix()
-                        zip_archive_name = zip_archive_name.encode(
-                            "CP437", errors="replace"
-                        ).decode("CP437")
-                    logger.debug(
-                        'epub: Added "%s" as "%s"', zip_target_file, zip_archive_name
-                    )
-                    epub_zip.write(zip_target_file, zip_archive_name)
     logger.info('Saved "%s"', colored(str(epub_file_path), "magenta", attrs=["bold"]))
 
     # clean up
