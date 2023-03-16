@@ -17,7 +17,6 @@ from odmpy.libby import LibbyClient, LibbyFormats
 from odmpy.odm import run
 
 # Test non-interactive options
-from odmpy.utils import strip_color_codes
 from .base import BaseTestCase
 
 
@@ -841,7 +840,7 @@ class OdmpyLibbyTests(BaseTestCase):
                 be_quiet=True,
                 injected_stream_handler=stream_handler,
             )
-            self.assertIn("Login successful.", strip_color_codes(out.getvalue()))
+            self.assertIn("Login successful.", out.getvalue())
             logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     @responses.activate
@@ -967,7 +966,7 @@ class OdmpyLibbyTests(BaseTestCase):
                 be_quiet=True,
                 injected_stream_handler=stream_handler,
             )
-            self.assertIn("Found 1 loan.", strip_color_codes(out.getvalue()))
+            self.assertIn("Found 1 loan.", out.getvalue())
             self.assertTrue(
                 self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
             )

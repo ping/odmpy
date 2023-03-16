@@ -15,7 +15,6 @@ from lxml import etree  # type: ignore[import]
 from odmpy.errors import OdmpyRuntimeError
 from odmpy.odm import run
 from odmpy.overdrive import OverDriveClient
-from odmpy.utils import strip_color_codes
 from .base import BaseTestCase
 from .data import (
     get_expected_result,
@@ -56,7 +55,7 @@ class OdmpyTests(BaseTestCase):
                 injected_stream_handler=stream_handler,
             )
             expected_text = expected.read()
-            self.assertEqual(strip_color_codes(out.getvalue()), expected_text)
+            self.assertEqual(out.getvalue(), expected_text)
             logging.getLogger(run.__module__).removeHandler(stream_handler)
 
     def test_info_json(self):
@@ -77,7 +76,7 @@ class OdmpyTests(BaseTestCase):
                 be_quiet=True,
                 injected_stream_handler=stream_handler,
             )
-            info = json.loads(strip_color_codes(out.getvalue()))
+            info = json.loads(out.getvalue())
             for tag in [
                 "title",
                 "creators",

@@ -34,17 +34,6 @@ TIMESTAMP_RE = re.compile(
     r"^((?P<hr>[0-9]+):)?(?P<min>[0-9]+):(?P<sec>[0-9]+)(\.(?P<ms>[0-9]+))?$"
 )
 ILLEGAL_WIN_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
-STRIP_COLOR_CODE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-
-
-def strip_color_codes(text: str) -> str:
-    """
-    Strips the ansi color formatting characters from the supplied text.
-
-    :param text:
-    :return:
-    """
-    return STRIP_COLOR_CODE_RE.sub("", text)
 
 
 def plural_or_singular_noun(
@@ -144,19 +133,6 @@ def mp3_duration_ms(filename: Path) -> int:
     if not audio.info:
         raise ValueError(f"Unable to parse MP3 info from: {filename}")
     return int(round(audio.info.length * 1000))
-
-
-def unescape_html(text: str) -> str:
-    """py2/py3 compatible html unescaping"""
-    try:
-        import html
-
-        return html.unescape(text)
-    except ImportError:
-        import HTMLParser  # type: ignore[import]
-
-        unescaped: str = HTMLParser.HTMLParser().unescape(text)
-        return unescaped
 
 
 # From django

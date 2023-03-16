@@ -70,12 +70,6 @@ class UtilsTests(unittest.TestCase):
         self.assertEqual(utils.parse_duration_to_seconds("12:00"), 12 * 60)
         self.assertEqual(utils.parse_duration_to_seconds("12:00.6"), 12 * 60 + 1)
 
-    def test_unescape_html(self):
-        self.assertEqual(
-            utils.unescape_html("&lt;b&gt;Hello &amp; Goodbye&lt;/b&gt;"),
-            "<b>Hello & Goodbye</b>",
-        )
-
     def test_positive_int(self):
         self.assertEqual(cli_utils.positive_int("1"), 1)
 

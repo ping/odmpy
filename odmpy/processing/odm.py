@@ -29,6 +29,7 @@ import uuid
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from functools import reduce
+from html import unescape as unescape_html
 from pathlib import Path
 from typing import Any, Union, Dict, List, Optional
 
@@ -55,7 +56,6 @@ from ..libby import (
 )
 from ..overdrive import OverDriveClient
 from ..utils import (
-    unescape_html,
     slugify,
     mp3_duration_ms,
     parse_duration_to_seconds,

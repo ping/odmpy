@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 import sys
 import unittest
@@ -23,6 +24,9 @@ class BaseTestCase(unittest.TestCase):
         if not self.test_downloads_dir.exists():
             self.test_downloads_dir.mkdir(parents=True, exist_ok=True)
 
+        # disable color output
+        os.environ["NO_COLOR"] = "1"
+
         self.logger = test_logger
         # hijack unittest -v arg to toggle log verbosity in test
         self.is_verbose = "-vv" in sys.argv
@@ -33,5 +37,6 @@ class BaseTestCase(unittest.TestCase):
             logging.basicConfig(stream=sys.stdout)
 
     def tearDown(self) -> None:
+        del os.environ["NO_COLOR"]
         if self.test_downloads_dir.exists():
             shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
