@@ -82,6 +82,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}
         sh run_tests.sh
+        coverage lcov
         mv .coverage ".coverage.${{ matrix.os }}.${{ matrix.python-version }}"
       shell: bash
     - name: Upload coverage artifacts
@@ -93,6 +94,7 @@ jobs:
     - name: Coveralls Parallel
       uses: coverallsapp/github-action@v2
       with:
+        path-to-lcov: "coverage.lcov"
         flag-name: run-${{ matrix.os }}-${{ matrix.python-version }}
         parallel: true
     - name: Test installation process
