@@ -76,8 +76,8 @@ jobs:
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip -q install -r requirements.txt
-        python3 -m pip -q install -r requirements-dev.txt
+        python3 -m pip -q install -r requirements.txt --upgrade
+        python3 -m pip -q install -r requirements-dev.txt --upgrade
     - name: Run tests on ${{ matrix.os }} with python ${{ matrix.python-version }}
       run: |
         cd ${GITHUB_WORKSPACE}
