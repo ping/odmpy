@@ -34,7 +34,7 @@ from termcolor import colored
 from ..constants import PERFORMER_FID, LANGUAGE_FID
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyFormats
-from ..utils import slugify, sanitize_path
+from ..utils import slugify, sanitize_path, is_windows
 
 
 #
@@ -100,10 +100,12 @@ def generate_names(
     try:
         if not book_folder.exists():
             book_folder.mkdir(parents=True, exist_ok=True)
-    except OSError as exc:
+    except OSError as os_err:
         # ref http://www.ioplex.com/~miallen/errcmpp.html
         # for Windows: OSError: [WinError 123] The filename, directory name, or volume label syntax is incorrect
-        if exc.errno not in (36, 63, 123) or args.no_book_folder:
+        if (is_windows() and os_err.errno != 22) or (
+            os_err.errno not in (36, 63) and not is_windows()
+        ):
             raise
 
         # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
@@ -114,13 +116,16 @@ def generate_names(
             "Series": sanitize_path(series or ""),
         }
         book_folder = Path(args.download_dir, book_folder_name)
+        if args.no_book_folder:
+            book_folder = Path(args.download_dir)
+
         logger.warning(
             f'Book folder name is too long. Files will be saved in "{book_folder}" instead.'
         )
         if not book_folder.exists():
             book_folder.mkdir(parents=True, exist_ok=True)
 
-        # create book name with just one author
+        # also create book name with just one author
         book_file_format = sanitize_path(
             args.book_file_format
             % {

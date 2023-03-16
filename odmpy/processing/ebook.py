@@ -23,7 +23,6 @@ import json
 import logging
 import mimetypes
 import os
-import platform
 import posixpath as zip_path
 import re
 import shutil
@@ -54,7 +53,7 @@ from ..libby import (
     LibbyMediaTypes,
 )
 from ..overdrive import OverDriveClient
-from ..utils import slugify
+from ..utils import slugify, is_windows
 
 #
 # Main processing logic for libby direct ebook and magazine loans
@@ -306,7 +305,6 @@ def process_ebook_loan(
     :param logger:
     :return:
     """
-    is_windows = os.name == "nt" or platform.system().lower() == "windows"
     book_folder, book_file_name = generate_names(
         title=loan["title"],
         series=loan.get("series") or "",
@@ -481,7 +479,7 @@ def process_ebook_loan(
                         book_content_folder.joinpath(cover_toc_item["featureImage"]),
                         start=asset_folder,
                     )
-                    if is_windows:
+                    if is_windows():
                         img_src = Path(img_src).as_posix()
                     # patch the svg based cover for magazines
                     cover_svg = soup.find("svg")

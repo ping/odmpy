@@ -36,6 +36,15 @@ TIMESTAMP_RE = re.compile(
 ILLEGAL_WIN_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
 
 
+def is_windows() -> bool:
+    """
+    Returns True if running on Windows.
+
+    :return:
+    """
+    return os.name == "nt" or platform.system().lower() == "windows"
+
+
 def plural_or_singular_noun(
     value: float, singular_noun: str, plural_noun: str = ""
 ) -> str:
