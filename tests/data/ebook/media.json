@@ -68,7 +68,12 @@
   },
   "formats": [
     {
-      "identifiers": [],
+      "identifiers": [
+        {
+          "value": "9789999999999",
+          "type": "ISBN"
+        }
+      ],
       "id": "ebook-overdrive",
       "name": "OverDrive Read",
       "fulfillmentType": "bifocal"
