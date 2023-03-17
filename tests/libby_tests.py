@@ -16,7 +16,7 @@ from odmpy.libby import (
     LibbyFormats,
 )
 from odmpy.libby_errors import ClientBadRequestError, ClientError
-from tests.base import BaseTestCase
+from tests.base import BaseTestCase, is_on_ci
 
 test_logger = logging.getLogger(__name__)
 test_logger.setLevel(logging.WARNING)
@@ -364,7 +364,7 @@ class LibbyClientTests(BaseTestCase):
         }
         self.assertTrue(LibbyClient.is_renewable(loan))
 
-    @unittest.skip("May get blocked by libby servers during CI/CD")
+    @unittest.skipIf(is_on_ci, "May get blocked by libby servers during CI/CD")
     def test_unauthed_libby_client(self):
         client = LibbyClient(logger=self.logger)
         try:

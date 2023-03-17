@@ -1,5 +1,6 @@
 import logging
 import os
+import platform
 import shutil
 import sys
 import unittest
@@ -12,6 +13,17 @@ test_logger.setLevel(logging.WARNING)
 requests_logger = logging.getLogger("urllib3")
 requests_logger.setLevel(logging.WARNING)
 requests_logger.propagate = True
+
+is_windows = os.name == "nt" or platform.system().lower() == "windows"
+
+# detect if running on CI
+is_on_ci = False
+try:
+    # https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
+    _ = os.environ["CI"]
+    is_on_ci = True
+except KeyError:
+    pass
 
 
 class BaseTestCase(unittest.TestCase):

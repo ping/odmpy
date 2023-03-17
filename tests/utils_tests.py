@@ -1,19 +1,17 @@
 import argparse
-import os
-import platform
 import string
 import unittest
 from datetime import datetime
 from pathlib import Path
 from random import choices
 
-from odmpy import utils
 from odmpy import cli_utils
+from odmpy import utils
+from tests.base import is_windows
 
 
 class UtilsTests(unittest.TestCase):
     def test_sanitize_path(self):
-        is_windows = os.name == "nt" or platform.system().lower() == "windows"
         self.assertEqual(
             utils.sanitize_path(r'a<b>c:d"e/f\g|h?i*j_a<b>c:d"e/f\g|h?i*j', ""),
             "abcdefghij_abcdefghij"
@@ -34,9 +32,7 @@ class UtilsTests(unittest.TestCase):
             "Español 中文 русский 한국어 日本語",
         )
 
-    @unittest.skipUnless(
-        os.name == "nt" or platform.system().lower() == "windows", "Not Windows"
-    )
+    @unittest.skipUnless(is_windows, "Not Windows")
     def test_sanitize_path_on_windows(self):
         # test if the folder can actually be created
         ts = int(datetime.utcnow().timestamp() * 1000)

@@ -7,7 +7,6 @@ import json
 import logging
 import os
 from http import HTTPStatus
-from io import StringIO
 
 import responses
 from lxml import etree  # type: ignore[import]
@@ -42,9 +41,7 @@ class OdmpyTests(BaseTestCase):
         expected_file = self.test_data_dir.joinpath(
             f"{self.test_file}.info.expected.txt"
         )
-        with expected_file.open("r", encoding="utf-8") as expected, StringIO() as out:
-            stream_handler = logging.StreamHandler(out)
-            stream_handler.setLevel(logging.DEBUG)
+        with self.assertLogs(run.__module__, level="INFO") as context:
             run(
                 [
                     "--noversioncheck",
@@ -52,19 +49,17 @@ class OdmpyTests(BaseTestCase):
                     str(self.test_data_dir.joinpath(self.test_file)),
                 ],
                 be_quiet=True,
-                injected_stream_handler=stream_handler,
             )
-            expected_text = expected.read()
-            self.assertEqual(out.getvalue(), expected_text)
-            logging.getLogger(run.__module__).removeHandler(stream_handler)
+        with expected_file.open("r", encoding="utf-8") as expected:
+            self.assertEqual(
+                "\n".join([r.msg for r in context.records]) + "\n", expected.read()
+            )
 
     def test_info_json(self):
         """
         `odmpy info test.odm` --format json`
         """
-        with StringIO() as out:
-            stream_handler = logging.StreamHandler(out)
-            stream_handler.setLevel(logging.DEBUG)
+        with self.assertLogs(run.__module__, level="INFO") as context:
             run(
                 [
                     "--noversioncheck",
@@ -74,20 +69,18 @@ class OdmpyTests(BaseTestCase):
                     "json",
                 ],
                 be_quiet=True,
-                injected_stream_handler=stream_handler,
             )
-            info = json.loads(out.getvalue())
-            for tag in [
-                "title",
-                "creators",
-                "publisher",
-                "subjects",
-                "languages",
-                "description",
-                "total_duration",
-            ]:
-                self.assertTrue(info.get(tag), msg="'{}' is not set".format(tag))
-            logging.getLogger(run.__module__).removeHandler(stream_handler)
+        info = json.loads("\n".join([r.msg for r in context.records]))
+        for tag in [
+            "title",
+            "creators",
+            "publisher",
+            "subjects",
+            "languages",
+            "description",
+            "total_duration",
+        ]:
+            self.assertTrue(info.get(tag), msg="'{}' is not set".format(tag))
 
     def _setup_common_responses(self):
         with self.test_data_dir.joinpath("audiobook", "cover.jpg").open("rb") as c:
@@ -314,10 +307,7 @@ class OdmpyTests(BaseTestCase):
         responses.get(
             "https://ping.github.io/odmpy/test_data", status=HTTPStatus.FORBIDDEN
         )
-        with StringIO() as out:
-            stream_handler = logging.StreamHandler(out)
-            stream_handler.setLevel(logging.DEBUG)
-
+        with self.assertLogs(run.__module__, level="INFO") as context:
             run(
                 [
                     "--noversioncheck",
@@ -325,10 +315,10 @@ class OdmpyTests(BaseTestCase):
                     str(self.test_data_dir.joinpath(self.test_file)),
                 ],
                 be_quiet=True,
-                injected_stream_handler=stream_handler,
             )
-            self.assertIn("Loan is probably already returned.", out.getvalue())
-            logging.getLogger(run.__module__).removeHandler(stream_handler)
+        self.assertIn(
+            "Loan is probably already returned.", [r.msg for r in context.records]
+        )
 
     @responses.activate
     def test_odm_return_error(self):

@@ -1,9 +1,7 @@
 import json
-import logging
 import unittest
 from datetime import datetime
 from http import HTTPStatus
-from io import StringIO
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -832,16 +830,9 @@ class OdmpyLibbyTests(BaseTestCase):
             json={},
         )
         self._setup_audiobook_direct_responses()
-        with StringIO() as out:
-            stream_handler = logging.StreamHandler(out)
-            stream_handler.setLevel(logging.DEBUG)
-            run(
-                ["libby", "--settings", str(settings_folder)],
-                be_quiet=True,
-                injected_stream_handler=stream_handler,
-            )
-            self.assertIn("Login successful.", out.getvalue())
-            logging.getLogger(run.__module__).removeHandler(stream_handler)
+        with self.assertLogs(run.__module__, level="INFO") as context:
+            run(["libby", "--settings", str(settings_folder)], be_quiet=True)
+        self.assertIn("Login successful.\n", [r.msg for r in context.records])
 
     @responses.activate
     @patch(
@@ -865,17 +856,8 @@ class OdmpyLibbyTests(BaseTestCase):
             status=HTTPStatus.BAD_REQUEST,
             json={},
         )
-        with StringIO() as out:
-            stream_handler = logging.StreamHandler(out)
-            stream_handler.setLevel(logging.DEBUG)
-            with self.assertRaises(OdmpyRuntimeError) as context:
-                run(
-                    ["libby", "--settings", str(settings_folder)],
-                    be_quiet=True,
-                    injected_stream_handler=stream_handler,
-                )
-            self.assertIn("Could not log in with code", str(context.exception))
-            logging.getLogger(run.__module__).removeHandler(stream_handler)
+        with self.assertRaisesRegex(OdmpyRuntimeError, "Could not log in with code"):
+            run(["libby", "--settings", str(settings_folder)], be_quiet=True)
 
     @responses.activate
     @patch(
@@ -903,39 +885,24 @@ class OdmpyLibbyTests(BaseTestCase):
             content_type="applications/json",
             json={},
         )
-        with StringIO() as out:
-            stream_handler = logging.StreamHandler(out)
-            stream_handler.setLevel(logging.DEBUG)
-            with self.assertRaises(OdmpyRuntimeError) as context:
-                run(
-                    ["libby", "--settings", str(settings_folder)],
-                    be_quiet=True,
-                    injected_stream_handler=stream_handler,
-                )
-            self.assertIn("at least 1 registered library card", str(context.exception))
-            logging.getLogger(run.__module__).removeHandler(stream_handler)
+        with self.assertRaisesRegex(
+            OdmpyRuntimeError, "at least 1 registered library card"
+        ):
+            run(["libby", "--settings", str(settings_folder)], be_quiet=True)
 
     @responses.activate
     @patch("builtins.input", lambda _: "")
     def test_mock_inputs_nodownloads(self):
         settings_folder = self._generate_fake_settings()
-
         with self.test_data_dir.joinpath("magazine", "sync.json").open(
             "r", encoding="utf-8"
         ) as s:
             responses.get(
                 "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
             )
-        with StringIO() as out:
-            stream_handler = logging.StreamHandler(out)
-            stream_handler.setLevel(logging.DEBUG)
-            run(
-                ["libby", "--settings", str(settings_folder)],
-                be_quiet=True,
-                injected_stream_handler=stream_handler,
-            )
-            self.assertIn("No downloadable loans found.", out.getvalue())
-            logging.getLogger(run.__module__).removeHandler(stream_handler)
+        with self.assertLogs(run.__module__, level="INFO") as context:
+            run(["libby", "--settings", str(settings_folder)], be_quiet=True)
+        self.assertIn("No downloadable loans found.", [r.msg for r in context.records])
 
     @responses.activate
     @patch("builtins.input", lambda _: "1")
@@ -957,20 +924,9 @@ class OdmpyLibbyTests(BaseTestCase):
             "--direct",
             "--hideprogress",
         ]
-
-        with StringIO() as out:
-            stream_handler = logging.StreamHandler(out)
-            stream_handler.setLevel(logging.DEBUG)
-            run(
-                run_command,
-                be_quiet=True,
-                injected_stream_handler=stream_handler,
-            )
-            self.assertIn("Found 1 loan.", out.getvalue())
-            self.assertTrue(
-                self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
-            )
-            logging.getLogger(run.__module__).removeHandler(stream_handler)
+        with self.assertLogs(run.__module__, level="INFO") as context:
+            run(run_command, be_quiet=True)
+        self.assertIn("INFO:odmpy.odm:Found 1 loan.", context.output)
 
     @responses.activate
     def test_mock_settings(self):
