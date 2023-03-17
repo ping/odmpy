@@ -328,7 +328,7 @@ class OdmpyTests(BaseTestCase):
         responses.get(
             "https://ping.github.io/odmpy/test_data", status=HTTPStatus.BAD_REQUEST
         )
-        with self.assertRaises(OdmpyRuntimeError) as context:
+        with self.assertRaisesRegex(OdmpyRuntimeError, "HTTP error returning odm"):
             run(
                 [
                     "--noversioncheck",
@@ -337,4 +337,3 @@ class OdmpyTests(BaseTestCase):
                 ],
                 be_quiet=True,
             )
-        self.assertIn("HTTP error returning odm", str(context.exception))
