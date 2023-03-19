@@ -23,7 +23,6 @@ import json
 import logging
 import mimetypes
 import os
-import posixpath as zip_path
 import re
 import shutil
 import xml.etree.ElementTree as ET
@@ -621,17 +620,17 @@ def process_ebook_loan(
         # an existing file name
         cover_image_name = f"cover_{int(datetime.datetime.now().timestamp())}.jpg"
         shutil.copyfile(cover_path, book_content_folder.joinpath(cover_image_name))
+        cover_img_manifest_id = "coverimage"
         ET.SubElement(
             manifest,
             "item",
             attrib={
-                "id": "coverimage",
+                "id": cover_img_manifest_id,
                 "href": cover_image_name,
                 "media-type": "image/jpeg",
                 "properties": "cover-image",
             },
         )
-        cover_img_manifest_id = "coverimage"
 
     if cover_img_manifest_id:
         metadata = package.find("metadata")
@@ -712,7 +711,7 @@ def process_ebook_loan(
         "rootfile",
         attrib={
             # use posix path because zipFile requires "/"
-            "full-path": zip_path.join(book_content_name, opf_file_name),
+            "full-path": Path(book_content_name, opf_file_name).as_posix(),
             "media-type": "application/oebps-package+xml",
         },
     )
