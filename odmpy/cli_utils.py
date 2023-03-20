@@ -50,6 +50,7 @@ class OdmpyNoninteractiveOptions(str, Enum):
 
     DownloadLatestN = "download_latest_n"
     DownloadSelectedN = "selected_loans_indices"
+    DownloadSelectedId = "selected_loans_ids"
     ExportLoans = "export_loans_path"
     Check = "check_signed_in"
 

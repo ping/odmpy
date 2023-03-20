@@ -515,6 +515,18 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
         ),
     )
     parser_libby.add_argument(
+        "--selectid",
+        dest=OdmpyNoninteractiveOptions.DownloadSelectedId,
+        type=positive_int,
+        nargs="+",
+        metavar="ID",
+        help=(
+            "Non-interactive mode that downloads loans by the loan ID entered.\n"
+            'For example, "--selectid 12345" will download the loan with the ID 12345.\n'
+            "If the loan with the ID does not exist, it will be skipped."
+        ),
+    )
+    parser_libby.add_argument(
         "--exportloans",
         dest=OdmpyNoninteractiveOptions.ExportLoans,
         metavar="LOANS_JSON_FILEPATH",
@@ -762,7 +774,9 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 return
 
             if args.command_name == OdmpyCommands.Libby and (
-                args.selected_loans_indices or args.download_latest_n
+                args.selected_loans_indices
+                or args.download_latest_n
+                or args.selected_loans_ids
             ):
                 # Non-interactive selection
                 selected_loans_indices = []
@@ -795,6 +809,16 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                             -args.download_latest_n :
                         ]
                     )
+                if args.selected_loans_ids:
+                    selected_loans_ids = [str(i) for i in args.selected_loans_ids]
+                    logger.info(
+                        "Non-interactive mode. Downloading loans with %s %s...",
+                        ps(len(selected_loans_ids), "ID"),
+                        ", ".join([colored(i, "blue") for i in selected_loans_ids]),
+                    )
+                    for n, loan in enumerate(audiobook_loans, start=1):
+                        if loan["id"] in selected_loans_ids:
+                            selected_loans_indices.append(n)
                 selected_loans_indices = sorted(list(set(selected_loans_indices)))
                 selected_loans: List[Dict] = [
                     audiobook_loans[j - 1] for j in selected_loans_indices

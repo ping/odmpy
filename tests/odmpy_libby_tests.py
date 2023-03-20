@@ -1020,3 +1020,46 @@ class OdmpyLibbyTests(BaseTestCase):
         if self.is_verbose:
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
+
+    @responses.activate
+    def test_mock_libby_download_by_selectid(self):
+        settings_folder = self._generate_fake_settings()
+
+        with self.test_data_dir.joinpath("ebook", "sync.json").open(
+            "r", encoding="utf-8"
+        ) as s:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync", json=json.load(s)
+            )
+        with self.test_data_dir.joinpath("ebook", "ebook.acsm").open(
+            "r", encoding="utf-8"
+        ) as a:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999/fulfill/ebook-epub-adobe",
+                content_type="application/xml",
+                body=a.read(),
+            )
+
+        test_folder = "test"
+
+        run_command = [
+            "libby",
+            "--settings",
+            str(settings_folder),
+            "--ebooks",
+            "--downloaddir",
+            str(self.test_downloads_dir),
+            "--bookfolderformat",
+            test_folder,
+            "--bookfileformat",
+            "ebook",
+            "--selectid",
+            "9999999",
+            "--hideprogress",
+        ]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+        self.assertTrue(
+            self.test_downloads_dir.joinpath(test_folder, "ebook.acsm").exists()
+        )
