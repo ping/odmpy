@@ -82,7 +82,7 @@ def valid_book_folder_file_format(value: str) -> str:
     :return:
     """
     try:
-        value % {"Title": "", "Author": "", "Series": "", "Edition": ""}
+        value % {"Title": "", "Author": "", "Series": "", "Edition": "", "ID": ""}
     except KeyError as err:
         raise argparse.ArgumentTypeError(
             f'"{value}" is not a valid book folder/file name format: Invalid field {err}'

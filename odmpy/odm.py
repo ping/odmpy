@@ -192,6 +192,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
             "  %%(Author)s: Comma-separated Author names\n"
             "  %%(Series)s: Series\n"
             "  %%(Edition)s: Edition\n"
+            "  %%(ID)s: Title/Loan ID\n"
         ),
     )
     parser_dl.add_argument(
@@ -207,6 +208,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
             "  %%(Author)s: Comma-separated Author names\n"
             "  %%(Series)s: Series\n"
             "  %%(Edition)s: Edition\n"
+            "  %%(ID)s: Title/Loan ID\n"
         ),
     )
     parser_dl.add_argument(
@@ -333,6 +335,7 @@ def extract_loan_file(
                 else []
             ),  # for open-epub
             edition=selected_loan.get("edition") or "",
+            title_id=selected_loan["id"],
             args=args,
             logger=logger,
         )

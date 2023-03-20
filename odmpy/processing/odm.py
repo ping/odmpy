@@ -277,6 +277,7 @@ def process_odm(
         series=series,
         authors=authors,
         edition="",
+        title_id=overdrive_media_id,
         args=args,
         logger=logger,
     )

@@ -91,6 +91,7 @@ class ProcessingSharedTests(BaseTestCase):
             series="",
             authors=["Author1", "Author2"],
             edition="",
+            title_id="",
             args=args,
             logger=self.logger,
         )
@@ -103,6 +104,7 @@ class ProcessingSharedTests(BaseTestCase):
             series="",
             authors=authors,
             edition="",
+            title_id="",
             args=args,
             logger=self.logger,
         )

@@ -1052,7 +1052,7 @@ class OdmpyLibbyTests(BaseTestCase):
             "--bookfolderformat",
             test_folder,
             "--bookfileformat",
-            "ebook",
+            "ebook_%(ID)s",
             "--selectid",
             "9999999",
             "--hideprogress",
@@ -1061,5 +1061,5 @@ class OdmpyLibbyTests(BaseTestCase):
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
         self.assertTrue(
-            self.test_downloads_dir.joinpath(test_folder, "ebook.acsm").exists()
+            self.test_downloads_dir.joinpath(test_folder, "ebook_9999999.acsm").exists()
         )

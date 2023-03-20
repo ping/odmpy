@@ -150,6 +150,7 @@ def process_audiobook_loan(
         series=series,
         authors=authors,
         edition=loan.get("edition") or "",
+        title_id=loan["id"],
         args=args,
         logger=logger,
     )

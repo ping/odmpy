@@ -309,6 +309,7 @@ def process_ebook_loan(
         series=loan.get("series") or "",
         authors=extract_authors_from_openbook(openbook),
         edition=loan.get("edition") or "",
+        title_id=loan["id"],
         args=args,
         logger=logger,
     )
