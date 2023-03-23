@@ -21,6 +21,7 @@ import datetime
 import io
 import json
 import logging
+import os
 import sys
 import time
 from http.client import HTTPConnection
@@ -666,12 +667,22 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
             )
             logger.info("-" * 70)
 
-            libby_client = LibbyClient(
-                settings_folder=args.settings_folder,
-                max_retries=args.retries,
-                timeout=args.timeout,
-                logger=logger,
-            )
+            token = os.environ.get("LIBBY_TOKEN")
+            if token:
+                # use token auth if available
+                libby_client = LibbyClient(
+                    identity_token=token,
+                    max_retries=args.retries,
+                    timeout=args.timeout,
+                    logger=logger,
+                )
+            else:
+                libby_client = LibbyClient(
+                    settings_folder=args.settings_folder,
+                    max_retries=args.retries,
+                    timeout=args.timeout,
+                    logger=logger,
+                )
 
             if args.command_name == OdmpyCommands.Libby and args.reset_settings:
                 libby_client.clear_settings()
@@ -679,7 +690,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 return
 
             if args.command_name == OdmpyCommands.Libby and args.check_signed_in:
-                if not libby_client.has_sync_code():
+                if not libby_client.get_token():
                     raise LibbyNotConfiguredError("Libby has not been setup.")
                 if not libby_client.is_logged_in():
                     raise LibbyNotConfiguredError("Libby is not signed-in.")
@@ -687,7 +698,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 return
 
             # detect if non-interactive command options are selected before setup
-            if not libby_client.has_sync_code():
+            if not libby_client.get_token():
                 if [
                     opt_name
                     for opt_name in OdmpyNoninteractiveOptions
@@ -697,7 +708,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                         'Libby has not been setup. Please run "odmpy libby" first.'
                     )
 
-            if not libby_client.has_sync_code():
+            if not libby_client.get_token():
                 instructions = (
                     "A Libby setup code is needed to allow odmpy to interact with Libby.\n"
                     "To get a Libby code, see https://help.libbyapp.com/en-us/6070.htm\n"
