@@ -547,7 +547,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
         "--check",
         dest=OdmpyNoninteractiveOptions.Check,
         action="store_true",
-        help="Non-interactive mode that displays Libby signed-in status.",
+        help="Non-interactive mode that displays Libby signed-in status and token if authenticated.",
     )
     parser_libby.add_argument(
         "--debug",
@@ -694,7 +694,9 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     raise LibbyNotConfiguredError("Libby has not been setup.")
                 if not libby_client.is_logged_in():
                     raise LibbyNotConfiguredError("Libby is not signed-in.")
-                logger.info("Libby is signed-in.")
+                logger.info(
+                    "Libby is signed-in with token:\n%s", libby_client.get_token()
+                )
                 return
 
             # detect if non-interactive command options are selected before setup
