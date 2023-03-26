@@ -23,7 +23,7 @@ Requires Python >= 3.7.
 
 ```bash
 # Install / Update to specific version
-python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.4 --upgrade
+python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.5 --upgrade
 
 # Install / Update from latest source
 python3 -m pip install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -76,7 +76,7 @@ Available commands:
     ret                 Return an audiobook loan file (odm).
     info                Get information about an audiobook loan file (odm).
 
-Version 0.7.4. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
+Version 0.7.5. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
 ```
 
 ### Download via Libby
@@ -93,8 +93,9 @@ usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--ebooks] [--magazines]
                    [--bookfileformat BOOK_FILE_FORMAT] [--overwritetags]
                    [--tagsdelimiter DELIMITER] [--opf] [-r OBSOLETE_RETRIES]
                    [-j] [--hideprogress] [--direct] [--keepodm] [--latest N]
-                   [--select N [N ...]] [--exportloans LOANS_JSON_FILEPATH]
-                   [--reset] [--check] [--debug]
+                   [--select N [N ...]] [--selectid ID [ID ...]]
+                   [--exportloans LOANS_JSON_FILEPATH] [--reset] [--check]
+                   [--debug]
 
 Interactive Libby Interface for downloading loans.
 
@@ -125,6 +126,7 @@ options:
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
                           %(Edition)s: Edition
+                          %(ID)s: Title/Loan ID
   --bookfileformat BOOK_FILE_FORMAT
                         Book file format string (without extension). Default "%(Title)s - %(Author)s".
                         This applies to only merged audiobooks, ebooks, and magazines.
@@ -133,6 +135,7 @@ options:
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
                           %(Edition)s: Edition
+                          %(ID)s: Title/Loan ID
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
                         This option forces odmpy to overwrite tags where possible. For audiobooks.
@@ -152,10 +155,14 @@ options:
   --select N [N ...]    Non-interactive mode that downloads loans by the index entered.
                         For example, "--select 1 5" will download the first and fifth loans in order of the checked out date.
                         If the 5th loan does not exist, it will be skipped.
+  --selectid ID [ID ...]
+                        Non-interactive mode that downloads loans by the loan ID entered.
+                        For example, "--selectid 12345" will download the loan with the ID 12345.
+                        If the loan with the ID does not exist, it will be skipped.
   --exportloans LOANS_JSON_FILEPATH
                         Non-interactive mode that exports loan information into a json file at the path specified.
   --reset               Remove previously saved odmpy Libby settings.
-  --check               Non-interactive mode that displays Libby signed-in status.
+  --check               Non-interactive mode that displays Libby signed-in status and token if authenticated.
   --debug               Debug switch for use during development. Please do not use.
 ```
 
@@ -282,6 +289,7 @@ options:
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
                           %(Edition)s: Edition
+                          %(ID)s: Title/Loan ID
   --bookfileformat BOOK_FILE_FORMAT
                         Book file format string (without extension). Default "%(Title)s - %(Author)s".
                         This applies to only merged audiobooks, ebooks, and magazines.
@@ -290,6 +298,7 @@ options:
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
                           %(Edition)s: Edition
+                          %(ID)s: Title/Loan ID
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
                         This option forces odmpy to overwrite tags where possible. For audiobooks.
@@ -327,7 +336,7 @@ odmpy libby -h
 ```
 usage: odmpy ret [-h] odm_file
 
-Return an audiobook loan file.
+Return an audiobook loan file (odm).
 
 positional arguments:
   odm_file    ODM file path.
@@ -343,7 +352,7 @@ options:
 ```
 usage: odmpy info [-h] [-f {text,json}] odm_file
 
-Get information about an audiobook loan file.
+Get information about an audiobook loan file (odm).
 
 positional arguments:
   odm_file              ODM file path.
