@@ -26,21 +26,16 @@ from pathlib import Path
 from typing import Optional, NamedTuple, Dict, List, Tuple
 from typing import OrderedDict as OrderedDictType
 from urllib import request
-
-from odmpy.libby_errors import (
-    ClientConnectionError,
-    ClientTimeoutError,
-    ErrorHandler,
-)
+from urllib.parse import urljoin
 
 if sys.version_info >= (3, 8):
     from typing import TypedDict
 else:
     from typing_extensions import TypedDict
-from urllib.parse import urljoin
-
 import requests
 from requests.adapters import HTTPAdapter, Retry
+
+from .libby_errors import ClientConnectionError, ClientTimeoutError, ErrorHandler
 
 #
 # Client for the Libby web API, and helper functions to make sense

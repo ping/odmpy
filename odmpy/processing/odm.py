@@ -51,9 +51,7 @@ from .shared import (
 from ..cli_utils import OdmpyCommands
 from ..constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES, UA_LONG
 from ..errors import OdmpyRuntimeError
-from ..libby import (
-    USER_AGENT,
-)
+from ..libby import USER_AGENT
 from ..overdrive import OverDriveClient
 from ..utils import (
     slugify,

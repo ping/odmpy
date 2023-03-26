@@ -45,12 +45,7 @@ from .shared import (
     extract_authors_from_openbook,
 )
 from ..errors import OdmpyRuntimeError
-from ..libby import (
-    USER_AGENT,
-    LibbyClient,
-    LibbyFormats,
-    LibbyMediaTypes,
-)
+from ..libby import USER_AGENT, LibbyClient, LibbyFormats, LibbyMediaTypes
 from ..overdrive import OverDriveClient
 from ..utils import slugify, is_windows
 

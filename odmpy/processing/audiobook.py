@@ -42,12 +42,7 @@ from .shared import (
     extract_isbn,
 )
 from ..errors import OdmpyRuntimeError
-from ..libby import (
-    USER_AGENT,
-    merge_toc,
-    PartMeta,
-    LibbyFormats,
-)
+from ..libby import USER_AGENT, merge_toc, PartMeta, LibbyFormats
 from ..overdrive import OverDriveClient
 from ..utils import slugify, plural_or_singular_noun as ps
 
