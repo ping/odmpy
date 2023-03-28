@@ -72,6 +72,8 @@ class OverDriveClient(object):
             "User-Agent": self.user_agent,
             "Referer": SITE_URL + "/",
             "Origin": SITE_URL,
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
         }
         return headers
 

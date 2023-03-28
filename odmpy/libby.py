@@ -304,6 +304,8 @@ class LibbyClient(object):
         return {
             "User-Agent": self.user_agent,
             "Accept": "application/json",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
         }
 
     def make_request(
