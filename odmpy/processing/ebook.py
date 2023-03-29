@@ -392,8 +392,13 @@ def process_ebook_loan(
     # Used to patch magazine css that causes paged mode in calibre viewer to not work.
     # This expression is used to strip `overflow-x: hidden` from the css definition
     # for `#article-body`.
-    patch_magazine_css_re = re.compile(
+    patch_magazine_css_overflow_re = re.compile(
         r"(#article-body\s*\{[^{}]+?)overflow-x:\s*hidden;([^{}]+?})"
+    )
+    # This expression is used to strip `padding: Xem Xem;` from the css definition
+    # for `#article-body` to remove the extraneous padding
+    patch_magazine_css_padding_re = re.compile(
+        r"(#article-body\s*\{[^{}]+?)padding:\s*[^;]+;([^{}]+?})"
     )
 
     # holds the manifest item ID for the image identified as the cover
@@ -447,7 +452,8 @@ def process_ebook_loan(
                 media_info["type"]["id"] == LibbyMediaTypes.Magazine
                 and media_type == "text/css"
             ):
-                css_content = patch_magazine_css_re.sub(r"\1\2", res.text)
+                css_content = patch_magazine_css_overflow_re.sub(r"\1\2", res.text)
+                css_content = patch_magazine_css_padding_re.sub(r"\1\2", css_content)
                 with open(asset_file_path, "w", encoding="utf-8") as f_out:
                     f_out.write(css_content)
             elif media_type in ("application/xhtml+xml", "text/html"):
