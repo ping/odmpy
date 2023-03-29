@@ -227,8 +227,10 @@ def _sort_title_contents(a: Dict, b: Dict):
     :return:
     """
     extensions_rank = [".xhtml", ".html", ".htm", ".jpg", ".jpeg", ".png", ".gif"]
-    a_ext = Path(a["url"]).suffix
-    b_ext = Path(b["url"]).suffix
+    a_parsed_url = urlparse(a["url"])
+    b_parsed_url = urlparse(b["url"])
+    a_ext = Path(a_parsed_url.path).suffix
+    b_ext = Path(b_parsed_url.path).suffix
     try:
         a_index = extensions_rank.index(a_ext)
     except ValueError:
@@ -245,7 +247,7 @@ def _sort_title_contents(a: Dict, b: Dict):
     if a_ext != b_ext:
         return -1 if a_ext < b_ext else 1
 
-    return -1 if urlparse(a["url"]).path < urlparse(b["url"]).path else 1
+    return -1 if a_parsed_url.path < b_parsed_url.path else 1
 
 
 def _filter_content(entry: Dict, media_info: Dict, toc_pages: List[str]):

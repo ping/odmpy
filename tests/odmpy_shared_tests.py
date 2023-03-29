@@ -1,6 +1,8 @@
 import argparse
+from functools import cmp_to_key
 
 from odmpy.processing import shared
+from odmpy.processing.ebook import _sort_title_contents
 from tests.base import BaseTestCase
 
 
@@ -110,3 +112,22 @@ class ProcessingSharedTests(BaseTestCase):
         )
         self.assertEqual(book_folder.stem, f"Test Title - {authors[0]}")
         self.assertEqual(book_file_name.name, f"Test Title - {authors[0]}.mp3")
+
+    def test_sort_title_contents(self):
+        entries = [
+            {"url": "http://localhost/assets/3.jpg"},
+            {"url": "http://localhost/assets/4.css"},
+            {"url": "http://localhost/pages/2.xhtml?cmpt=12345"},
+            {"url": "http://localhost/pages/1.xhtml?cmpt=12345"},
+        ]
+
+        sorted_entries = sorted(entries, key=cmp_to_key(_sort_title_contents))
+        self.assertEqual(
+            sorted_entries,
+            [
+                {"url": "http://localhost/pages/1.xhtml?cmpt=12345"},
+                {"url": "http://localhost/pages/2.xhtml?cmpt=12345"},
+                {"url": "http://localhost/assets/3.jpg"},
+                {"url": "http://localhost/assets/4.css"},
+            ],
+        )
