@@ -507,8 +507,8 @@ def process_ebook_loan(
                             if not asset_font_path.exists():
                                 css_content = css_content.replace(src_match, "")
                     except (
-                        Exception
-                    ) as patch_err:  # noqa, pylint: disable=broad-exception-caught
+                        Exception  # noqa, pylint: disable=broad-exception-caught
+                    ) as patch_err:
                         logger.warning(
                             "Error while patching font sources: %s", patch_err
                         )
