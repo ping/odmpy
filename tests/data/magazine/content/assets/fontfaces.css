@@ -1,0 +1,54 @@
+@font-face {
+  font-family: 'SourceSerifPro-Regular';
+  src: url('fonts/SourceSerifPro-Regular.ttf')  format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'SourceSerifPro-Bold';
+  src: url('fonts/SourceSerifPro-Bold.ttf')  format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'SourceSerifPro-Semibold';
+  src: url('fonts/SourceSerifPro-Semibold.ttf')  format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'SourceSerifPro-Light';
+  src: url('fonts/SourceSerifPro-Light.ttf')  format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'SourceSansPro-Bold';
+  src: url('fonts/SourceSansPro-Bold.ttf')  format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'SourceSansPro-Regular';
+  src: url('fonts/SourceSansPro-Regular.ttf')  format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'SourceSansPro-Light';
+  src: url('fonts/SourceSansPro-Light.ttf')  format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'SourceSansPro-SemiBold';
+  src: url('fonts/SourceSansPro-SemiBold.ttf')  format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'OpenSans-Regular';
+  src: url('fonts/OpenSans-Regular.ttf')  format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

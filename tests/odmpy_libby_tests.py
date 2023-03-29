@@ -323,7 +323,7 @@ class OdmpyLibbyTests(BaseTestCase):
                     content_type="image/jpeg",
                     body=f.read(),
                 )
-        for css in ("assets/magazine.css",):
+        for css in ("assets/magazine.css", "assets/fontfaces.css"):
             with self.test_data_dir.joinpath("magazine", "content", css).open(
                 "r", encoding="utf-8"
             ) as f:
@@ -394,11 +394,18 @@ class OdmpyLibbyTests(BaseTestCase):
             None,
         )
         self.assertTrue(css)
-        css_content = css.get_content().decode("utf-8")
-        # test for patches
-        self.assertNotIn("overflow-x", css_content)
-        self.assertRegex(css_content, r"font-family:.+?,serif;")
-        self.assertRegex(css_content, r"font-weight: 700;")
+        for css_file in list(book.get_items_of_type(ebooklib.ITEM_STYLE)):
+            self.assertIn(
+                css_file.get_name(), ("assets/magazine.css", "assets/fontfaces.css")
+            )
+            css_content = css_file.get_content().decode("utf-8")
+            if css_file.get_name() == "assets/magazine.css":
+                # test for patches
+                self.assertNotIn("overflow-x", css_content)
+                self.assertRegex(css_content, r"font-family:.+?,serif;")
+                self.assertRegex(css_content, r"font-weight: 700;")
+            if css_file.get_name() == "assets/fontfaces.css":
+                self.assertNotIn("src", css_content)
 
     @responses.activate
     def test_mock_libby_download_ebook_acsm(self):

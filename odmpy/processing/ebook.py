@@ -226,7 +226,18 @@ def _sort_title_contents(a: Dict, b: Dict):
     :param b:
     :return:
     """
-    extensions_rank = [".xhtml", ".html", ".htm", ".jpg", ".jpeg", ".png", ".gif"]
+    extensions_rank = [
+        ".xhtml",
+        ".html",
+        ".htm",
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".ttf",  # download fonts before css so that we check if font is available
+        ".otf",
+        ".css",
+    ]
     a_parsed_url = urlparse(a["url"])
     b_parsed_url = urlparse(b["url"])
     a_ext = Path(a_parsed_url.path).suffix
@@ -402,6 +413,10 @@ def process_ebook_loan(
     )
     # This expression is used to patch the missing fonts-specified in magazine css
     patch_magazine_css_font_re = re.compile(r"(font-family: '[^']+(Sans|Serif)[^']+';)")
+    # This expression is used to strip the missing font src in magazine css
+    patch_magazine_css_font_src_re = re.compile(
+        r"@font-face\s*\{[^{}]+?(src:\s*url\('(fonts/.+\.ttf)'\).+?;)[^{}]+?}"
+    )
 
     # holds the manifest item ID for the image identified as the cover
     cover_img_manifest_id = None
@@ -477,6 +492,15 @@ def process_ebook_loan(
                         elif "-Light" in font_family:
                             new_font_css += " font-weight: 300;"
                         css_content = css_content.replace(font_family, new_font_css)
+                else:
+                    # patch font url declarations
+                    # since ttf/otf files are downloaded ahead of css, we can verify
+                    # if the font files are actually available
+                    font_sources = patch_magazine_css_font_src_re.findall(css_content)
+                    for src_match, font_src in font_sources:
+                        asset_font_path = Path(urljoin(str(asset_file_path), font_src))
+                        if not asset_font_path.exists():
+                            css_content = css_content.replace(src_match, "")
                 with open(asset_file_path, "w", encoding="utf-8") as f_out:
                     f_out.write(css_content)
             elif media_type in ("application/xhtml+xml", "text/html"):

@@ -23,8 +23,11 @@
       {
         "url": "http://localhost/assets/magazine.css",
         "bytes": 1
+      },
+      {
+        "url": "http://localhost/assets/fontfaces.css",
+        "bytes": 1
       }
-
     ]
   }
 ]
