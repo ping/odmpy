@@ -496,11 +496,22 @@ def process_ebook_loan(
                     # patch font url declarations
                     # since ttf/otf files are downloaded ahead of css, we can verify
                     # if the font files are actually available
-                    font_sources = patch_magazine_css_font_src_re.findall(css_content)
-                    for src_match, font_src in font_sources:
-                        asset_font_path = Path(urljoin(str(asset_file_path), font_src))
-                        if not asset_font_path.exists():
-                            css_content = css_content.replace(src_match, "")
+                    try:
+                        font_sources = patch_magazine_css_font_src_re.findall(
+                            css_content
+                        )
+                        for src_match, font_src in font_sources:
+                            asset_font_path = Path(
+                                urljoin(str(asset_file_path), font_src)
+                            )
+                            if not asset_font_path.exists():
+                                css_content = css_content.replace(src_match, "")
+                    except (
+                        Exception
+                    ) as patch_err:  # noqa, pylint: disable=broad-exception-caught
+                        logger.warning(
+                            "Error while patching font sources: %s", patch_err
+                        )
                 with open(asset_file_path, "w", encoding="utf-8") as f_out:
                     f_out.write(css_content)
             elif media_type in ("application/xhtml+xml", "text/html"):
