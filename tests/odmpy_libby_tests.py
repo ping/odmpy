@@ -323,6 +323,15 @@ class OdmpyLibbyTests(BaseTestCase):
                     content_type="image/jpeg",
                     body=f.read(),
                 )
+        for css in ("assets/magazine.css",):
+            with self.test_data_dir.joinpath("magazine", "content", css).open(
+                "r", encoding="utf-8"
+            ) as f:
+                responses.get(
+                    f"http://localhost/{css}",
+                    content_type="text/css",
+                    body=f.read(),
+                )
 
         test_folder = "test"
 
@@ -379,6 +388,17 @@ class OdmpyLibbyTests(BaseTestCase):
             None,
         )
         self.assertTrue(nav)
+
+        css = next(
+            iter([b for b in list(book.get_items_of_type(ebooklib.ITEM_STYLE))]),
+            None,
+        )
+        self.assertTrue(css)
+        css_content = css.get_content().decode("utf-8")
+        # test for patches
+        self.assertNotIn("overflow-x", css_content)
+        self.assertRegex(css_content, r"font-family:.+?,serif;")
+        self.assertRegex(css_content, r"font-weight: 700;")
 
     @responses.activate
     def test_mock_libby_download_ebook_acsm(self):

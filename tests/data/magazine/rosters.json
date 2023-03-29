@@ -19,7 +19,12 @@
       {
         "url": "http://localhost/assets/cover.jpg",
         "bytes": 1
+      },
+      {
+        "url": "http://localhost/assets/magazine.css",
+        "bytes": 1
       }
+
     ]
   }
 ]

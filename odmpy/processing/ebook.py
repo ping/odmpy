@@ -400,6 +400,8 @@ def process_ebook_loan(
     patch_magazine_css_padding_re = re.compile(
         r"(#article-body\s*\{[^{}]+?)padding:\s*[^;]+;([^{}]+?})"
     )
+    # This expression is used to patch the missing fonts-specified in magazine css
+    patch_magazine_css_font_re = re.compile(r"(font-family: '[^']+(Sans|Serif)[^']+';)")
 
     # holds the manifest item ID for the image identified as the cover
     cover_img_manifest_id = None
@@ -447,13 +449,34 @@ def process_ebook_loan(
                 entry_url, headers=headers, return_res=True
             )
 
-            # patch magazine css to fix rendering in calibre viewer
+            # patch magazine css to fix various rendering problems
             if (
                 media_info["type"]["id"] == LibbyMediaTypes.Magazine
                 and media_type == "text/css"
             ):
                 css_content = patch_magazine_css_overflow_re.sub(r"\1\2", res.text)
                 css_content = patch_magazine_css_padding_re.sub(r"\1\2", css_content)
+                if "#article-body" in css_content:
+                    # patch font-family declarations
+                    # libby declares these font-faces but does not supply them in the roster
+                    # nor are they actually available when viewed online (http 403)
+                    font_families = list(
+                        set(patch_magazine_css_font_re.findall(css_content))
+                    )
+                    for font_family, _ in font_families:
+                        new_font_css = font_family[:-1]
+                        if "Serif" in font_family:
+                            new_font_css += ",serif"
+                        elif "Sans" in font_family:
+                            new_font_css += ",sans-serif"
+                        new_font_css += ";"
+                        if "-Bold" in font_family:
+                            new_font_css += " font-weight: 700;"
+                        elif "-SemiBold" in font_family:
+                            new_font_css += " font-weight: 600;"
+                        elif "-Light" in font_family:
+                            new_font_css += " font-weight: 300;"
+                        css_content = css_content.replace(font_family, new_font_css)
                 with open(asset_file_path, "w", encoding="utf-8") as f_out:
                     f_out.write(css_content)
             elif media_type in ("application/xhtml+xml", "text/html"):
