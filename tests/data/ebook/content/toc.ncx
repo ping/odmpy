@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ncx version="2005-1"
+    xmlns="http://www.daisy.org/z3986/2005/ncx/" xml:lang="en">
+    <head>
+        <meta content="urn:uid:1234567890" name="dtb:uid" />
+    </head>
+    <docTitle>
+        <text>Test EBook</text>
+    </docTitle>
+    <docAuthor>
+        <text>Test Publisher</text>
+    </docAuthor>
+    <navMap>
+        <navPoint id="navPoint1">
+            <navLabel>
+                <text>Test EBook</text>
+            </navLabel>
+            <content src="pages/Cover.xhtml" />
+        </navPoint>
+        <navPoint id="navPoint2">
+            <navLabel>
+                <text>Test Chapter 1</text>
+            </navLabel>
+            <content src="pages/page-01.xhtml" />
+        </navPoint>
+        <navPoint id="navPoint3">
+            <navLabel>
+                <text>Test Chapter 2</text>
+            </navLabel>
+            <content src="pages/page-02.xhtml" />
+        </navPoint>
+    </navMap>
+</ncx>

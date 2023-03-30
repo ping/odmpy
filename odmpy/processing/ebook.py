@@ -34,7 +34,7 @@ from urllib.parse import urlparse, urljoin
 
 import bs4.element
 import requests
-from bs4 import BeautifulSoup, Doctype
+from bs4 import BeautifulSoup, Doctype, Tag
 from termcolor import colored
 from tqdm import tqdm
 
@@ -234,7 +234,7 @@ def _sort_title_contents(a: Dict, b: Dict):
         ".jpeg",
         ".png",
         ".gif",
-        ".ttf",  # download fonts before css so that we check if font is available
+        ".ttf",  # download fonts before css so that we can check if font is available
         ".otf",
         ".css",
     ]
@@ -639,6 +639,46 @@ def process_ebook_loan(
             }
         )
         has_ncx = True
+    else:
+        # EPUB3 compliance: Ensure that the identifier in ncx matches the one in the OPF
+        # Mismatch due to the toc.ncx being supplied by publisher
+        ncx_manifest_entry = next(
+            iter([m for m in manifest_entries if m["id"] == "ncx"]), None
+        )
+        if ncx_manifest_entry:
+            expected_book_identifier = (
+                extract_isbn(
+                    media_info["formats"],
+                    format_types=[
+                        LibbyFormats.MagazineOverDrive
+                        if loan["type"]["id"] == LibbyMediaTypes.Magazine
+                        else LibbyFormats.EBookOverdrive
+                    ],
+                )
+                or media_info["id"]
+            )  # this is the summarised logic from build_opf_package
+            ncx_path = book_content_folder.joinpath(ncx_manifest_entry["href"])
+            new_ncx_contents = None
+            with ncx_path.open("r", encoding="utf-8") as ncx_f:
+                ncx_soup = BeautifulSoup(ncx_f, features="xml")
+                meta_id = ncx_soup.find("meta", attrs={"name": "dtb:uid"})
+                if (
+                    meta_id
+                    and type(meta_id) == Tag
+                    and meta_id.get("content")
+                    and meta_id["content"] != expected_book_identifier
+                ):
+                    logger.debug(
+                        'Replacing identifier in %s: "%s" -> "%s"',
+                        ncx_path.name,
+                        meta_id["content"],
+                        expected_book_identifier,
+                    )
+                    meta_id["content"] = expected_book_identifier
+                    new_ncx_contents = str(ncx_soup)
+            if new_ncx_contents:
+                with ncx_path.open("w", encoding="utf-8") as ncx_f:
+                    ncx_f.write(new_ncx_contents)
 
     # create epub OPF
     opf_file_name = "package.opf"

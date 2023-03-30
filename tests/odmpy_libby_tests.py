@@ -524,6 +524,14 @@ class OdmpyLibbyTests(BaseTestCase):
                     content_type="image/jpeg",
                     body=f.read(),
                 )
+        with self.test_data_dir.joinpath("ebook", "content", "toc.ncx").open(
+            "r", encoding="utf-8"
+        ) as f:
+            responses.get(
+                "http://localhost/toc.ncx",
+                content_type="application/x-dtbncx+xml",
+                body=f.read(),
+            )
 
         test_folder = "test"
 
@@ -543,6 +551,7 @@ class OdmpyLibbyTests(BaseTestCase):
             "1",
             "--opf",
             "--hideprogress",
+            "--debug",
         ]
         if self.is_verbose:
             run_command.insert(0, "--verbose")
@@ -583,6 +592,15 @@ class OdmpyLibbyTests(BaseTestCase):
             None,
         )
         self.assertTrue(nav)
+        self.assertEqual(nav.get_name(), "toc.ncx")
+        ncx_soup = BeautifulSoup(nav.get_content(), "xml")
+        meta_id = ncx_soup.find("meta", attrs={"name": "dtb:uid"})
+        self.assertTrue(meta_id)
+        self.assertEqual(meta_id["content"], "9789999999999")
+
+        # test for debug artifacts here as well
+        for f in ("loan.json", "media.json", "openbook.json", "rosters.json"):
+            self.assertTrue(self.test_downloads_dir.joinpath(test_folder, f).exists())
 
     @responses.activate
     @patch("urllib.request.OpenerDirector.open")

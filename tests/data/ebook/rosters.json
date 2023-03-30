@@ -19,6 +19,10 @@
       {
         "url": "http://localhost/assets/cover.jpg",
         "bytes": 1
+      },
+      {
+        "url": "http://localhost/toc.ncx",
+        "bytes": 1
       }
     ]
   }
