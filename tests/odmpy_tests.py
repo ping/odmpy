@@ -80,7 +80,8 @@ class OdmpyTests(BaseTestCase):
             "description",
             "total_duration",
         ]:
-            self.assertTrue(info.get(tag), msg="'{}' is not set".format(tag))
+            with self.subTest(tag=tag):
+                self.assertTrue(info.get(tag), msg="'{}' is not set".format(tag))
 
     def _setup_common_responses(self):
         with self.test_data_dir.joinpath("audiobook", "cover.jpg").open("rb") as c:

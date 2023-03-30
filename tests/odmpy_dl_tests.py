@@ -230,7 +230,8 @@ class OdmpyDlTests(BaseTestCase):
             "publisher",
             "track",
         ]:
-            self.assertTrue(meta["format"]["tags"].get(tag))
+            with self.subTest(tag=tag):
+                self.assertTrue(meta["format"]["tags"].get(tag))
 
         run(
             [

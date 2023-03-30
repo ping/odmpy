@@ -292,15 +292,17 @@ class LibbyClientTests(BaseTestCase):
                 "constraints",
                 "privateAccountId",
             ):
-                self.assertIn(k, loan, msg=f"'{k}' not found in loan")
+                with self.subTest(key=k):
+                    self.assertIn(k, loan, msg=f"'{k}' not found in loan")
 
             self.assertIn(loan["type"]["id"], ("audiobook", "ebook", "magazine"))
             self.assertIn(loan["type"]["name"], ("Audiobook", "eBook", "Magazine"))
 
             for k in formats_keys.get(loan["type"]["id"], []):
-                self.assertIn(
-                    k, loan, msg=f'"{k}" not found in {loan["type"]["id"]} loan'
-                )
+                with self.subTest(key=k):
+                    self.assertIn(
+                        k, loan, msg=f'"{k}" not found in {loan["type"]["id"]} loan'
+                    )
 
     def test_holds(self):
         if not self.client.get_token():
@@ -331,7 +333,8 @@ class LibbyClientTests(BaseTestCase):
                 "otherFormats",
                 # "readiverseFormat",
             ):
-                self.assertIn(k, hold, msg=f"'{k}' not found in hold")
+                with self.subTest(key=k):
+                    self.assertIn(k, hold, msg=f"'{k}' not found in hold")
 
             for k in (
                 "placedDate",
@@ -350,7 +353,8 @@ class LibbyClientTests(BaseTestCase):
                 "holdsRatio",
                 "estimatedReleaseDate",
             ):
-                self.assertIn(k, hold, msg=f"'{k}' not found in hold")
+                with self.subTest(key=k):
+                    self.assertIn(k, hold, msg=f"'{k}' not found in hold")
 
     def test_is_renewable(self):
         now = datetime.utcnow().replace(tzinfo=timezone.utc)

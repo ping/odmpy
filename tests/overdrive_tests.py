@@ -42,7 +42,8 @@ class OverDriveClientTests(BaseTestCase):
             "unitsSold",
             "popularity",
         ):
-            self.assertIn(k, item, msg=f'"{k}" not found')
+            with self.subTest(key=k):
+                self.assertIn(k, item, msg=f'"{k}" not found')
 
     def test_media_bulk(self):
         items = self.client.media_bulk(["284716", "5704038"])
@@ -67,4 +68,5 @@ class OverDriveClientTests(BaseTestCase):
                 "unitsSold",
                 "popularity",
             ):
-                self.assertIn(k, item, msg=f'"{k}" not found')
+                with self.subTest(key=k):
+                    self.assertIn(k, item, msg=f'"{k}" not found')
