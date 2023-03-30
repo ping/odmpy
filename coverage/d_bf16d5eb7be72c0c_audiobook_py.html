@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/processing/audiobook.py: 82.1%</title>
+    <title>Coverage for odmpy/processing/audiobook.py: 86.5%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/processing/audiobook.py</b>:
-            <span class="pc_cov">82.1%</span>
+            <span class="pc_cov">86.5%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">156 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">128<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">28<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">135<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">21<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_ebook_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.2">coverage.py v7.2.2</a>,
-            created at 2023-03-30 09:15 +0000
+            created at 2023-03-30 13:49 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -250,11 +250,11 @@
     <p class="mis show_mis"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t">        <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t170" href="#t170">170</a></span><span class="t">    <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">is_debug_mode</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">        <span class="key">with</span> <span class="nam">book_folder</span><span class="op">.</span><span class="nam">joinpath</span><span class="op">(</span><span class="str">"loan.json"</span><span class="op">)</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="str">"w"</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">f</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">            <span class="nam">json</span><span class="op">.</span><span class="nam">dump</span><span class="op">(</span><span class="nam">loan</span><span class="op">,</span> <span class="nam">f</span><span class="op">,</span> <span class="nam">indent</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">        <span class="key">with</span> <span class="nam">book_folder</span><span class="op">.</span><span class="nam">joinpath</span><span class="op">(</span><span class="str">"loan.json"</span><span class="op">)</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="str">"w"</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">f</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">            <span class="nam">json</span><span class="op">.</span><span class="nam">dump</span><span class="op">(</span><span class="nam">loan</span><span class="op">,</span> <span class="nam">f</span><span class="op">,</span> <span class="nam">indent</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">        <span class="key">with</span> <span class="nam">book_folder</span><span class="op">.</span><span class="nam">joinpath</span><span class="op">(</span><span class="str">"openbook.json"</span><span class="op">)</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="str">"w"</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">f</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">            <span class="nam">json</span><span class="op">.</span><span class="nam">dump</span><span class="op">(</span><span class="nam">openbook</span><span class="op">,</span> <span class="nam">f</span><span class="op">,</span> <span class="nam">indent</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">        <span class="key">with</span> <span class="nam">book_folder</span><span class="op">.</span><span class="nam">joinpath</span><span class="op">(</span><span class="str">"openbook.json"</span><span class="op">)</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="str">"w"</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">f</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">            <span class="nam">json</span><span class="op">.</span><span class="nam">dump</span><span class="op">(</span><span class="nam">openbook</span><span class="op">,</span> <span class="nam">f</span><span class="op">,</span> <span class="nam">indent</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">    <span class="nam">cover_filename</span><span class="op">,</span> <span class="nam">cover_bytes</span> <span class="op">=</span> <span class="nam">generate_cover</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">        <span class="nam">book_folder</span><span class="op">=</span><span class="nam">book_folder</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -495,7 +495,7 @@
     <p class="pln"><span class="n"><a id="t413" href="#t413">413</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t414" href="#t414">414</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t415" href="#t415">415</a></span><span class="t">        <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">merge_format</span> <span class="op">==</span> <span class="str">"m4b"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t416" href="#t416">416</a></span><span class="t">            <span class="nam">convert_to_m4b</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t416" href="#t416">416</a></span><span class="t">            <span class="nam">convert_to_m4b</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t417" href="#t417">417</a></span><span class="t">                <span class="nam">book_filename</span><span class="op">=</span><span class="nam">book_filename</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t418" href="#t418">418</a></span><span class="t">                <span class="nam">book_m4b_filename</span><span class="op">=</span><span class="nam">book_m4b_filename</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t419" href="#t419">419</a></span><span class="t">                <span class="nam">cover_filename</span><span class="op">=</span><span class="nam">cover_filename</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -549,8 +549,8 @@
     <p class="mis show_mis"><span class="n"><a id="t467" href="#t467">467</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"Already saved %s"</span><span class="op">,</span> <span class="nam">colored</span><span class="op">(</span><span class="nam">str</span><span class="op">(</span><span class="nam">opf_file_path</span><span class="op">)</span><span class="op">,</span> <span class="str">"magenta"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t468" href="#t468">468</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t469" href="#t469">469</a></span><span class="t">    <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">write_json</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t470" href="#t470">470</a></span><span class="t">        <span class="key">with</span> <span class="nam">book_folder</span><span class="op">.</span><span class="nam">joinpath</span><span class="op">(</span><span class="str">"debug.json"</span><span class="op">)</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="str">"w"</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">outfile</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t471" href="#t471">471</a></span><span class="t">            <span class="nam">json</span><span class="op">.</span><span class="nam">dump</span><span class="op">(</span><span class="nam">debug_meta</span><span class="op">,</span> <span class="nam">outfile</span><span class="op">,</span> <span class="nam">indent</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t470" href="#t470">470</a></span><span class="t">        <span class="key">with</span> <span class="nam">book_folder</span><span class="op">.</span><span class="nam">joinpath</span><span class="op">(</span><span class="str">"debug.json"</span><span class="op">)</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="str">"w"</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">outfile</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t471" href="#t471">471</a></span><span class="t">            <span class="nam">json</span><span class="op">.</span><span class="nam">dump</span><span class="op">(</span><span class="nam">debug_meta</span><span class="op">,</span> <span class="nam">outfile</span><span class="op">,</span> <span class="nam">indent</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t472" href="#t472">472</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t473" href="#t473">473</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">args</span><span class="op">.</span><span class="nam">is_debug_mode</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t474" href="#t474">474</a></span><span class="t">        <span class="com"># clean up</span>&nbsp;</span><span class="r"></span></p>
@@ -570,7 +570,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_ebook_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.2">coverage.py v7.2.2</a>,
-            created at 2023-03-30 09:15 +0000
+            created at 2023-03-30 13:49 +0000
         </p>
     </div>
 </footer>
