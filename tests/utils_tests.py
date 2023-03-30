@@ -78,9 +78,9 @@ class UtilsTests(unittest.TestCase):
     def test_valid_book_folder_file_format(self):
         self.assertEqual(
             cli_utils.valid_book_folder_file_format(
-                "%(Author)s/%(Series)s/%(Title)s-%(Edition)s"
+                "%(Author)s/%(Series)s/%(Title)s-%(Edition)s-%(ID)s"
             ),
-            "%(Author)s/%(Series)s/%(Title)s-%(Edition)s",
+            "%(Author)s/%(Series)s/%(Title)s-%(Edition)s-%(ID)s",
         )
 
         with self.assertRaises(argparse.ArgumentTypeError) as context:
