@@ -739,6 +739,7 @@ class OdmpyLibbyTests(BaseTestCase):
             "--opf",
             "--merge",
             "--hideprogress",
+            "--writejson",
         ]
         if self.is_verbose:
             run_command.insert(0, "--verbose")
@@ -748,6 +749,9 @@ class OdmpyLibbyTests(BaseTestCase):
         )
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
+        )
+        self.assertTrue(
+            self.test_downloads_dir.joinpath(test_folder, "debug.json").exists()
         )
 
     @responses.activate
