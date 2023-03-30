@@ -424,10 +424,15 @@ def process_ebook_loan(
     for entry in progress_bar:
         entry_url = entry["url"]
         parsed_entry_url = urlparse(entry_url)
-        media_type, _ = mimetypes.guess_type(parsed_entry_url.path[1:])
-        asset_folder = book_content_folder.joinpath(
-            Path(parsed_entry_url.path[1:]).parent
-        )
+        title_content_path = Path(parsed_entry_url.path[1:])
+        media_type, _ = mimetypes.guess_type(title_content_path.name)
+        if not media_type and title_content_path.suffix == ".ncx":
+            # patch for mimetypes.guess_type failure
+            media_type = "application/x-dtbncx+xml"
+        if not media_type:
+            logger.warning("Skipped roster entry: %s", title_content_path.name)
+            continue
+        asset_folder = book_content_folder.joinpath(title_content_path.parent)
         if media_type == "application/x-dtbncx+xml":
             has_ncx = True
         manifest_entry = {
