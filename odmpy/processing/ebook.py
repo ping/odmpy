@@ -21,7 +21,6 @@ import base64
 import datetime
 import json
 import logging
-import mimetypes
 import os
 import re
 import shutil
@@ -47,7 +46,7 @@ from .shared import (
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyClient, LibbyFormats, LibbyMediaTypes
 from ..overdrive import OverDriveClient
-from ..utils import slugify, is_windows
+from ..utils import slugify, is_windows, guess_mimetype
 
 #
 # Main processing logic for libby direct ebook and magazine loans
@@ -271,7 +270,7 @@ def _filter_content(entry: Dict, media_info: Dict, toc_pages: List[str]):
     :return:
     """
     parsed_entry_url = urlparse(entry["url"])
-    media_type, _ = mimetypes.guess_type(parsed_entry_url.path[1:])
+    media_type = guess_mimetype(parsed_entry_url.path[1:])
 
     if media_info["type"]["id"] == LibbyMediaTypes.Magazine and media_type:
         if media_type.startswith("image/") and (
@@ -425,10 +424,7 @@ def process_ebook_loan(
         entry_url = entry["url"]
         parsed_entry_url = urlparse(entry_url)
         title_content_path = Path(parsed_entry_url.path[1:])
-        media_type, _ = mimetypes.guess_type(title_content_path.name)
-        if not media_type and title_content_path.suffix == ".ncx":
-            # patch for mimetypes.guess_type failure
-            media_type = "application/x-dtbncx+xml"
+        media_type = guess_mimetype(title_content_path.name)
         if not media_type:
             logger.warning("Skipped roster entry: %s", title_content_path.name)
             continue

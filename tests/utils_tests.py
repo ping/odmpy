@@ -86,3 +86,24 @@ class UtilsTests(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError) as context:
             _ = cli_utils.valid_book_folder_file_format("%(X)s")
         self.assertIn("Invalid field 'X'", str(context.exception))
+
+    def test_mimetypes_guess(self):
+        for f in (
+            "a.xhtml",
+            "a.html",
+            "a.css",
+            "a.png",
+            "a.gif",
+            "a.jpeg",
+            "a.jpg",
+            "a.otf",
+            "a.ttf",
+            "a.eot",
+            "a.woff",
+            "a.woff2",
+            "x/a.svg",
+            "http://localhost/x/a.ncx",
+        ):
+            with self.subTest(file_name=f):
+                mime_type = utils.guess_mimetype(f)
+                self.assertIsNotNone(mime_type, f"Unable to guess mimetype for {f}")

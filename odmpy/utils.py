@@ -21,6 +21,7 @@ import platform
 import re
 import unicodedata
 import xml.etree.ElementTree as ET
+from mimetypes import guess_type
 from pathlib import Path
 from typing import Optional
 
@@ -34,6 +35,36 @@ TIMESTAMP_RE = re.compile(
     r"^((?P<hr>[0-9]+):)?(?P<min>[0-9]+):(?P<sec>[0-9]+)(\.(?P<ms>[0-9]+))?$"
 )
 ILLEGAL_WIN_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
+MIMETYPE_MAP = {
+    ".xhtml": "application/xhtml+xml",
+    ".html": "text/html",
+    ".css": "text/css",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".jpeg": "image/jpeg",
+    ".jpg": "image/jpeg",
+    ".otf": "font/otf",
+    ".ttf": "font/ttf",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+    ".eot": "application/vnd.ms-fontobject",
+    ".svg": "image/svg+xml",
+    ".ncx": "application/x-dtbncx+xml",
+}
+
+
+def guess_mimetype(url: str) -> Optional[str]:
+    """
+    Attempt to guess the mimetype for a given url
+
+    :param url:
+    :return:
+    """
+    url_path = Path(url)
+    mime_type, _ = guess_type(url_path.name, strict=False)
+    if not mime_type:
+        mime_type = MIMETYPE_MAP.get(url_path.suffix.lower(), None)
+    return mime_type
 
 
 def is_windows() -> bool:
