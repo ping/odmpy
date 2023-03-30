@@ -709,19 +709,19 @@ def build_opf_package(
     if asin:
         asin_tag = ET.SubElement(metadata, "dc:identifier")
         asin_tag.text = asin
-        asin_tag.set("id", "mobi-asin")
+        asin_tag.set("id", "asin")
         if version == "2.0":
-            asin_tag.set("opf:scheme", "MOBI-ASIN")
+            asin_tag.set("opf:scheme", "ASIN")
         if version == "3.0":
             asin_tag_meta = ET.SubElement(
                 metadata,
                 "meta",
                 attrib={
-                    "refines": "#mobi-asin",
+                    "refines": "#asin",
                     "property": "identifier-type",
                 },
             )
-            asin_tag_meta.text = "MOBI-ASIN"
+            asin_tag_meta.text = "ASIN"
 
     # add overdrive id and reserveId
     overdrive_id = ET.SubElement(metadata, "dc:identifier")
