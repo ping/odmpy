@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.2">coverage.py v7.2.2</a>,
-            created at 2023-03-29 10:24 +0000
+            created at 2023-03-30 07:20 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -791,19 +791,19 @@
     <p class="run"><span class="n"><a id="t709" href="#t709">709</a></span><span class="t">    <span class="key">if</span> <span class="nam">asin</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t710" href="#t710">710</a></span><span class="t">        <span class="nam">asin_tag</span> <span class="op">=</span> <span class="nam">ET</span><span class="op">.</span><span class="nam">SubElement</span><span class="op">(</span><span class="nam">metadata</span><span class="op">,</span> <span class="str">"dc:identifier"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t711" href="#t711">711</a></span><span class="t">        <span class="nam">asin_tag</span><span class="op">.</span><span class="nam">text</span> <span class="op">=</span> <span class="nam">asin</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t712" href="#t712">712</a></span><span class="t">        <span class="nam">asin_tag</span><span class="op">.</span><span class="nam">set</span><span class="op">(</span><span class="str">"id"</span><span class="op">,</span> <span class="str">"mobi-asin"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t712" href="#t712">712</a></span><span class="t">        <span class="nam">asin_tag</span><span class="op">.</span><span class="nam">set</span><span class="op">(</span><span class="str">"id"</span><span class="op">,</span> <span class="str">"asin"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t713" href="#t713">713</a></span><span class="t">        <span class="key">if</span> <span class="nam">version</span> <span class="op">==</span> <span class="str">"2.0"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t714" href="#t714">714</a></span><span class="t">            <span class="nam">asin_tag</span><span class="op">.</span><span class="nam">set</span><span class="op">(</span><span class="str">"opf:scheme"</span><span class="op">,</span> <span class="str">"MOBI-ASIN"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t714" href="#t714">714</a></span><span class="t">            <span class="nam">asin_tag</span><span class="op">.</span><span class="nam">set</span><span class="op">(</span><span class="str">"opf:scheme"</span><span class="op">,</span> <span class="str">"ASIN"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t715" href="#t715">715</a></span><span class="t">        <span class="key">if</span> <span class="nam">version</span> <span class="op">==</span> <span class="str">"3.0"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t716" href="#t716">716</a></span><span class="t">            <span class="nam">asin_tag_meta</span> <span class="op">=</span> <span class="nam">ET</span><span class="op">.</span><span class="nam">SubElement</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t717" href="#t717">717</a></span><span class="t">                <span class="nam">metadata</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t718" href="#t718">718</a></span><span class="t">                <span class="str">"meta"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t719" href="#t719">719</a></span><span class="t">                <span class="nam">attrib</span><span class="op">=</span><span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t720" href="#t720">720</a></span><span class="t">                    <span class="str">"refines"</span><span class="op">:</span> <span class="str">"#mobi-asin"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t720" href="#t720">720</a></span><span class="t">                    <span class="str">"refines"</span><span class="op">:</span> <span class="str">"#asin"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t721" href="#t721">721</a></span><span class="t">                    <span class="str">"property"</span><span class="op">:</span> <span class="str">"identifier-type"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t722" href="#t722">722</a></span><span class="t">                <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t723" href="#t723">723</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t724" href="#t724">724</a></span><span class="t">            <span class="nam">asin_tag_meta</span><span class="op">.</span><span class="nam">text</span> <span class="op">=</span> <span class="str">"MOBI-ASIN"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t724" href="#t724">724</a></span><span class="t">            <span class="nam">asin_tag_meta</span><span class="op">.</span><span class="nam">text</span> <span class="op">=</span> <span class="str">"ASIN"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t725" href="#t725">725</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t726" href="#t726">726</a></span><span class="t">    <span class="com"># add overdrive id and reserveId</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t727" href="#t727">727</a></span><span class="t">    <span class="nam">overdrive_id</span> <span class="op">=</span> <span class="nam">ET</span><span class="op">.</span><span class="nam">SubElement</span><span class="op">(</span><span class="nam">metadata</span><span class="op">,</span> <span class="str">"dc:identifier"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -1053,7 +1053,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.2">coverage.py v7.2.2</a>,
-            created at 2023-03-29 10:24 +0000
+            created at 2023-03-30 07:20 +0000
         </p>
     </div>
 </footer>
