@@ -773,6 +773,8 @@ class OdmpyLibbyTests(BaseTestCase):
             "--overwritetags",
             "--opf",
             "--hideprogress",
+            "--debug",
+            "--writejson",
         ]
         if self.is_verbose:
             run_command.insert(0, "--verbose")
@@ -783,6 +785,9 @@ class OdmpyLibbyTests(BaseTestCase):
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "test-audiobook.opf").exists()
         )
+        # test for debug artifacts here as well
+        for f in ("loan.json", "openbook.json", "debug.json"):
+            self.assertTrue(self.test_downloads_dir.joinpath(test_folder, f).exists())
 
     @responses.activate
     def test_mock_libby_download_audiobook_direct_merge(self):
@@ -815,6 +820,44 @@ class OdmpyLibbyTests(BaseTestCase):
         run(run_command, be_quiet=not self.is_verbose)
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook.mp3").exists()
+        )
+        self.assertTrue(
+            self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
+        )
+
+    @responses.activate
+    def test_mock_libby_download_audiobook_direct_merge_m4b(self):
+        settings_folder = self._generate_fake_settings()
+        self._setup_audiobook_direct_responses()
+
+        test_folder = "test"
+
+        run_command = [
+            "libby",
+            "--settings",
+            str(settings_folder),
+            "--downloaddir",
+            str(self.test_downloads_dir),
+            "--bookfolderformat",
+            test_folder,
+            "--bookfileformat",
+            "ebook",
+            "--direct",
+            "--select",
+            "1",
+            "--merge",
+            "--mergeformat",
+            "m4b",
+            "--chapters",
+            "--overwritetags",
+            "--opf",
+            "--hideprogress",
+        ]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+        self.assertTrue(
+            self.test_downloads_dir.joinpath(test_folder, "ebook.m4b").exists()
         )
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
