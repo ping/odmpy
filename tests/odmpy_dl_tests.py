@@ -307,6 +307,7 @@ class OdmpyDlTests(BaseTestCase):
                 "--merge",
                 "--nobookfolder",
                 "--hideprogress",
+                "--writejson",
             ],
             be_quiet=True,
         )
@@ -314,3 +315,4 @@ class OdmpyDlTests(BaseTestCase):
             "downloads", f"{expected_result.merged_book_basename}.mp3"
         )
         self.assertTrue(mp3_file.exists())
+        self.assertTrue(self.test_data_dir.joinpath("downloads", "debug.json").exists())

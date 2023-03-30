@@ -589,7 +589,9 @@ def process_odm(
     # end loop: for p in download_parts:
 
     debug_meta["audio_lengths_ms"] = audio_lengths_ms
-    debug_meta["file_tracks"] = file_tracks
+    debug_meta["file_tracks"] = [
+        {"file": str(f["file"]), "markers": f["markers"]} for f in file_tracks
+    ]
 
     if args.merge_output:
         logger.info(
