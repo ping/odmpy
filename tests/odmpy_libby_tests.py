@@ -1134,7 +1134,12 @@ class OdmpyLibbyTests(BaseTestCase):
         return ""
 
     @responses.activate
-    @patch("builtins.input", new=_ret_invalid_choice)
+    @patch(
+        "builtins.input",
+        lambda txt: OdmpyLibbyTests._ret_invalid_choice(  # pylint: disable=unnecessary-lambda
+            txt
+        ),
+    )
     def test_mock_libby_invalid_choice(self):
         settings_folder = self._generate_fake_settings()
         with self.test_data_dir.joinpath("audiobook", "sync.json").open(
