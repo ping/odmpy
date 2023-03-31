@@ -18,7 +18,6 @@ from .base import BaseTestCase
 
 
 class OdmpyLibbyTests(BaseTestCase):
-
     # don't know if this is good idea...
     _custom_counter: Dict[str, int] = {}
 
