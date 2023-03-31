@@ -939,7 +939,12 @@ class OdmpyLibbyTests(BaseTestCase):
         self.assertIn("Login successful.\n", [r.msg for r in context.records])
 
     @responses.activate
-    @patch("builtins.input", new=_libby_setup_prompt)
+    @patch(
+        "builtins.input",
+        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
+            txt
+        ),
+    )
     def test_mock_libby_setup_fail(self):
         settings_folder = self.test_downloads_dir.joinpath("settings")
         if not settings_folder.exists():
@@ -959,7 +964,12 @@ class OdmpyLibbyTests(BaseTestCase):
             run(["libby", "--settings", str(settings_folder)], be_quiet=True)
 
     @responses.activate
-    @patch("builtins.input", new=_libby_setup_prompt)
+    @patch(
+        "builtins.input",
+        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
+            txt
+        ),
+    )
     def test_mock_libby_setup_sync_fail(self):
         settings_folder = self.test_downloads_dir.joinpath("settings")
         if not settings_folder.exists():
