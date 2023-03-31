@@ -913,12 +913,7 @@ class OdmpyLibbyTests(BaseTestCase):
         return ""
 
     @responses.activate
-    @patch(
-        "builtins.input",
-        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
-            txt
-        ),
-    )
+    @patch("builtins.input", new=_libby_setup_prompt.__func__)  # type: ignore[attr-defined]
     def test_mock_libby_setup(self):
         settings_folder = self.test_downloads_dir.joinpath("settings")
         if not settings_folder.exists():
@@ -939,12 +934,7 @@ class OdmpyLibbyTests(BaseTestCase):
         self.assertIn("Login successful.\n", [r.msg for r in context.records])
 
     @responses.activate
-    @patch(
-        "builtins.input",
-        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
-            txt
-        ),
-    )
+    @patch("builtins.input", new=_libby_setup_prompt.__func__)  # type: ignore[attr-defined]
     def test_mock_libby_setup_fail(self):
         settings_folder = self.test_downloads_dir.joinpath("settings")
         if not settings_folder.exists():
@@ -964,12 +954,7 @@ class OdmpyLibbyTests(BaseTestCase):
             run(["libby", "--settings", str(settings_folder)], be_quiet=True)
 
     @responses.activate
-    @patch(
-        "builtins.input",
-        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
-            txt
-        ),
-    )
+    @patch("builtins.input", new=_libby_setup_prompt.__func__)  # type: ignore[attr-defined]
     def test_mock_libby_setup_sync_fail(self):
         settings_folder = self.test_downloads_dir.joinpath("settings")
         if not settings_folder.exists():
@@ -995,7 +980,7 @@ class OdmpyLibbyTests(BaseTestCase):
             run(["libby", "--settings", str(settings_folder)], be_quiet=True)
 
     @responses.activate
-    @patch("builtins.input", lambda _: "")
+    @patch("builtins.input", new=lambda _: "")
     def test_mock_inputs_nodownloads(self):
         settings_folder = self._generate_fake_settings()
         with self.test_data_dir.joinpath("magazine", "sync.json").open(
@@ -1009,7 +994,7 @@ class OdmpyLibbyTests(BaseTestCase):
         self.assertIn("No downloadable loans found.", [r.msg for r in context.records])
 
     @responses.activate
-    @patch("builtins.input", lambda _: "1")
+    @patch("builtins.input", new=lambda _: "1")
     def test_mock_inputs_loans_found(self):
         settings_folder = self._generate_fake_settings()
         self._setup_audiobook_direct_responses()
@@ -1079,7 +1064,7 @@ class OdmpyLibbyTests(BaseTestCase):
             self.assertIn("__libby_sync_code", settings)
 
     @responses.activate
-    @patch("builtins.input", lambda _: "1")
+    @patch("builtins.input", new=lambda _: "1")
     def test_mock_libby_return(self):
         settings_folder = self._generate_fake_settings()
         with self.test_data_dir.joinpath("audiobook", "sync.json").open(
@@ -1102,7 +1087,7 @@ class OdmpyLibbyTests(BaseTestCase):
         run(run_command, be_quiet=not self.is_verbose)
 
     @responses.activate
-    @patch("builtins.input", lambda _: "1")
+    @patch("builtins.input", new=lambda _: "1")
     def test_mock_libby_renew(self):
         settings_folder = self._generate_fake_settings()
         with self.test_data_dir.joinpath("audiobook", "sync.json").open(
@@ -1134,12 +1119,7 @@ class OdmpyLibbyTests(BaseTestCase):
         return ""
 
     @responses.activate
-    @patch(
-        "builtins.input",
-        lambda txt: OdmpyLibbyTests._ret_invalid_choice(  # pylint: disable=unnecessary-lambda
-            txt
-        ),
-    )
+    @patch("builtins.input", new=_ret_invalid_choice.__func__)  # type: ignore[attr-defined]
     def test_mock_libby_invalid_choice(self):
         settings_folder = self._generate_fake_settings()
         with self.test_data_dir.joinpath("audiobook", "sync.json").open(
