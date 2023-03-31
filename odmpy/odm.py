@@ -980,7 +980,8 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     ):
                         logger.warning(f"Invalid choice: {loan_index_selected}")
                         loan_choices_isvalid = False
-                        continue
+                        loan_choices = []
+                        break
                 if loan_choices_isvalid:
                     break
 

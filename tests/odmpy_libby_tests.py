@@ -3,6 +3,7 @@ import unittest
 from datetime import datetime
 from http import HTTPStatus
 from pathlib import Path
+from typing import Dict
 from unittest.mock import patch, MagicMock
 
 import ebooklib  # type: ignore[import]
@@ -13,12 +14,24 @@ from ebooklib import epub
 from odmpy.errors import LibbyNotConfiguredError, OdmpyRuntimeError
 from odmpy.libby import LibbyClient, LibbyFormats
 from odmpy.odm import run
-
-# Test non-interactive options
 from .base import BaseTestCase
 
 
 class OdmpyLibbyTests(BaseTestCase):
+
+    # don't know if this is good idea...
+    _custom_counter: Dict[str, int] = {}
+
+    @staticmethod
+    def add_to_counter(counter_name: str) -> None:
+        if not OdmpyLibbyTests._custom_counter.get(counter_name):
+            OdmpyLibbyTests._custom_counter[counter_name] = 0
+        OdmpyLibbyTests._custom_counter[counter_name] += 1
+
+    @staticmethod
+    def get_counter(counter_name: str) -> int:
+        return OdmpyLibbyTests._custom_counter.get(counter_name, 0)
+
     def test_settings_clear(self):
         settings_folder = self._generate_fake_settings()
         settings_file = settings_folder.joinpath("libby.json")
@@ -927,12 +940,7 @@ class OdmpyLibbyTests(BaseTestCase):
         self.assertIn("Login successful.\n", [r.msg for r in context.records])
 
     @responses.activate
-    @patch(
-        "builtins.input",
-        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
-            txt
-        ),
-    )
+    @patch("builtins.input", new=_libby_setup_prompt)
     def test_mock_libby_setup_fail(self):
         settings_folder = self.test_downloads_dir.joinpath("settings")
         if not settings_folder.exists():
@@ -952,12 +960,7 @@ class OdmpyLibbyTests(BaseTestCase):
             run(["libby", "--settings", str(settings_folder)], be_quiet=True)
 
     @responses.activate
-    @patch(
-        "builtins.input",
-        lambda txt: OdmpyLibbyTests._libby_setup_prompt(  # pylint: disable=unnecessary-lambda
-            txt
-        ),
-    )
+    @patch("builtins.input", new=_libby_setup_prompt)
     def test_mock_libby_setup_sync_fail(self):
         settings_folder = self.test_downloads_dir.joinpath("settings")
         if not settings_folder.exists():
@@ -1109,6 +1112,37 @@ class OdmpyLibbyTests(BaseTestCase):
             )
 
         run_command = ["libbyrenew", "--settings", str(settings_folder)]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+
+    @staticmethod
+    def _ret_invalid_choice(text: str) -> str:
+        counter_name = "invalid_choice"
+        if "Choose from" in text and OdmpyLibbyTests.get_counter(counter_name) == 0:
+            OdmpyLibbyTests.add_to_counter(counter_name)
+            return "x"
+        return ""
+
+    @responses.activate
+    @patch("builtins.input", new=_ret_invalid_choice)
+    def test_mock_libby_invalid_choice(self):
+        settings_folder = self._generate_fake_settings()
+        with self.test_data_dir.joinpath("audiobook", "sync.json").open(
+            "r", encoding="utf-8"
+        ) as f:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync",
+                content_type="application/json",
+                json=json.load(f),
+            )
+            responses.delete(
+                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999",
+                content_type="application/json",
+                json={},
+            )
+
+        run_command = ["libbyreturn", "--settings", str(settings_folder)]
         if self.is_verbose:
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
