@@ -519,7 +519,7 @@ def process_odm(
             if (
                 args.add_chapters
                 and not args.merge_output
-                and not audiofile.tag.table_of_contents
+                and (args.overwrite_tags or not audiofile.tag.table_of_contents)
             ):
                 # set the chapter marks
                 generated_markers: List[Dict[str, Union[str, int]]] = []
@@ -633,7 +633,9 @@ def process_odm(
             delimiter=args.tag_delimiter,
         )
 
-        if args.add_chapters and not audiofile.tag.table_of_contents:
+        if args.add_chapters and (
+            args.overwrite_tags or not audiofile.tag.table_of_contents
+        ):
             merged_markers: List[Dict[str, Union[str, int]]] = []
             for i, f in enumerate(file_tracks):
                 prev_tracks_len_ms = (
