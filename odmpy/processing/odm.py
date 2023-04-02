@@ -537,6 +537,12 @@ def process_odm(
                         }
                     )
 
+                if args.overwrite_tags and audiofile.tag.table_of_contents:
+                    # Clear existing toc to prevent "There may only be one top-level table of contents.
+                    # Toc 'b'toc'' is current top-level." error
+                    for f in list(audiofile.tag.table_of_contents):
+                        audiofile.tag.table_of_contents.remove(f.element_id)  # type: ignore[attr-defined]
+
                 toc = audiofile.tag.table_of_contents.set(
                     "toc".encode("ascii"),
                     toplevel=True,
@@ -659,6 +665,12 @@ def process_odm(
                         }
                     )
             debug_meta["merged_markers"] = merged_markers
+
+            if args.overwrite_tags and audiofile.tag.table_of_contents:
+                # Clear existing toc to prevent "There may only be one top-level table of contents.
+                # Toc 'b'toc'' is current top-level." error
+                for f in list(audiofile.tag.table_of_contents):
+                    audiofile.tag.table_of_contents.remove(f.element_id)  # type: ignore[attr-defined]
 
             toc = audiofile.tag.table_of_contents.set(
                 "toc".encode("ascii"),
