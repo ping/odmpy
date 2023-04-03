@@ -1,11 +1,14 @@
+import json
 import logging
 import os
 import unittest
 from collections import OrderedDict
 from datetime import datetime, timezone, timedelta
 from http import HTTPStatus
+from pathlib import Path
 
 import responses
+from responses import matchers
 
 from odmpy.libby import (
     LibbyClient,
@@ -443,6 +446,58 @@ class LibbyClientTests(BaseTestCase):
         )
         self.assertEqual(context.exception.http_status, HTTPStatus.FORBIDDEN)
         self.assertEqual(context.exception.error_response, "")
+
+    @responses.activate
+    def test_libby_borrow_hold(self):
+        hold = {"id": "123456", "type": {"id": "ebook"}, "cardId": "99999"}
+        responses.post(
+            f'https://sentry-read.svc.overdrive.com/card/{hold["cardId"]}/loan/{hold["id"]}',
+            json={},
+            match=[
+                matchers.json_params_matcher(
+                    {
+                        "period": 21,
+                        "units": "days",
+                        "lucky_day": None,
+                        "title_format": hold["type"]["id"],
+                    }
+                )
+            ],
+        )
+        client = LibbyClient(logger=self.logger, identity_token=".")
+        client.borrow_hold(hold)
+
+    def _generate_fake_settings(self) -> Path:
+        settings_folder = self.test_downloads_dir.joinpath("settings")
+        if not settings_folder.exists():
+            settings_folder.mkdir(parents=True, exist_ok=True)
+
+        # generate fake settings
+        with settings_folder.joinpath("libby.json").open("w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "chip": "12345",
+                    "identity": "abcdefgh",
+                    "syncable": False,
+                    "primary": True,
+                    "__libby_sync_code": "12345678",
+                },
+                f,
+            )
+        return settings_folder
+
+    def test_has_chip(self):
+        client = LibbyClient(logger=self.logger, identity_token=".")
+        self.assertFalse(client.has_chip())
+
+        settings_folder = self._generate_fake_settings()
+        client = LibbyClient(settings_folder=str(settings_folder))
+        self.assertTrue(client.has_chip())
+
+    def test_has_sync_code(self):
+        settings_folder = self._generate_fake_settings()
+        client = LibbyClient(settings_folder=str(settings_folder))
+        self.assertTrue(client.has_sync_code())
 
     def test_string_enum(self):
         self.assertEqual(f"{LibbyFormats.AudioBookMP3}", "audiobook-mp3")
