@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/libby.py: 91.3%</title>
+    <title>Coverage for odmpy/libby.py: 93.6%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/libby.py</b>:
-            <span class="pc_cov">91.3%</span>
+            <span class="pc_cov">93.6%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">298 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">272<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">26<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">279<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">19<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_libby_errors_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.2">coverage.py v7.2.2</a>,
-            created at 2023-04-02 11:51 +0000
+            created at 2023-04-03 06:35 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -338,7 +338,7 @@
     <p class="pln"><span class="n"><a id="t256" href="#t256">256</a></span><span class="t">        <span class="op">**</span><span class="nam">kwargs</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t257" href="#t257">257</a></span><span class="t">    <span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t258" href="#t258">258</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">logger</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t259" href="#t259">259</a></span><span class="t">            <span class="nam">logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">__name__</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t259" href="#t259">259</a></span><span class="t">            <span class="nam">logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">__name__</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t260" href="#t260">260</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span> <span class="op">=</span> <span class="nam">logger</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t261" href="#t261">261</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">settings_folder</span> <span class="op">=</span> <span class="nam">Path</span><span class="op">(</span><span class="nam">settings_folder</span><span class="op">)</span> <span class="key">if</span> <span class="nam">settings_folder</span> <span class="key">else</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t262" href="#t262">262</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">settings_folder</span> <span class="key">and</span> <span class="key">not</span> <span class="nam">self</span><span class="op">.</span><span class="nam">settings_folder</span><span class="op">.</span><span class="nam">exists</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -477,7 +477,7 @@
     <p class="pln"><span class="n"><a id="t395" href="#t395">395</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t396" href="#t396">396</a></span><span class="t"><span class="str">        :return:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t397" href="#t397">397</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">        <span class="key">return</span> <span class="nam">bool</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">identity</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"identity"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">        <span class="key">return</span> <span class="nam">bool</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">identity</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"identity"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t399" href="#t399">399</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t400" href="#t400">400</a></span><span class="t">    <span class="key">def</span> <span class="nam">has_sync_code</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-></span> <span class="nam">bool</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
@@ -485,7 +485,7 @@
     <p class="pln"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t"><span class="str">        :return:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t405" href="#t405">405</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t406" href="#t406">406</a></span><span class="t">        <span class="key">return</span> <span class="nam">bool</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t406" href="#t406">406</a></span><span class="t">        <span class="key">return</span> <span class="nam">bool</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t407" href="#t407">407</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">identity</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"__libby_sync_code"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t408" href="#t408">408</a></span><span class="t">            <span class="key">or</span> <span class="nam">self</span><span class="op">.</span><span class="nam">identity</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"__odmpy_sync_code"</span><span class="op">)</span>  <span class="com"># for backwards compat</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t409" href="#t409">409</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -894,17 +894,17 @@
     <p class="pln"><span class="n"><a id="t812" href="#t812">812</a></span><span class="t"><span class="str">        :param days:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t813" href="#t813">813</a></span><span class="t"><span class="str">        :return:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t814" href="#t814">814</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t815" href="#t815">815</a></span><span class="t">        <span class="nam">data</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t815" href="#t815">815</a></span><span class="t">        <span class="nam">data</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t816" href="#t816">816</a></span><span class="t">            <span class="str">"period"</span><span class="op">:</span> <span class="nam">days</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t817" href="#t817">817</a></span><span class="t">            <span class="str">"units"</span><span class="op">:</span> <span class="str">"days"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t818" href="#t818">818</a></span><span class="t">            <span class="str">"lucky_day"</span><span class="op">:</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t819" href="#t819">819</a></span><span class="t">            <span class="str">"title_format"</span><span class="op">:</span> <span class="nam">title_format</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t820" href="#t820">820</a></span><span class="t">        <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t821" href="#t821">821</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t822" href="#t822">822</a></span><span class="t">        <span class="nam">res</span><span class="op">:</span> <span class="nam">Dict</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">make_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t822" href="#t822">822</a></span><span class="t">        <span class="nam">res</span><span class="op">:</span> <span class="nam">Dict</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">make_request</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t823" href="#t823">823</a></span><span class="t">            <span class="str">f"card/{card_id}/loan/{title_id}"</span><span class="op">,</span> <span class="nam">json_data</span><span class="op">=</span><span class="nam">data</span><span class="op">,</span> <span class="nam">method</span><span class="op">=</span><span class="str">"POST"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t824" href="#t824">824</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t825" href="#t825">825</a></span><span class="t">        <span class="key">return</span> <span class="nam">res</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t825" href="#t825">825</a></span><span class="t">        <span class="key">return</span> <span class="nam">res</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t826" href="#t826">826</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t827" href="#t827">827</a></span><span class="t">    <span class="key">def</span> <span class="nam">borrow_hold</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">hold</span><span class="op">:</span> <span class="nam">Dict</span><span class="op">)</span> <span class="op">-></span> <span class="nam">Dict</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t828" href="#t828">828</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
@@ -913,7 +913,7 @@
     <p class="pln"><span class="n"><a id="t831" href="#t831">831</a></span><span class="t"><span class="str">        :param hold:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t832" href="#t832">832</a></span><span class="t"><span class="str">        :return:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t833" href="#t833">833</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t834" href="#t834">834</a></span><span class="t">        <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">borrow_title</span><span class="op">(</span><span class="nam">hold</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span><span class="op">,</span> <span class="nam">hold</span><span class="op">[</span><span class="str">"type"</span><span class="op">]</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span><span class="op">,</span> <span class="nam">hold</span><span class="op">[</span><span class="str">"cardId"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t834" href="#t834">834</a></span><span class="t">        <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">borrow_title</span><span class="op">(</span><span class="nam">hold</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span><span class="op">,</span> <span class="nam">hold</span><span class="op">[</span><span class="str">"type"</span><span class="op">]</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span><span class="op">,</span> <span class="nam">hold</span><span class="op">[</span><span class="str">"cardId"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t835" href="#t835">835</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t836" href="#t836">836</a></span><span class="t">    <span class="key">def</span> <span class="nam">renew_title</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t837" href="#t837">837</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span> <span class="nam">title_id</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">title_format</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">card_id</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">days</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">21</span>&nbsp;</span><span class="r"></span></p>
@@ -971,7 +971,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_libby_errors_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.2">coverage.py v7.2.2</a>,
-            created at 2023-04-02 11:51 +0000
+            created at 2023-04-03 06:35 +0000
         </p>
     </div>
 </footer>
