@@ -9,6 +9,7 @@ import ebooklib  # type: ignore[import]
 import responses
 from bs4 import BeautifulSoup
 from ebooklib import epub
+from responses import matchers
 
 from odmpy.errors import LibbyNotConfiguredError, OdmpyRuntimeError
 from odmpy.libby import LibbyClient, LibbyFormats
@@ -1089,6 +1090,76 @@ class OdmpyLibbyTests(BaseTestCase):
         if self.is_verbose:
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
+
+    @staticmethod
+    def _ret_libby_renew_failure(_: str) -> str:
+        counter_name = "renew_failure"
+        if OdmpyLibbyTests.get_counter(counter_name) == 0:
+            OdmpyLibbyTests.add_to_counter(counter_name)
+            return "1"
+        if OdmpyLibbyTests.get_counter(counter_name) == 1:
+            OdmpyLibbyTests.add_to_counter(counter_name)
+            return "y"
+        return ""
+
+    @responses.activate
+    @patch("builtins.input", new=_ret_libby_renew_failure.__func__)  # type: ignore[attr-defined]
+    def test_mock_libby_renew_failure(self):
+        settings_folder = self._generate_fake_settings()
+        with self.test_data_dir.joinpath("audiobook", "sync.json").open(
+            "r", encoding="utf-8"
+        ) as f:
+            sync_state = json.load(f)
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/chip/sync",
+                content_type="application/json",
+                json=sync_state,
+            )
+            responses.put(
+                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999",
+                content_type="application/json",
+                json={
+                    "result": "upstream_failure",
+                    "upstream": {
+                        "userExplanation": "TestRenewFailure",
+                        "errorCode": "999",
+                    },
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+            responses.post(
+                "https://sentry-read.svc.overdrive.com/card/123456789/hold/9999999",
+                content_type="application/json",
+                match=[
+                    matchers.json_params_matcher(
+                        {"days_to_suspend": 0, "email_address": ""}
+                    )
+                ],
+                json={
+                    "title": "Test Audiobook",
+                    "holdListPosition": 2,
+                    "ownedCopies": 10,
+                    "estimatedWaitDays": 21,
+                },
+            )
+
+        run_command = ["libbyrenew", "--settings", str(settings_folder)]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+
+        with self.assertLogs(run.__module__, level="INFO") as context:
+            run(run_command, be_quiet=not self.is_verbose)
+
+        self.assertTrue(
+            [r.msg for r in context.records if r.msg.startswith("Renewing loan")]
+        )
+        self.assertTrue(
+            [
+                r.msg
+                for r in context.records
+                if r.msg.startswith("Hold successfully created for")
+            ]
+        )
 
     @staticmethod
     def _ret_invalid_choice(text: str) -> str:

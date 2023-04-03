@@ -1026,7 +1026,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                             selected_loan["title"],
                             colored(badreq_err.msg, "red"),
                         )
-                        if selected_loan.get("availableCopies") == 0 and not [
+                        if selected_loan.get("availableCopies", 0) == 0 and not [
                             h
                             for h in holds
                             if h["cardId"] == selected_loan["cardId"]
