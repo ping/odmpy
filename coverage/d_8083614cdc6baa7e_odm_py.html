@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for odmpy/odm.py: 84.2%</title>
+    <title>Coverage for odmpy/odm.py: 86.2%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>odmpy/odm.py</b>:
-            <span class="pc_cov">84.2%</span>
+            <span class="pc_cov">86.2%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">349 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">294<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">55<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">301<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">48<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.2">coverage.py v7.2.2</a>,
-            created at 2023-04-03 07:58 +0000
+            created at 2023-04-03 08:45 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -1102,27 +1102,27 @@
     <p class="pln"><span class="n"><a id="t1020" href="#t1020">1020</a></span><span class="t">                            <span class="str">'Renewed "%s".'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1021" href="#t1021">1021</a></span><span class="t">                            <span class="nam">colored</span><span class="op">(</span><span class="nam">selected_loan</span><span class="op">[</span><span class="str">"title"</span><span class="op">]</span><span class="op">,</span> <span class="str">"blue"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1022" href="#t1022">1022</a></span><span class="t">                        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t1023" href="#t1023">1023</a></span><span class="t">                    <span class="key">except</span> <span class="nam">ClientBadRequestError</span> <span class="key">as</span> <span class="nam">badreq_err</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t1024" href="#t1024">1024</a></span><span class="t">                        <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1023" href="#t1023">1023</a></span><span class="t">                    <span class="key">except</span> <span class="nam">ClientBadRequestError</span> <span class="key">as</span> <span class="nam">badreq_err</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1024" href="#t1024">1024</a></span><span class="t">                        <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1025" href="#t1025">1025</a></span><span class="t">                            <span class="str">'Error encountered while renewing "%s": %s'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1026" href="#t1026">1026</a></span><span class="t">                            <span class="nam">selected_loan</span><span class="op">[</span><span class="str">"title"</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1027" href="#t1027">1027</a></span><span class="t">                            <span class="nam">colored</span><span class="op">(</span><span class="nam">badreq_err</span><span class="op">.</span><span class="nam">msg</span><span class="op">,</span> <span class="str">"red"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1028" href="#t1028">1028</a></span><span class="t">                        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t1029" href="#t1029">1029</a></span><span class="t">                        <span class="key">if</span> <span class="nam">selected_loan</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"availableCopies"</span><span class="op">)</span> <span class="op">==</span> <span class="num">0</span> <span class="key">and</span> <span class="key">not</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1029" href="#t1029">1029</a></span><span class="t">                        <span class="key">if</span> <span class="nam">selected_loan</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"availableCopies"</span><span class="op">,</span> <span class="num">0</span><span class="op">)</span> <span class="op">==</span> <span class="num">0</span> <span class="key">and</span> <span class="key">not</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1030" href="#t1030">1030</a></span><span class="t">                            <span class="nam">h</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1031" href="#t1031">1031</a></span><span class="t">                            <span class="key">for</span> <span class="nam">h</span> <span class="key">in</span> <span class="nam">holds</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1032" href="#t1032">1032</a></span><span class="t">                            <span class="key">if</span> <span class="nam">h</span><span class="op">[</span><span class="str">"cardId"</span><span class="op">]</span> <span class="op">==</span> <span class="nam">selected_loan</span><span class="op">[</span><span class="str">"cardId"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1033" href="#t1033">1033</a></span><span class="t">                            <span class="key">and</span> <span class="nam">h</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span> <span class="op">==</span> <span class="nam">selected_loan</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1034" href="#t1034">1034</a></span><span class="t">                        <span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1035" href="#t1035">1035</a></span><span class="t">                            <span class="com"># offer to make a hold</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t1036" href="#t1036">1036</a></span><span class="t">                            <span class="nam">make_hold</span> <span class="op">=</span> <span class="nam">input</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1036" href="#t1036">1036</a></span><span class="t">                            <span class="nam">make_hold</span> <span class="op">=</span> <span class="nam">input</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1037" href="#t1037">1037</a></span><span class="t">                                <span class="str">"Do you wish to place a hold instead? (y/n): "</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1038" href="#t1038">1038</a></span><span class="t">                            <span class="op">)</span><span class="op">.</span><span class="nam">strip</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t1039" href="#t1039">1039</a></span><span class="t">                            <span class="key">if</span> <span class="nam">make_hold</span> <span class="op">==</span> <span class="str">"y"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t1040" href="#t1040">1040</a></span><span class="t">                                <span class="nam">hold</span> <span class="op">=</span> <span class="nam">libby_client</span><span class="op">.</span><span class="nam">create_hold</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1039" href="#t1039">1039</a></span><span class="t">                            <span class="key">if</span> <span class="nam">make_hold</span> <span class="op">==</span> <span class="str">"y"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1040" href="#t1040">1040</a></span><span class="t">                                <span class="nam">hold</span> <span class="op">=</span> <span class="nam">libby_client</span><span class="op">.</span><span class="nam">create_hold</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1041" href="#t1041">1041</a></span><span class="t">                                    <span class="nam">selected_loan</span><span class="op">[</span><span class="str">"id"</span><span class="op">]</span><span class="op">,</span> <span class="nam">selected_loan</span><span class="op">[</span><span class="str">"cardId"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1042" href="#t1042">1042</a></span><span class="t">                                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t1043" href="#t1043">1043</a></span><span class="t">                                <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1043" href="#t1043">1043</a></span><span class="t">                                <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1044" href="#t1044">1044</a></span><span class="t">                                    <span class="str">"Hold successfully created for %s. You are #%s in line. %s %s in use. Available in ~%s %s."</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1045" href="#t1045">1045</a></span><span class="t">                                    <span class="nam">colored</span><span class="op">(</span><span class="nam">hold</span><span class="op">[</span><span class="str">"title"</span><span class="op">]</span><span class="op">,</span> <span class="nam">attrs</span><span class="op">=</span><span class="op">[</span><span class="str">"bold"</span><span class="op">]</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1046" href="#t1046">1046</a></span><span class="t">                                    <span class="nam">hold</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"holdListPosition"</span><span class="op">,</span> <span class="num">0</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -1236,7 +1236,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.2">coverage.py v7.2.2</a>,
-            created at 2023-04-03 07:58 +0000
+            created at 2023-04-03 08:45 +0000
         </p>
     </div>
 </footer>
