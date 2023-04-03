@@ -1,11 +1,9 @@
-import json
 import logging
 import os
 import unittest
 from collections import OrderedDict
 from datetime import datetime, timezone, timedelta
 from http import HTTPStatus
-from pathlib import Path
 
 import responses
 from responses import matchers
@@ -466,25 +464,6 @@ class LibbyClientTests(BaseTestCase):
         )
         client = LibbyClient(logger=self.logger, identity_token=".")
         client.borrow_hold(hold)
-
-    def _generate_fake_settings(self) -> Path:
-        settings_folder = self.test_downloads_dir.joinpath("settings")
-        if not settings_folder.exists():
-            settings_folder.mkdir(parents=True, exist_ok=True)
-
-        # generate fake settings
-        with settings_folder.joinpath("libby.json").open("w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "chip": "12345",
-                    "identity": "abcdefgh",
-                    "syncable": False,
-                    "primary": True,
-                    "__libby_sync_code": "12345678",
-                },
-                f,
-            )
-        return settings_folder
 
     def test_has_chip(self):
         client = LibbyClient(logger=self.logger, identity_token=".")

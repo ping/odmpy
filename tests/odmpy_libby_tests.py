@@ -2,7 +2,6 @@ import json
 import unittest
 from datetime import datetime
 from http import HTTPStatus
-from pathlib import Path
 from typing import Dict
 from unittest.mock import patch, MagicMock
 
@@ -239,25 +238,6 @@ class OdmpyLibbyTests(BaseTestCase):
             self.fail("Test aborted")
 
         self.assertTrue(download_folder.glob("*/*.epub"))
-
-    def _generate_fake_settings(self) -> Path:
-        settings_folder = self.test_downloads_dir.joinpath("settings")
-        if not settings_folder.exists():
-            settings_folder.mkdir(parents=True, exist_ok=True)
-
-        # generate fake settings
-        with settings_folder.joinpath("libby.json").open("w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "chip": "12345",
-                    "identity": "abcdefgh",
-                    "syncable": False,
-                    "primary": True,
-                    "__libby_sync_code": "12345678",
-                },
-                f,
-            )
-        return settings_folder
 
     @responses.activate
     def test_mock_libby_download_magazine(self):

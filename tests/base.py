@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import platform
@@ -52,3 +53,27 @@ class BaseTestCase(unittest.TestCase):
         del os.environ["NO_COLOR"]
         if self.test_downloads_dir.exists():
             shutil.rmtree(self.test_downloads_dir, ignore_errors=True)
+
+    def _generate_fake_settings(self) -> Path:
+        """
+        Generate fake settings file for odmpy/libby.
+
+        :return:
+        """
+        settings_folder = self.test_downloads_dir.joinpath("settings")
+        if not settings_folder.exists():
+            settings_folder.mkdir(parents=True, exist_ok=True)
+
+        # generate fake settings
+        with settings_folder.joinpath("libby.json").open("w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "chip": "12345",
+                    "identity": "abcdefgh",
+                    "syncable": False,
+                    "primary": True,
+                    "__libby_sync_code": "12345678",
+                },
+                f,
+            )
+        return settings_folder
