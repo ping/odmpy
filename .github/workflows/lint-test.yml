@@ -74,8 +74,9 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
+      # Installing wheel due to https://github.com/pypa/pip/issues/8559
       run: |
-        python3 -m pip install --upgrade pip
+        python3 -m pip -q install --upgrade pip wheel
         python3 -m pip -q install -r requirements.txt --upgrade
         python3 -m pip -q install -r requirements-dev.txt --upgrade
     - name: Run tests on ${{ matrix.os }} with python ${{ matrix.python-version }}
