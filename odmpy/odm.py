@@ -68,7 +68,7 @@ requests_logger.addHandler(ch)
 requests_logger.setLevel(logging.ERROR)
 requests_logger.propagate = True
 
-__version__ = "0.7.5"  # also update ../setup.py
+__version__ = "0.7.6"  # also update ../setup.py
 TAGS_ENDPOINT = "https://api.github.com/repos/ping/odmpy/tags"
 REPOSITORY_URL = "https://github.com/ping/odmpy"
 
