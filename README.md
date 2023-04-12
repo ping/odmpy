@@ -1,6 +1,6 @@
 # odmpy
 
-A simple console manager for OverDrive/Libby loans. Originally a python port of [overdrive](https://github.com/chbrown/overdrive), it now supports downloading of various loan types such as **audiobooks**, **eBooks**, and **magazines** via [Libby](https://help.libbyapp.com/en-us/6103.htm).
+A command line manager for OverDrive/Libby loans. Originally a python port of [overdrive](https://github.com/chbrown/overdrive), it now supports downloading of various loan types such as **audiobooks**, **eBooks**, and **magazines** via [Libby](https://help.libbyapp.com/en-us/6103.htm).
 
 odmpy also has useful features for audiobooks such as adding of chapters metadata and merging of multipart files into a single `.mp3` or `.m4b` (requires [ffmpeg](https://ffmpeg.org/)).
 
@@ -22,6 +22,8 @@ Requires Python >= 3.7.
 [![Buy me a coffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=&slug=ping&button_colour=FFDD00&font_colour=000000&font_family=Bree&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/ping)
 
 ## Install
+
+You must already have [Python](https://wiki.python.org/moin/BeginnersGuide/Download) installed on your system. If you wish to use the merge feature for audiobooks, you will also need to install [ffmpeg](https://ffmpeg.org/download.html).
 
 ```bash
 # Install / Update to specific version
