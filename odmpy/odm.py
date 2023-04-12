@@ -747,7 +747,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
 
             synced_state = libby_client.sync()
             # sort by checkout date so that recent most is at the bottom
-            audiobook_loans = sorted(
+            libby_loans = sorted(
                 [
                     book
                     for book in synced_state.get("loans", [])
@@ -770,7 +770,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     colored(args.export_loans_path, "magenta"),
                 )
                 with open(args.export_loans_path, "w", encoding="utf-8") as f:
-                    json.dump(audiobook_loans, f)
+                    json.dump(libby_loans, f)
                     logger.info(
                         'Saved loans as "%s"',
                         colored(args.export_loans_path, "magenta", attrs=["bold"]),
@@ -778,14 +778,14 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 return
 
             if args.command_name == OdmpyCommands.LibbyRenew:
-                audiobook_loans = [
-                    loan for loan in audiobook_loans if libby_client.is_renewable(loan)
+                libby_loans = [
+                    loan for loan in libby_loans if libby_client.is_renewable(loan)
                 ]
-                if not audiobook_loans:
+                if not libby_loans:
                     logger.info("No renewable loans found.")
                     return
 
-            if not audiobook_loans:
+            if not libby_loans:
                 logger.info("No downloadable loans found.")
                 return
 
@@ -796,7 +796,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
             ):
                 # Non-interactive selection
                 selected_loans_indices = []
-                total_loans_count = len(audiobook_loans)
+                total_loans_count = len(libby_loans)
                 if args.selected_loans_indices:
                     selected_loans_indices.extend(
                         [
@@ -821,9 +821,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                         ps(args.download_latest_n, "loan"),
                     )
                     selected_loans_indices.extend(
-                        list(range(1, len(audiobook_loans) + 1))[
-                            -args.download_latest_n :
-                        ]
+                        list(range(1, len(libby_loans) + 1))[-args.download_latest_n :]
                     )
                 if args.selected_loans_ids:
                     selected_loans_ids = [str(i) for i in args.selected_loans_ids]
@@ -832,12 +830,12 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                         ps(len(selected_loans_ids), "ID"),
                         ", ".join([colored(i, "blue") for i in selected_loans_ids]),
                     )
-                    for n, loan in enumerate(audiobook_loans, start=1):
+                    for n, loan in enumerate(libby_loans, start=1):
                         if loan["id"] in selected_loans_ids:
                             selected_loans_indices.append(n)
                 selected_loans_indices = sorted(list(set(selected_loans_indices)))
                 selected_loans: List[Dict] = [
-                    audiobook_loans[j - 1] for j in selected_loans_indices
+                    libby_loans[j - 1] for j in selected_loans_indices
                 ]
                 if args.libby_direct:
                     for selected_loan in selected_loans:
@@ -892,10 +890,10 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
             holds = synced_state.get("holds", [])
             logger.info(
                 "Found %s %s.",
-                colored(str(len(audiobook_loans)), "blue"),
-                ps(len(audiobook_loans), "loan"),
+                colored(str(len(libby_loans)), "blue"),
+                ps(len(libby_loans), "loan"),
             )
-            for index, loan in enumerate(audiobook_loans, start=1):
+            for index, loan in enumerate(libby_loans, start=1):
                 expiry_date = datetime.datetime.strptime(
                     loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
                 )
@@ -962,7 +960,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
             while True:
                 user_loan_choice_input = input(
                     f'\n{colored(libby_mode.title(), "magenta", attrs=["bold"])}. '
-                    f'Choose from {colored(f"1-{len(audiobook_loans)}", attrs=["bold"])} '
+                    f'Choose from {colored(f"1-{len(libby_loans)}", attrs=["bold"])} '
                     "(separate choices with a space or leave blank to quit), \n"
                     "then press enter: "
                 ).strip()
@@ -976,7 +974,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     if (
                         (not loan_index_selected.isdigit())
                         or int(loan_index_selected) < 0
-                        or int(loan_index_selected) > len(audiobook_loans)
+                        or int(loan_index_selected) > len(libby_loans)
                     ):
                         logger.warning(f"Invalid choice: {loan_index_selected}")
                         loan_choices_isvalid = False
@@ -994,7 +992,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
             if args.command_name == OdmpyCommands.LibbyReturn:
                 # do returns
                 for c in loan_choices:
-                    selected_loan = audiobook_loans[int(c) - 1]
+                    selected_loan = libby_loans[int(c) - 1]
                     logger.info(
                         'Returning loan "%s"...',
                         colored(selected_loan["title"], "blue"),
@@ -1009,7 +1007,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
             if args.command_name == OdmpyCommands.LibbyRenew:
                 # do renewals
                 for c in loan_choices:
-                    selected_loan = audiobook_loans[int(c) - 1]
+                    selected_loan = libby_loans[int(c) - 1]
                     logger.info(
                         'Renewing loan "%s"...',
                         colored(selected_loan["title"], "blue"),
@@ -1056,7 +1054,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 # do downloads
                 if args.libby_direct:
                     for c in loan_choices:
-                        selected_loan = audiobook_loans[int(c) - 1]
+                        selected_loan = libby_loans[int(c) - 1]
                         logger.info(
                             'Opening %s "%s"...',
                             selected_loan.get("type", {}).get("id"),
@@ -1084,7 +1082,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     return
 
                 for c in loan_choices:
-                    selected_loan = audiobook_loans[int(c) - 1]
+                    selected_loan = libby_loans[int(c) - 1]
                     logger.info(
                         'Opening %s "%s"...',
                         selected_loan.get("type", {}).get("id"),
