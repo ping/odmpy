@@ -5,3 +5,4 @@ termcolor
 tqdm
 typing_extensions; python_version < '3.8'
 beautifulsoup4
+lxml

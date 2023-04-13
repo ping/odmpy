@@ -35,6 +35,7 @@ install_requires = [
     "termcolor",
     "tqdm",
     "beautifulsoup4",
+    "lxml",
 ]
 if sys.version_info < (3, 8):
     install_requires.append("typing_extensions")
