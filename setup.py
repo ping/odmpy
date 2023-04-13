@@ -29,13 +29,13 @@ __long_description__ = """
 """
 
 install_requires = [
-    "requests",
-    "eyed3",
+    "requests>=2.28.0",
+    "eyed3>=0.9.7",
     "mutagen>=1.46.0",
-    "termcolor",
-    "tqdm",
-    "beautifulsoup4",
-    "lxml",
+    "termcolor>=2.0.0",
+    "tqdm>=4.63.0",
+    "beautifulsoup4>=4.11.0",
+    "lxml>=4.9.0",
 ]
 if sys.version_info < (3, 8):
     install_requires.append("typing_extensions")
