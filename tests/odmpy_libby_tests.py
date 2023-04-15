@@ -9,6 +9,8 @@ import ebooklib  # type: ignore[import]
 import responses
 from bs4 import BeautifulSoup
 from ebooklib import epub
+from mutagen.id3 import ID3
+from mutagen.mp3 import MP3
 from responses import matchers
 
 from odmpy.errors import LibbyNotConfiguredError, OdmpyRuntimeError
@@ -776,12 +778,27 @@ class OdmpyLibbyTests(BaseTestCase):
         if self.is_verbose:
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
-        self.assertTrue(
-            self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
-        )
+        part_files = self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
+        self.assertTrue(part_files)
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "test-audiobook.opf").exists()
         )
+        for part_file in part_files:
+            mutagen_audio = MP3(part_file, ID3=ID3)
+            self.assertTrue(mutagen_audio.tags["CTOC:toc"])
+            # check chapters are generated in sequence
+            for i, chap_id in enumerate(
+                mutagen_audio.tags["CTOC:toc"].child_element_ids
+            ):
+                self.assertEqual(chap_id, f"ch{i:02d}")
+                chapter = mutagen_audio.tags[f"CHAP:{chap_id}"]
+                if i > 0:
+                    prev_chapter = mutagen_audio.tags[
+                        f'CHAP:{mutagen_audio.tags["CTOC:toc"].child_element_ids[i - 1]}'
+                    ]
+                    self.assertGreater(chapter.start_time, prev_chapter.start_time)
+                    self.assertEqual(chapter.start_time, prev_chapter.end_time)
+
         # test for debug artifacts here as well
         for f in ("loan.json", "openbook.json", "debug.json"):
             self.assertTrue(self.test_downloads_dir.joinpath(test_folder, f).exists())
@@ -816,11 +833,20 @@ class OdmpyLibbyTests(BaseTestCase):
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
         self.assertTrue(
-            self.test_downloads_dir.joinpath(test_folder, "ebook.mp3").exists()
-        )
-        self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
         )
+        mp3_filepath = self.test_downloads_dir.joinpath(test_folder, "ebook.mp3")
+        self.assertTrue(mp3_filepath.exists())
+        mutagen_audio = MP3(mp3_filepath, ID3=ID3)
+        self.assertTrue(mutagen_audio.tags["CTOC:toc"])
+        chapters = [t for t in mutagen_audio.tags.getall("CHAP")]
+        for i, tag in enumerate(chapters):
+            # check tags are written in time sequence for merged files
+            # because ffmpeg conversion from mp3 to m4b bugs out when
+            # CHAPs are not written out in time sequence
+            # https://github.com/quodlibet/mutagen/issues/506
+            if i > 0:
+                self.assertGreater(tag.start_time, chapters[i - 1].start_time)
 
     @responses.activate
     def test_mock_libby_download_audiobook_direct_merge_m4b(self):

@@ -4,7 +4,6 @@
 # https://opensource.org/licenses/MIT
 
 import json
-import logging
 import os
 from http import HTTPStatus
 
@@ -18,9 +17,6 @@ from .base import BaseTestCase
 from .data import (
     get_expected_result,
 )
-
-eyed3_log = logging.getLogger("eyed3.mp3.headers")
-eyed3_log.setLevel(logging.ERROR)
 
 
 # [i] USE run_tests.sh

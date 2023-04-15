@@ -30,7 +30,6 @@ __long_description__ = """
 
 install_requires = [
     "requests>=2.28.0",
-    "eyed3>=0.9.7",
     "mutagen>=1.46.0",
     "termcolor>=2.0.0",
     "tqdm>=4.63.0",

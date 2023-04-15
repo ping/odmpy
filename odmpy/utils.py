@@ -25,8 +25,6 @@ from mimetypes import guess_type
 from pathlib import Path
 from typing import Optional
 
-from mutagen.mp3 import MP3  # type: ignore[import]
-
 #
 # Small utility type functions used across the board
 #
@@ -51,6 +49,18 @@ MIMETYPE_MAP = {
     ".svg": "image/svg+xml",
     ".ncx": "application/x-dtbncx+xml",
 }
+
+
+def escape_text_for_ffmpeg(text: str) -> str:
+    """
+    Escape text for ffmpeg metadata update.
+
+    :param text:
+    :return:
+    """
+    for c in ("=", ";", "#", "\n"):
+        text = text.replace(c, rf"\{c}")
+    return text
 
 
 def guess_mimetype(url: str) -> Optional[str]:
@@ -147,20 +157,6 @@ def parse_duration_to_seconds(text: str) -> int:
     :return:
     """
     return round(parse_duration_to_milliseconds(text) / 1000.0)
-
-
-def mp3_duration_ms(filename: Path) -> int:
-    # Ref: https://github.com/ping/odmpy/pull/3
-    # returns the length of the mp3 in ms
-
-    # eyeD3's audio length function:
-    # audiofile.info.time_secs
-    # returns incorrect times due to its header computation
-    # mutagen does not have this issue
-    audio = MP3(filename)
-    if not audio.info:
-        raise ValueError(f"Unable to parse MP3 info from: {filename}")
-    return int(round(audio.info.length * 1000))
 
 
 # From django

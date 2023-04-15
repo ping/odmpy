@@ -22,19 +22,34 @@ import logging
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, NamedTuple
 from urllib.parse import urlparse
 
-import eyed3  # type: ignore[import]
 import requests
-from eyed3.utils import art  # type: ignore[import]
+from mutagen.id3 import (
+    ID3,
+    TIT2,
+    TIT3,
+    TALB,
+    TPE1,
+    TPE2,
+    TRCK,
+    TPUB,
+    COMM,
+    APIC,
+    TPE3,
+    TLAN,
+    TDRL,
+    TXXX,
+    TCON,
+)
+from mutagen.mp3 import MP3
 from requests.adapters import HTTPAdapter, Retry
 from termcolor import colored
 
-from ..constants import PERFORMER_FID, LANGUAGE_FID
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyFormats
-from ..utils import slugify, sanitize_path, is_windows
+from ..utils import slugify, sanitize_path, is_windows, escape_text_for_ffmpeg
 
 
 #
@@ -146,7 +161,7 @@ def generate_names(
 
 
 def write_tags(
-    audiofile: eyed3.core.AudioFile,
+    audiofile: MP3,
     title: str,
     sub_title: Optional[str],
     authors: List[str],
@@ -193,60 +208,56 @@ def write_tags(
     if not delimiter:
         delimiter = ";"
 
-    if not audiofile.tag:
-        audiofile.initTag()
-    if always_overwrite or overwrite_title or not audiofile.tag.title:
-        audiofile.tag.title = str(title)
-    if sub_title and (
-        always_overwrite
-        or not audiofile.tag.getTextFrame(eyed3.id3.frames.SUBTITLE_FID)
-    ):
-        audiofile.tag.setTextFrame(eyed3.id3.frames.SUBTITLE_FID, sub_title)
-    if always_overwrite or not audiofile.tag.album:
-        audiofile.tag.album = str(title)
-    if authors and (always_overwrite or not audiofile.tag.artist):
-        audiofile.tag.artist = delimiter.join([str(a) for a in authors])
-    if authors and (always_overwrite or not audiofile.tag.album_artist):
-        audiofile.tag.album_artist = delimiter.join([str(a) for a in authors])
-    if part_number and (always_overwrite or not audiofile.tag.track_num):
-        audiofile.tag.track_num = (part_number, total_parts)
-    if narrators and (
-        always_overwrite or not audiofile.tag.getTextFrame(PERFORMER_FID)
-    ):
-        audiofile.tag.setTextFrame(
-            PERFORMER_FID, delimiter.join([str(n) for n in narrators])
+    if not audiofile.tags:
+        audiofile.tags = ID3()
+
+    if always_overwrite or overwrite_title or "TIT2" not in audiofile.tags:
+        audiofile.tags.add(TIT2(encoding=3, text=title))
+    if sub_title and (always_overwrite or "TIT3" not in audiofile.tags):
+        audiofile.tags.add(TIT3(encoding=3, text=sub_title))
+
+    if always_overwrite or "TALB" not in audiofile.tags:
+        audiofile.tags.add(TALB(encoding=3, text=title))
+
+    if authors and (always_overwrite or "TPE1" not in audiofile.tags):
+        audiofile.tags.add(TPE1(encoding=3, text=delimiter.join(authors)))
+    if authors and (always_overwrite or "TPE2" not in audiofile.tags):
+        audiofile.tags.add(TPE2(encoding=3, text=delimiter.join(authors)))
+    if part_number and (always_overwrite or "TRCK" not in audiofile.tags):
+        audiofile.tags.add(
+            TRCK(encoding=3, text="{:02d}/{:02d}".format(part_number, total_parts))
         )
-    if publisher and (always_overwrite or not audiofile.tag.publisher):
-        audiofile.tag.publisher = str(publisher)
-    if description and (
-        always_overwrite or eyed3.id3.frames.COMMENT_FID not in audiofile.tag.frame_set
-    ):
-        audiofile.tag.comments.set(str(description), description="Description")
-    if genres and (always_overwrite or not audiofile.tag.genre):
-        audiofile.tag.genre = delimiter.join(genres)
-    if languages and (always_overwrite or not audiofile.tag.getTextFrame(LANGUAGE_FID)):
-        audiofile.tag.setTextFrame(
-            LANGUAGE_FID, delimiter.join([str(lang) for lang in languages])
-        )
-    if published_date and (always_overwrite or not audiofile.tag.release_date):
-        audiofile.tag.release_date = published_date
+    if narrators and (always_overwrite or "TPE3" not in audiofile):
+        audiofile.tags.add(TPE3(encoding=3, text=delimiter.join(narrators)))
+    if publisher and (always_overwrite or "TPUB" not in audiofile.tags):
+        audiofile.tags.add(TPUB(encoding=3, text=publisher))
+    if description and (always_overwrite or "COMM" not in audiofile.tags):
+        audiofile.tags.add(COMM(encoding=3, desc="Description", text=description))
+    if genres and (always_overwrite or "TCON" not in audiofile.tags):
+        audiofile.tags.add(TCON(encoding=3, text=delimiter.join(genres)))
+    if languages and (always_overwrite or "TLAN" not in audiofile):
+        audiofile.tags.add(TLAN(encoding=3, text=delimiter.join(languages)))
+    if published_date and (always_overwrite or "TDRL" not in audiofile):
+        audiofile.tags.add(TDRL(encoding=3, text=published_date))
     if cover_bytes:
-        audiofile.tag.images.set(
-            art.TO_ID3_ART_TYPES[art.FRONT_COVER][0],
-            cover_bytes,
-            "image/jpeg",
-            description="Cover",
+        audiofile.tags.add(
+            APIC(encoding=3, mime="image/jpeg", type=3, desc="Cover", data=cover_bytes)
         )
     if series:
-        audiofile.tag.user_text_frames.set(series, "Series")
+        audiofile.tags.add(TXXX(encoding=3, desc="Series", text=series))
     # Output some OD identifiers in the mp3
     if overdrive_id:
-        audiofile.tag.user_text_frames.set(
-            overdrive_id,
-            "OverDrive Media ID" if overdrive_id.isdigit() else "OverDrive Reserve ID",
+        audiofile.tags.add(
+            TXXX(
+                encoding=3,
+                desc="OverDrive Media ID"
+                if overdrive_id.isdigit()
+                else "OverDrive Reserve ID",
+                text=overdrive_id,
+            )
         )
     if isbn:
-        audiofile.tag.user_text_frames.set(isbn, "ISBN")
+        audiofile.tags.add(TXXX(encoding=3, desc="ISBN", text=isbn))
 
 
 def get_best_cover_url(loan: Dict) -> Optional[str]:
@@ -360,7 +371,8 @@ def merge_into_mp3(
     :return:
     """
 
-    # We can't directly generate a m4b here even if specified because eyed3 doesn't support m4b/mp4
+    # We won't directly generate a m4b here even if specified because mutagen support for m4b/mp4
+    # is not as good as mp3
     temp_book_filename = book_filename.with_suffix(".part")
     cmd = [
         "ffmpeg",
@@ -474,6 +486,105 @@ def convert_to_m4b(
         book_filename.unlink()
     except Exception as e:  # pylint: disable=broad-except
         logger.warning(f'Error deleting "{book_filename}": {str(e)}')
+
+
+class FfmpegChapterMarker(NamedTuple):
+    title: str
+    start_millisecond: int
+    end_millisecond: int
+
+
+def update_chapters(
+    target_filepath: Path,
+    chapters: List[FfmpegChapterMarker],
+    output_format: str,
+    ffmpeg_loglevel: str,
+    logger: logging.Logger,
+) -> None:
+    """
+    Workaround for https://github.com/quodlibet/mutagen/issues/506
+
+    :param target_filepath:
+    :param chapters:
+    :param output_format:
+    :param ffmpeg_loglevel:
+    :param logger:
+    :return:
+    """
+
+    # We have to export ffmpegmeta first because
+    # ffmpeg metadata updates overwrites everything
+
+    ffmeta_filepath = target_filepath.with_suffix(".ffmeta.txt")
+    # generate current ffmetadata file first
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-nostdin",
+        "-hide_banner",
+        "-loglevel",
+        ffmpeg_loglevel,
+        "-i",
+        str(target_filepath),
+        "-f",
+        "ffmetadata",
+        str(ffmeta_filepath),
+    ]
+    try:
+        exit_code = subprocess.call(cmd)
+        if exit_code:
+            logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
+            logger.warning(f"Command: {' '.join(cmd)!s}")
+            ffmeta_filepath.unlink(missing_ok=True)
+            return
+    except Exception as ffmpeg_ex:  # pylint: disable=broad-except
+        logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
+        ffmeta_filepath.unlink(missing_ok=True)
+        return
+
+    with ffmeta_filepath.open("a", encoding="utf-8") as f:
+        for chapter in chapters:
+            f.write("[CHAPTER]\n")
+            f.write("TIMEBASE=1/1000\n")
+            f.write(f"START={chapter.start_millisecond}\n")
+            f.write(f"END={chapter.end_millisecond}\n")
+            f.write(f"title={escape_text_for_ffmpeg(chapter.title)}\n")
+        f.write("\n")
+
+    target_tmp_filepath = target_filepath.with_suffix(".tmp")
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-nostdin",
+        "-hide_banner",
+        "-loglevel",
+        ffmpeg_loglevel,
+        "-i",
+        str(target_filepath),
+        "-i",
+        str(ffmeta_filepath),
+        "-map_metadata",
+        "1",
+        "-c",
+        "copy",
+        "-f",
+        output_format,
+        str(target_tmp_filepath),
+    ]
+    try:
+        logger.info(f"Command: {' '.join(cmd)!s}")
+        exit_code = subprocess.call(cmd)
+        if exit_code:
+            logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
+            logger.warning(f"Command: {' '.join(cmd)!s}")
+            target_tmp_filepath.unlink(missing_ok=True)
+        else:
+            target_tmp_filepath.rename(target_filepath)
+        ffmeta_filepath.unlink(missing_ok=True)
+    except Exception as ffmpeg_ex:  # pylint: disable=broad-except
+        logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
+        ffmeta_filepath.unlink(missing_ok=True)
+        target_tmp_filepath.unlink(missing_ok=True)
 
 
 def remux_mp3(

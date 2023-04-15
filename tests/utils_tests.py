@@ -107,3 +107,9 @@ class UtilsTests(unittest.TestCase):
             with self.subTest(file_name=f):
                 mime_type = utils.guess_mimetype(f)
                 self.assertIsNotNone(mime_type, f"Unable to guess mimetype for {f}")
+
+    def test_escape_text_for_ffmpeg(self):
+        self.assertEqual(
+            utils.escape_text_for_ffmpeg("#1 != #2;\nIn Town"),
+            "\\#1 !\\= \\#2\\;\\\nIn Town",
+        )

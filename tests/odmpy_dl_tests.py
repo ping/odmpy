@@ -2,10 +2,9 @@ import json
 import os
 import subprocess
 
-import eyed3  # type: ignore[import]
 import responses
+from mutagen.mp3 import MP3
 
-from odmpy import constants
 from odmpy.odm import run
 from .base import BaseTestCase
 from .data import (
@@ -88,34 +87,43 @@ class OdmpyDlTests(BaseTestCase):
             ],
             be_quiet=True,
         )
-        marker_count = 0
         for i in range(1, expected_result.total_parts + 1):
             book_file = expected_result.book_folder.joinpath(
                 expected_result.mp3_name_format.format(i)
             )
-            audio = eyed3.load(book_file)
-            self.assertTrue(audio.tag)
+            mutagen_audio = MP3(book_file)
+            self.assertTrue(mutagen_audio.tags)
             self.assertTrue(
-                audio.tag.title.startswith(part_title_formats[self.test_file].format(i))
+                mutagen_audio.tags["TIT2"]
+                .text[0]
+                .startswith(part_title_formats[self.test_file].format(i))
             )
-
-            self.assertEqual(audio.tag.album, "Ceremonies For Christmas")
-            self.assertEqual(audio.tag.artist, "Robert Herrick")
-            self.assertEqual(audio.tag.album_artist, album_artists[self.test_file])
-            self.assertEqual(audio.tag.track_num[0], i)
-            self.assertEqual(audio.tag.publisher, "Librivox")
             self.assertEqual(
-                audio.tag.getTextFrame(constants.PERFORMER_FID),
+                mutagen_audio.tags["TALB"].text[0], "Ceremonies For Christmas"
+            )
+            self.assertEqual(
+                mutagen_audio.tags["TALB"].text[0], "Ceremonies For Christmas"
+            )
+            self.assertEqual(mutagen_audio.tags["TPE1"].text[0], "Robert Herrick")
+            self.assertEqual(
+                mutagen_audio.tags["TPE2"].text[0], album_artists[self.test_file]
+            )
+            self.assertEqual(mutagen_audio.tags["TRCK"], str(i))
+            self.assertEqual(mutagen_audio.tags["TPUB"].text[0], "Librivox")
+            self.assertEqual(
+                mutagen_audio.tags["TPE3"].text[0],
                 "LibriVox Volunteers",
             )
-            self.assertTrue(audio.tag.table_of_contents)
-            self.assertTrue(audio.tag.chapters)
-            for _, ch in enumerate(audio.tag.chapters):
+            self.assertTrue(mutagen_audio.tags["CTOC:toc"])
+            for j, chap_id in enumerate(
+                mutagen_audio.tags["CTOC:toc"].child_element_ids
+            ):
+                chap_tag = mutagen_audio.tags[f"CHAP:{chap_id}"]
+                self.assertTrue(chap_tag.sub_frames)
                 self.assertEqual(
-                    ch.sub_frames[b"TIT2"][0].text,
-                    markers[self.test_file][marker_count],
+                    chap_tag.sub_frames["TIT2"].text[0],
+                    markers[self.test_file][j + i - 1],
                 )
-                marker_count += 1
 
     @responses.activate
     def test_merge_formats(self):
@@ -208,8 +216,8 @@ class OdmpyDlTests(BaseTestCase):
 
         last_end = 0
         self.assertEqual(len(meta.get("chapters", [])), expected_result.total_chapters)
-        for ch in meta["chapters"]:
-            self.assertEqual(ch["tags"]["title"], markers[self.test_file][ch["id"]])
+        for i, ch in enumerate(sorted(meta["chapters"], key=lambda c: c["start"])):
+            self.assertEqual(ch["tags"]["title"], markers[self.test_file][i])
             start = ch["start"]
             end = ch["end"]
             self.assertGreater(end, start)
@@ -217,7 +225,7 @@ class OdmpyDlTests(BaseTestCase):
             self.assertGreater(end, last_end)
             self.assertAlmostEqual(
                 (end - start) / 1000.0,
-                expected_result.chapter_durations_sec[ch["id"]],
+                expected_result.chapter_durations_sec[i],
                 0,
             )
             last_end = end
@@ -270,8 +278,8 @@ class OdmpyDlTests(BaseTestCase):
         last_end = 0
         meta = json.loads(str(cmd_result.stdout))
         self.assertEqual(len(meta.get("chapters", [])), expected_result.total_chapters)
-        for ch in meta["chapters"]:
-            self.assertEqual(ch["tags"]["title"], markers[self.test_file][ch["id"]])
+        for i, ch in enumerate(sorted(meta["chapters"], key=lambda c: c["start"])):
+            self.assertEqual(ch["tags"]["title"], markers[self.test_file][i])
             start = ch["start"]
             end = ch["end"]
             self.assertGreater(end, start)
@@ -282,7 +290,7 @@ class OdmpyDlTests(BaseTestCase):
                 # AssertionError: 66.467 != 67 within 0 places (0.5330000000000013 difference)
                 self.assertAlmostEqual(
                     (end - start) / 1000.0,
-                    expected_result.chapter_durations_sec[ch["id"]],
+                    expected_result.chapter_durations_sec[i],
                     0,
                 )
             last_end = end

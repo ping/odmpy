@@ -632,11 +632,6 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
     if hasattr(args, "export_loans_path") and args.export_loans_path:
         args.export_loans_path = str(Path(args.export_loans_path).expanduser())
 
-    # suppress warnings
-    logging.getLogger("eyed3").setLevel(
-        logging.WARNING if logger.level == logging.DEBUG else logging.ERROR
-    )
-
     if not args.dont_check_version:
         check_version(args.timeout, args.retries)
 

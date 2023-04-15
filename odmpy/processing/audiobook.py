@@ -24,8 +24,9 @@ import shutil
 from typing import Optional, Any, Dict, List
 from typing import OrderedDict as OrderedDictType
 
-import eyed3  # type: ignore[import]
 import requests
+from mutagen.id3 import ID3, CTOC, CTOCFlags, TIT2, CHAP
+from mutagen.mp3 import MP3, BitrateMode
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 from tqdm import tqdm
@@ -40,6 +41,8 @@ from .shared import (
     create_opf,
     get_best_cover_url,
     extract_isbn,
+    update_chapters,
+    FfmpegChapterMarker,
 )
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, merge_toc, PartMeta, LibbyFormats
@@ -246,14 +249,12 @@ def process_audiobook_loan(
                 raise OdmpyRuntimeError("Connection Error while downloading part file.")
 
         try:
-            # Fill id3 info for mp3 part
-            audiofile = eyed3.load(part_filename)
-            variable_bitrate, audio_bitrate = audiofile.info.bit_rate
-            if variable_bitrate:
-                # don't use vbr
-                audio_bitrate = 0
+            mutagen_audio = MP3(part_filename, ID3=ID3)
+            if mutagen_audio.info.bitrate_mode == BitrateMode.CBR:
+                audio_bitrate = int(mutagen_audio.info.bitrate / 1000)
+
             write_tags(
-                audiofile=audiofile,
+                audiofile=mutagen_audio,
                 title=title,
                 sub_title=sub_title,
                 authors=authors,
@@ -272,50 +273,52 @@ def process_audiobook_loan(
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
-            audiofile.tag.save()
+            mutagen_audio.save()
 
             if (
                 args.add_chapters
                 and not args.merge_output
-                and (args.overwrite_tags or not audiofile.tag.table_of_contents)
+                and (args.overwrite_tags or "CTOC" not in mutagen_audio.tags)
             ):
-                if args.overwrite_tags and audiofile.tag.table_of_contents:
-                    # Clear existing toc to prevent "There may only be one top-level table of contents.
-                    # Toc 'b'toc'' is current top-level." error
-                    for f in list(audiofile.tag.table_of_contents):
-                        audiofile.tag.table_of_contents.remove(f.element_id)  # type: ignore[attr-defined]
+                if args.overwrite_tags and "CTOC" in mutagen_audio.tags:
+                    # Clear existing toc
+                    mutagen_audio.pop("CTOC")
 
-                toc = audiofile.tag.table_of_contents.set(
-                    "toc".encode("ascii"),
-                    toplevel=True,
-                    ordered=True,
-                    child_ids=[],
-                    description="Table of Contents",
-                )
                 chapter_marks = p["chapters"]
-                for i, m in enumerate(chapter_marks):
-                    title_frameset = eyed3.id3.frames.FrameSet()
-                    title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, m.title)
-                    chap = audiofile.tag.chapters.set(
-                        f"ch{i}".encode("ascii"),
-                        times=(
-                            round(m.start_second * 1000),
-                            round(m.end_second * 1000),
-                        ),
-                        sub_frames=title_frameset,
+
+                # We can't use update_chapters here because it requires ffmpeg,
+                # and we only specify the ffmpeg requirement for merging
+
+                mutagen_audio.tags.add(
+                    CTOC(
+                        element_id="toc",
+                        flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
+                        child_element_ids=[
+                            f"ch{i:02d}" for i, _ in enumerate(chapter_marks)
+                        ],
+                        sub_frames=[TIT2(text=["Table of Contents"])],
                     )
-                    toc.child_ids.append(chap.element_id)
+                )
+                for i, m in enumerate(chapter_marks):
+                    mutagen_audio.tags.add(
+                        CHAP(
+                            element_id=f"ch{i:02d}",
+                            start_time=round(m.start_second * 1000),
+                            end_time=round(m.end_second * 1000),
+                            sub_frames=[TIT2(text=[m.title])],
+                        )
+                    )
                     start_time = datetime.timedelta(seconds=m.start_second)
                     end_time = datetime.timedelta(seconds=m.end_second)
                     logger.debug(
                         'Added chap tag => %s: %s-%s "%s" to "%s"',
-                        colored(f"ch{i}", "cyan"),
+                        colored(f"ch{i:02d}", "cyan"),
                         start_time,
                         end_time,
                         colored(m.title, "cyan"),
                         colored(str(part_filename), "blue"),
                     )
-                audiofile.tag.save()
+                mutagen_audio.save()
 
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(
@@ -344,10 +347,9 @@ def process_audiobook_loan(
             hide_progress=args.hide_progress,
             logger=logger,
         )
-
-        audiofile = eyed3.load(book_filename)
+        mutagen_audio = MP3(book_filename, ID3=ID3)
         write_tags(
-            audiofile=audiofile,
+            audiofile=mutagen_audio,
             title=title,
             sub_title=sub_title,
             authors=authors,
@@ -366,50 +368,35 @@ def process_audiobook_loan(
             always_overwrite=args.overwrite_tags,
             delimiter=args.tag_delimiter,
         )
+        mutagen_audio.save()
 
         if args.add_chapters and (
-            args.overwrite_tags or not audiofile.tag.table_of_contents
+            args.overwrite_tags or "CTOC" not in mutagen_audio.tags
         ):
-            if args.overwrite_tags and audiofile.tag.table_of_contents:
-                # Clear existing toc to prevent "There may only be one top-level table of contents.
-                # Toc 'b'toc'' is current top-level." error
-                for f in list(audiofile.tag.table_of_contents):
-                    audiofile.tag.table_of_contents.remove(f.element_id)  # type: ignore[attr-defined]
+            if args.overwrite_tags and "CTOC" in mutagen_audio.tags:
+                # Clear existing toc
+                mutagen_audio.pop("CTOC")
+                mutagen_audio.save()
 
-            toc = audiofile.tag.table_of_contents.set(
-                "toc".encode("ascii"),
-                toplevel=True,
-                ordered=True,
-                child_ids=[],
-                description="Table of Contents",
-            )
             merged_markers = merge_toc(parsed_toc)
             debug_meta["merged_markers"] = [
                 {"title": m.title, "start": m.start_second, "end": m.end_second}
                 for m in merged_markers
             ]
-
-            for i, m in enumerate(merged_markers):
-                title_frameset = eyed3.id3.frames.FrameSet()
-                title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, m.title)
-                chap = audiofile.tag.chapters.set(
-                    f"ch{i}".encode("ascii"),
-                    times=(round(m.start_second * 1000), round(m.end_second * 1000)),
-                    sub_frames=title_frameset,
-                )
-                toc.child_ids.append(chap.element_id)
-                start_time = datetime.timedelta(seconds=m.start_second)
-                end_time = datetime.timedelta(seconds=m.end_second)
-                logger.debug(
-                    'Added chap tag => %s: %s-%s "%s" to "%s"',
-                    colored(f"ch{i}", "cyan"),
-                    start_time,
-                    end_time,
-                    colored(m.title, "cyan"),
-                    colored(str(book_filename), "blue"),
-                )
-
-        audiofile.tag.save()
+            update_chapters(
+                target_filepath=book_filename,
+                chapters=[
+                    FfmpegChapterMarker(
+                        title=m.title,
+                        start_millisecond=round(m.start_second * 1000),
+                        end_millisecond=round(m.end_second * 1000),
+                    )
+                    for m in merged_markers
+                ],
+                output_format="mp3",
+                ffmpeg_loglevel=ffmpeg_loglevel,
+                logger=logger,
+            )
 
         if args.merge_format == "mp3":
             logger.info(
