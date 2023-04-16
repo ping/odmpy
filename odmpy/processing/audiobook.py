@@ -297,7 +297,7 @@ def process_audiobook_loan(
                     title_frameset = eyed3.id3.frames.FrameSet()
                     title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, m.title)
                     chap = audiofile.tag.chapters.set(
-                        f"ch{i}".encode("ascii"),
+                        f"ch{i:02d}".encode("ascii"),
                         times=(
                             round(m.start_second * 1000),
                             round(m.end_second * 1000),
@@ -309,7 +309,7 @@ def process_audiobook_loan(
                     end_time = datetime.timedelta(seconds=m.end_second)
                     logger.debug(
                         'Added chap tag => %s: %s-%s "%s" to "%s"',
-                        colored(f"ch{i}", "cyan"),
+                        colored(f"ch{i:02d}", "cyan"),
                         start_time,
                         end_time,
                         colored(m.title, "cyan"),
