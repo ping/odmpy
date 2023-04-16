@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_ebook_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.3">coverage.py v7.2.3</a>,
-            created at 2023-04-13 23:26 +0000
+            created at 2023-04-16 12:11 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -379,7 +379,7 @@
     <p class="run"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">                    <span class="nam">title_frameset</span> <span class="op">=</span> <span class="nam">eyed3</span><span class="op">.</span><span class="nam">id3</span><span class="op">.</span><span class="nam">frames</span><span class="op">.</span><span class="nam">FrameSet</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t298" href="#t298">298</a></span><span class="t">                    <span class="nam">title_frameset</span><span class="op">.</span><span class="nam">setTextFrame</span><span class="op">(</span><span class="nam">eyed3</span><span class="op">.</span><span class="nam">id3</span><span class="op">.</span><span class="nam">frames</span><span class="op">.</span><span class="nam">TITLE_FID</span><span class="op">,</span> <span class="nam">m</span><span class="op">.</span><span class="nam">title</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">                    <span class="nam">chap</span> <span class="op">=</span> <span class="nam">audiofile</span><span class="op">.</span><span class="nam">tag</span><span class="op">.</span><span class="nam">chapters</span><span class="op">.</span><span class="nam">set</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">                        <span class="str">f"ch{i}"</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span><span class="str">"ascii"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">                        <span class="str">f"ch{i:02d}"</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span><span class="str">"ascii"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t301" href="#t301">301</a></span><span class="t">                        <span class="nam">times</span><span class="op">=</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t302" href="#t302">302</a></span><span class="t">                            <span class="nam">round</span><span class="op">(</span><span class="nam">m</span><span class="op">.</span><span class="nam">start_second</span> <span class="op">*</span> <span class="num">1000</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t303" href="#t303">303</a></span><span class="t">                            <span class="nam">round</span><span class="op">(</span><span class="nam">m</span><span class="op">.</span><span class="nam">end_second</span> <span class="op">*</span> <span class="num">1000</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -391,7 +391,7 @@
     <p class="run"><span class="n"><a id="t309" href="#t309">309</a></span><span class="t">                    <span class="nam">end_time</span> <span class="op">=</span> <span class="nam">datetime</span><span class="op">.</span><span class="nam">timedelta</span><span class="op">(</span><span class="nam">seconds</span><span class="op">=</span><span class="nam">m</span><span class="op">.</span><span class="nam">end_second</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t310" href="#t310">310</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t311" href="#t311">311</a></span><span class="t">                        <span class="str">'Added chap tag => %s: %s-%s "%s" to "%s"'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t312" href="#t312">312</a></span><span class="t">                        <span class="nam">colored</span><span class="op">(</span><span class="str">f"ch{i}"</span><span class="op">,</span> <span class="str">"cyan"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t312" href="#t312">312</a></span><span class="t">                        <span class="nam">colored</span><span class="op">(</span><span class="str">f"ch{i:02d}"</span><span class="op">,</span> <span class="str">"cyan"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t313" href="#t313">313</a></span><span class="t">                        <span class="nam">start_time</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t314" href="#t314">314</a></span><span class="t">                        <span class="nam">end_time</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t315" href="#t315">315</a></span><span class="t">                        <span class="nam">colored</span><span class="op">(</span><span class="nam">m</span><span class="op">.</span><span class="nam">title</span><span class="op">,</span> <span class="str">"cyan"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -582,7 +582,7 @@
             <a id="nextFileLink" class="nav" href="d_bf16d5eb7be72c0c_ebook_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.3">coverage.py v7.2.3</a>,
-            created at 2023-04-13 23:26 +0000
+            created at 2023-04-16 12:11 +0000
         </p>
     </div>
 </footer>
