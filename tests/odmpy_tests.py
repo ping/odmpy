@@ -4,7 +4,6 @@
 # https://opensource.org/licenses/MIT
 
 import json
-import os
 from http import HTTPStatus
 
 import responses
@@ -25,59 +24,68 @@ from .data import (
 class OdmpyTests(BaseTestCase):
     def setUp(self):
         super().setUp()
-        try:
-            self.test_file = os.environ["TEST_ODM"]
-        except KeyError:
-            raise RuntimeError("TEST_ODM environment var not defined.")
+
+        # test1.odm - book with ascii meta
+        # test2.odm - book with non-ascii meta
+        # test3.odm - Issue using mutagen, ref #17
+        # test4.odm - HTML entities decoding, ref #19
+        self.test_odms = ["test1.odm", "test2.odm", "test3.odm", "test4.odm"]
 
     def test_info(self):
         """
         `odmpy info test.odm`
         """
-        expected_file = self.test_data_dir.joinpath(
-            f"{self.test_file}.info.expected.txt"
-        )
-        with self.assertLogs(run.__module__, level="INFO") as context:
-            run(
-                [
-                    "--noversioncheck",
-                    "info",
-                    str(self.test_data_dir.joinpath(self.test_file)),
-                ],
-                be_quiet=True,
-            )
-        with expected_file.open("r", encoding="utf-8") as expected:
-            self.assertEqual(
-                "\n".join([r.msg for r in context.records]) + "\n", expected.read()
-            )
+        for test_odm_file in self.test_odms:
+            with self.subTest(odm=test_odm_file):
+                expected_file = self.test_data_dir.joinpath(
+                    f"{test_odm_file}.info.expected.txt"
+                )
+                with self.assertLogs(run.__module__, level="INFO") as context:
+                    run(
+                        [
+                            "--noversioncheck",
+                            "info",
+                            str(self.test_data_dir.joinpath(test_odm_file)),
+                        ],
+                        be_quiet=True,
+                    )
+                with expected_file.open("r", encoding="utf-8") as expected:
+                    self.assertEqual(
+                        "\n".join([r.msg for r in context.records]) + "\n",
+                        expected.read(),
+                    )
 
     def test_info_json(self):
         """
         `odmpy info test.odm` --format json`
         """
-        with self.assertLogs(run.__module__, level="INFO") as context:
-            run(
-                [
-                    "--noversioncheck",
-                    "info",
-                    str(self.test_data_dir.joinpath(self.test_file)),
-                    "--format",
-                    "json",
-                ],
-                be_quiet=True,
-            )
-        info = json.loads("\n".join([r.msg for r in context.records]))
-        for tag in [
-            "title",
-            "creators",
-            "publisher",
-            "subjects",
-            "languages",
-            "description",
-            "total_duration",
-        ]:
-            with self.subTest(tag=tag):
-                self.assertTrue(info.get(tag), msg="'{}' is not set".format(tag))
+        for test_odm_file in self.test_odms:
+            with self.subTest(odm=test_odm_file):
+                with self.assertLogs(run.__module__, level="INFO") as context:
+                    run(
+                        [
+                            "--noversioncheck",
+                            "info",
+                            str(self.test_data_dir.joinpath(test_odm_file)),
+                            "--format",
+                            "json",
+                        ],
+                        be_quiet=True,
+                    )
+                info = json.loads("\n".join([r.msg for r in context.records]))
+                for tag in [
+                    "title",
+                    "creators",
+                    "publisher",
+                    "subjects",
+                    "languages",
+                    "description",
+                    "total_duration",
+                ]:
+                    with self.subTest(tag=tag):
+                        self.assertTrue(
+                            info.get(tag), msg="'{}' is not set".format(tag)
+                        )
 
     def _setup_common_responses(self):
         with self.test_data_dir.joinpath("audiobook", "cover.jpg").open("rb") as c:
@@ -92,20 +100,51 @@ class OdmpyTests(BaseTestCase):
             "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fodmpy%2Ftest_data%2Fcover_NOTFOUND.jpg",
             status=404,
         )
-        responses.add_passthru("https://ping.github.io/odmpy/test_data/")
-        responses.add_passthru("https://thunder.api.overdrive.com/")
+        # responses.add_passthru("https://ping.github.io/odmpy/test_data/")
+        odm_test_data_dir = self.test_data_dir.joinpath("audiobook", "odm")
+        with odm_test_data_dir.joinpath("test.license").open(
+            "r", encoding="utf-8"
+        ) as license_file:
+            responses.get(
+                "https://ping.github.io/odmpy/test_data/test.license",
+                content_type="application/xml",
+                body=license_file.read(),
+            )
+        for mp3 in (
+            "book1/ceremonies_herrick_bk_64kb.mp3",
+            "book1/ceremonies_herrick_cjph_64kb.mp3",
+            "book1/ceremonies_herrick_gg_64kb.mp3",
+            "book3/01_ceremonies_herrick_cjph_64kb.mp3",
+        ):
+            with odm_test_data_dir.joinpath(mp3).open("rb") as m:
+                responses.get(
+                    f"https://ping.github.io/odmpy/test_data/{mp3}",
+                    content_type="audio/mp3",
+                    body=m.read(),
+                )
+        with odm_test_data_dir.joinpath("media.json").open("r", encoding="utf-8") as m:
+            responses.get(
+                "https://thunder.api.overdrive.com/v2/media/0fef5121-bb1f-42a5-b62a-d9fded939d50",
+                content_type="application/json",
+                body=m.read(),
+            )
+        responses.get(
+            "https://ping.github.io/odmpy/test_data/cover_NOTFOUND.jpg",
+            status=HTTPStatus.NOT_FOUND,
+        )
 
     @responses.activate
     def test_cover_fail_ref24(self):
         """
-        Test for error downloading cover
+        Test for #24 error downloading cover
         """
         self._setup_common_responses()
+        test_odm_file = "test_ref24.odm"
         run(
             [
                 "--noversioncheck",
                 "dl",
-                str(self.test_data_dir.joinpath(self.test_file)),
+                str(self.test_data_dir.joinpath(test_odm_file)),
                 "--downloaddir",
                 str(self.test_downloads_dir),
                 "--keepcover",
@@ -113,7 +152,7 @@ class OdmpyTests(BaseTestCase):
             ],
             be_quiet=True,
         )
-        expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
+        expected_result = get_expected_result(self.test_downloads_dir, test_odm_file)
         self.assertTrue(expected_result.book_folder.is_dir())
         for i in range(1, expected_result.total_parts + 1):
             book_file = expected_result.book_folder.joinpath(
@@ -126,13 +165,16 @@ class OdmpyTests(BaseTestCase):
     def test_opf(self):
         """
         `odmpy dl test.odm --opf`
+
+        Test for #26 opf generation
         """
         self._setup_common_responses()
+        test_odm_file = "test1.odm"
         run(
             [
                 "--noversioncheck",
                 "dl",
-                str(self.test_data_dir.joinpath(self.test_file)),
+                str(self.test_data_dir.joinpath(test_odm_file)),
                 "--downloaddir",
                 str(self.test_downloads_dir),
                 "--keepcover",
@@ -141,7 +183,7 @@ class OdmpyTests(BaseTestCase):
             ],
             be_quiet=True,
         )
-        expected_result = get_expected_result(self.test_downloads_dir, self.test_file)
+        expected_result = get_expected_result(self.test_downloads_dir, test_odm_file)
 
         # schema file has been edited to remove the legacy toc attribute for spine
         schema_file = self.test_data_dir.joinpath("opf.schema.xml")
@@ -291,7 +333,7 @@ class OdmpyTests(BaseTestCase):
             [
                 "--noversioncheck",
                 "ret",
-                str(self.test_data_dir.joinpath(self.test_file)),
+                str(self.test_data_dir.joinpath(self.test_odms[0])),
             ],
             be_quiet=True,
         )
@@ -309,7 +351,7 @@ class OdmpyTests(BaseTestCase):
                 [
                     "--noversioncheck",
                     "ret",
-                    str(self.test_data_dir.joinpath(self.test_file)),
+                    str(self.test_data_dir.joinpath(self.test_odms[0])),
                 ],
                 be_quiet=True,
             )
@@ -330,7 +372,7 @@ class OdmpyTests(BaseTestCase):
                 [
                     "--noversioncheck",
                     "ret",
-                    str(self.test_data_dir.joinpath(self.test_file)),
+                    str(self.test_data_dir.joinpath(self.test_odms[0])),
                 ],
                 be_quiet=True,
             )
