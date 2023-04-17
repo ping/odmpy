@@ -83,8 +83,8 @@ jobs:
     - name: Run tests on ${{ matrix.os }} with python ${{ matrix.python-version }}
       run: |
         cd ${GITHUB_WORKSPACE}
-        python -m unittest -vv tests.OdmpyLibbyTests.test_mock_libby_download_audiobook_direct_merge
-        python -m unittest -vv tests.OdmpyDlTests.test_merge_formats_add_chapters
+        python -m unittest tests.OdmpyLibbyTests.test_mock_libby_download_audiobook_direct_merge
+        python -m unittest tests.OdmpyDlTests.test_merge_formats_add_chapters
 #        sh run_tests.sh
 #        coverage lcov
 #        mv .coverage ".coverage.${{ matrix.os }}.${{ matrix.python-version }}"
