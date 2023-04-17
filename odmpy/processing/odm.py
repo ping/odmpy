@@ -50,6 +50,7 @@ from .shared import (
     init_session,
     update_chapters,
     FfmpegChapterMarker,
+    Tag,
 )
 from ..cli_utils import OdmpyCommands
 from ..constants import OMC, OS, UA, UNSUPPORTED_PARSER_ENTITIES, UA_LONG
@@ -519,7 +520,9 @@ def process_odm(
             if (
                 args.add_chapters
                 and not args.merge_output
-                and (args.overwrite_tags or "CTOC" not in mutagen_audio.tags)
+                and (
+                    args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
+                )
             ):
                 # set the chapter marks
                 generated_markers: List[Dict[str, Union[str, int]]] = []
@@ -537,9 +540,9 @@ def process_odm(
                         }
                     )
 
-                if args.overwrite_tags and "CTOC" in mutagen_audio.tags:
+                if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
                     # Clear existing toc
-                    mutagen_audio.tags.pop("CTOC")
+                    mutagen_audio.tags.pop(Tag.TableOfContents)
 
                 # We can't use update_chapters here because it requires ffmpeg,
                 # and we only specify the ffmpeg requirement for merging
@@ -641,7 +644,7 @@ def process_odm(
         mutagen_audio.save()
 
         if args.add_chapters and (
-            args.overwrite_tags or "CTOC" not in mutagen_audio.tags
+            args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
         ):
             merged_markers: List[Dict[str, Union[str, int]]] = []
             for i, f in enumerate(file_tracks):
@@ -667,9 +670,9 @@ def process_odm(
                     )
             debug_meta["merged_markers"] = merged_markers
 
-            if args.overwrite_tags and "CTOC" in mutagen_audio.tags:
+            if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
                 # Clear existing toc to prevent "There may only be one top-level table of contents.
-                mutagen_audio.pop("CTOC")
+                mutagen_audio.pop(Tag.TableOfContents)
                 mutagen_audio.save()
 
             update_chapters(

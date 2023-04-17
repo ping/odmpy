@@ -6,6 +6,7 @@ import responses
 from mutagen.mp3 import MP3
 
 from odmpy.odm import run
+from odmpy.processing.shared import Tag
 from .base import BaseTestCase
 from .data import (
     part_title_formats,
@@ -129,37 +130,39 @@ class OdmpyDlTests(BaseTestCase):
                     self.assertTrue(mutagen_audio.tags)
 
                     self.assertTrue(
-                        mutagen_audio.tags["TIT2"]
+                        mutagen_audio.tags[Tag.Title]
                         .text[0]
                         .startswith(part_title_formats[test_odm_file].format(i))
                     )
                     self.assertEqual(
-                        mutagen_audio.tags["TALB"].text[0], "Ceremonies For Christmas"
+                        mutagen_audio.tags[Tag.Album].text[0],
+                        "Ceremonies For Christmas",
                     )
                     self.assertEqual(
-                        mutagen_audio.tags["TALB"].text[0], "Ceremonies For Christmas"
+                        mutagen_audio.tags[Tag.Artist].text[0], "Robert Herrick"
                     )
                     self.assertEqual(
-                        mutagen_audio.tags["TPE1"].text[0], "Robert Herrick"
-                    )
-                    self.assertEqual(
-                        mutagen_audio.tags["TPE2"].text[0],
+                        mutagen_audio.tags[Tag.AlbumArtist].text[0],
                         album_artists[test_odm_file],
                     )
-                    self.assertEqual(mutagen_audio.tags["TRCK"], str(i))
-                    self.assertEqual(mutagen_audio.tags["TPUB"].text[0], "Librivox")
+                    self.assertEqual(mutagen_audio.tags[Tag.TrackNumber], str(i))
                     self.assertEqual(
-                        mutagen_audio.tags["TPE3"].text[0],
+                        mutagen_audio.tags[Tag.Publisher].text[0], "Librivox"
+                    )
+                    self.assertEqual(
+                        mutagen_audio.tags[Tag.Conductor].text[0],
                         "LibriVox Volunteers",
                     )
-                    self.assertTrue(mutagen_audio.tags["CTOC:toc"])
+                    self.assertTrue(mutagen_audio.tags[f"{Tag.TableOfContents}:toc"])
                     for j, chap_id in enumerate(
-                        mutagen_audio.tags["CTOC:toc"].child_element_ids
+                        mutagen_audio.tags[
+                            f"{Tag.TableOfContents}:toc"
+                        ].child_element_ids
                     ):
-                        chap_tag = mutagen_audio.tags[f"CHAP:{chap_id}"]
+                        chap_tag = mutagen_audio.tags[f"{Tag.Chapter}:{chap_id}"]
                         self.assertTrue(chap_tag.sub_frames)
                         self.assertEqual(
-                            chap_tag.sub_frames["TIT2"].text[0],
+                            chap_tag.sub_frames[Tag.Title].text[0],
                             markers[test_odm_file][j + i - 1],
                         )
 

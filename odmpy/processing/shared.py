@@ -21,6 +21,7 @@ import datetime
 import logging
 import subprocess
 import xml.etree.ElementTree as ET
+from enum import Enum
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple, NamedTuple
 from urllib.parse import urlparse
@@ -160,6 +161,30 @@ def generate_names(
     return book_folder, book_filename
 
 
+class Tag(str, Enum):
+    """
+    Helper string enum for tag frames names
+    """
+
+    Title = "TIT2"
+    SubTitle = "TIT3"
+    Album = "TALB"
+    Artist = "TPE1"
+    AlbumArtist = "TPE2"
+    TrackNumber = "TRCK"
+    Publisher = "TPUB"
+    Comment = "COMM"
+    Genre = "TCON"
+    Conductor = "TPE3"
+    Language = "TLAN"
+    ReleaseDate = "TDRL"
+    TableOfContents = "CTOC"
+    Chapter = "CHAP"
+
+    def __str__(self):
+        return str(self.value)
+
+
 def write_tags(
     audiofile: MP3,
     title: str,
@@ -211,33 +236,33 @@ def write_tags(
     if not audiofile.tags:
         audiofile.tags = ID3()
 
-    if always_overwrite or overwrite_title or "TIT2" not in audiofile.tags:
+    if always_overwrite or overwrite_title or Tag.Title not in audiofile.tags:
         audiofile.tags.add(TIT2(encoding=3, text=title))
-    if sub_title and (always_overwrite or "TIT3" not in audiofile.tags):
+    if sub_title and (always_overwrite or Tag.SubTitle not in audiofile.tags):
         audiofile.tags.add(TIT3(encoding=3, text=sub_title))
 
-    if always_overwrite or "TALB" not in audiofile.tags:
+    if always_overwrite or Tag.Album not in audiofile.tags:
         audiofile.tags.add(TALB(encoding=3, text=title))
 
-    if authors and (always_overwrite or "TPE1" not in audiofile.tags):
+    if authors and (always_overwrite or Tag.Artist not in audiofile.tags):
         audiofile.tags.add(TPE1(encoding=3, text=delimiter.join(authors)))
-    if authors and (always_overwrite or "TPE2" not in audiofile.tags):
+    if authors and (always_overwrite or Tag.AlbumArtist not in audiofile.tags):
         audiofile.tags.add(TPE2(encoding=3, text=delimiter.join(authors)))
-    if part_number and (always_overwrite or "TRCK" not in audiofile.tags):
+    if part_number and (always_overwrite or Tag.TrackNumber not in audiofile.tags):
         audiofile.tags.add(
             TRCK(encoding=3, text="{:02d}/{:02d}".format(part_number, total_parts))
         )
-    if narrators and (always_overwrite or "TPE3" not in audiofile):
+    if narrators and (always_overwrite or Tag.Conductor not in audiofile):
         audiofile.tags.add(TPE3(encoding=3, text=delimiter.join(narrators)))
-    if publisher and (always_overwrite or "TPUB" not in audiofile.tags):
+    if publisher and (always_overwrite or Tag.Publisher not in audiofile.tags):
         audiofile.tags.add(TPUB(encoding=3, text=publisher))
-    if description and (always_overwrite or "COMM" not in audiofile.tags):
+    if description and (always_overwrite or Tag.Comment not in audiofile.tags):
         audiofile.tags.add(COMM(encoding=3, desc="Description", text=description))
-    if genres and (always_overwrite or "TCON" not in audiofile.tags):
+    if genres and (always_overwrite or Tag.Genre not in audiofile.tags):
         audiofile.tags.add(TCON(encoding=3, text=delimiter.join(genres)))
-    if languages and (always_overwrite or "TLAN" not in audiofile):
+    if languages and (always_overwrite or Tag.Language not in audiofile):
         audiofile.tags.add(TLAN(encoding=3, text=delimiter.join(languages)))
-    if published_date and (always_overwrite or "TDRL" not in audiofile):
+    if published_date and (always_overwrite or Tag.ReleaseDate not in audiofile):
         audiofile.tags.add(TDRL(encoding=3, text=published_date))
     if cover_bytes:
         audiofile.tags.add(

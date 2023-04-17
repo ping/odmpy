@@ -43,6 +43,7 @@ from .shared import (
     extract_isbn,
     update_chapters,
     FfmpegChapterMarker,
+    Tag,
 )
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, merge_toc, PartMeta, LibbyFormats
@@ -278,11 +279,13 @@ def process_audiobook_loan(
             if (
                 args.add_chapters
                 and not args.merge_output
-                and (args.overwrite_tags or "CTOC" not in mutagen_audio.tags)
+                and (
+                    args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
+                )
             ):
-                if args.overwrite_tags and "CTOC" in mutagen_audio.tags:
+                if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
                     # Clear existing toc
-                    mutagen_audio.pop("CTOC")
+                    mutagen_audio.pop(Tag.TableOfContents)
 
                 chapter_marks = p["chapters"]
 
@@ -371,11 +374,11 @@ def process_audiobook_loan(
         mutagen_audio.save()
 
         if args.add_chapters and (
-            args.overwrite_tags or "CTOC" not in mutagen_audio.tags
+            args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
         ):
-            if args.overwrite_tags and "CTOC" in mutagen_audio.tags:
+            if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
                 # Clear existing toc
-                mutagen_audio.pop("CTOC")
+                mutagen_audio.pop(Tag.TableOfContents)
                 mutagen_audio.save()
 
             merged_markers = merge_toc(parsed_toc)

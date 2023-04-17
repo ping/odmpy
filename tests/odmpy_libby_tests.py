@@ -16,6 +16,7 @@ from responses import matchers
 from odmpy.errors import LibbyNotConfiguredError, OdmpyRuntimeError
 from odmpy.libby import LibbyClient, LibbyFormats
 from odmpy.odm import run
+from odmpy.processing.shared import Tag
 from .base import BaseTestCase
 
 
@@ -792,17 +793,17 @@ class OdmpyLibbyTests(BaseTestCase):
 
         for part_file in part_files:
             mutagen_audio = MP3(part_file, ID3=ID3)
-            self.assertTrue(mutagen_audio.tags["CTOC:toc"])
+            self.assertTrue(mutagen_audio.tags[f"{Tag.TableOfContents}:toc"])
             # check chapters are generated in sequence
             for i, chap_id in enumerate(
-                mutagen_audio.tags["CTOC:toc"].child_element_ids
+                mutagen_audio.tags[f"{Tag.TableOfContents}:toc"].child_element_ids
             ):
                 self.assertEqual(chap_id, f"ch{i:02d}")
-                chapter = mutagen_audio.tags[f"CHAP:{chap_id}"]
-                self.assertEqual(chapter.sub_frames["TIT2"].text[0], markers[i])
+                chapter = mutagen_audio.tags[f"{Tag.Chapter}:{chap_id}"]
+                self.assertEqual(chapter.sub_frames[Tag.Title].text[0], markers[i])
                 if i > 0:
                     prev_chapter = mutagen_audio.tags[
-                        f'CHAP:{mutagen_audio.tags["CTOC:toc"].child_element_ids[i - 1]}'
+                        f'CHAP:{mutagen_audio.tags[f"{Tag.TableOfContents}:toc"].child_element_ids[i - 1]}'
                     ]
                     self.assertGreater(chapter.start_time, prev_chapter.start_time)
                     self.assertEqual(chapter.start_time, prev_chapter.end_time)
@@ -854,7 +855,7 @@ class OdmpyLibbyTests(BaseTestCase):
 
         mutagen_audio = MP3(mp3_filepath, ID3=ID3)
         self.assertTrue(mutagen_audio.tags["CTOC:toc"])
-        chapters = [t for t in mutagen_audio.tags.getall("CHAP")]
+        chapters = [t for t in mutagen_audio.tags.getall(Tag.Chapter)]
         self.assertEqual(len(markers), len(chapters))
 
         for i, chapter in enumerate(chapters):
@@ -862,7 +863,7 @@ class OdmpyLibbyTests(BaseTestCase):
             # because ffmpeg conversion from mp3 to m4b bugs out when
             # CHAPs are not written out in time sequence
             # https://github.com/quodlibet/mutagen/issues/506
-            self.assertEqual(chapter.sub_frames["TIT2"].text[0], markers[i])
+            self.assertEqual(chapter.sub_frames[Tag.Title].text[0], markers[i])
             if i > 0:
                 self.assertGreater(chapter.start_time, chapters[i - 1].start_time)
 
