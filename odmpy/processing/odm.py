@@ -33,7 +33,7 @@ from html import unescape as unescape_html
 from pathlib import Path
 from typing import Any, Union, Dict, List, Optional
 
-from mutagen.id3 import ID3, CTOC, CTOCFlags, TIT2, CHAP
+from mutagen.id3 import ID3, CTOC, CTOCFlags, TIT2, CHAP, Encoding
 from mutagen.mp3 import MP3, BitrateMode
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
@@ -552,7 +552,9 @@ def process_odm(
                         element_id="toc",
                         flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
                         child_element_ids=[m["id"] for m in generated_markers],
-                        sub_frames=[TIT2(text=["Table of Contents"])],
+                        sub_frames=[
+                            TIT2(encoding=Encoding.UTF8, text=["Table of Contents"])
+                        ],
                     )
                 )
 
@@ -562,7 +564,9 @@ def process_odm(
                             element_id=gm["id"],
                             start_time=gm["start_time"],
                             end_time=gm["end_time"],
-                            sub_frames=[TIT2(text=[gm["text"]])],
+                            sub_frames=[
+                                TIT2(encoding=Encoding.UTF8, text=[gm["text"]])
+                            ],
                         )
                     )
                     start_time = datetime.timedelta(

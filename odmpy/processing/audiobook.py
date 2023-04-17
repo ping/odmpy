@@ -25,7 +25,7 @@ from typing import Optional, Any, Dict, List
 from typing import OrderedDict as OrderedDictType
 
 import requests
-from mutagen.id3 import ID3, CTOC, CTOCFlags, TIT2, CHAP
+from mutagen.id3 import ID3, CTOC, CTOCFlags, TIT2, CHAP, Encoding
 from mutagen.mp3 import MP3, BitrateMode
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
@@ -299,7 +299,9 @@ def process_audiobook_loan(
                         child_element_ids=[
                             f"ch{i:02d}" for i, _ in enumerate(chapter_marks)
                         ],
-                        sub_frames=[TIT2(text=["Table of Contents"])],
+                        sub_frames=[
+                            TIT2(encoding=Encoding.UTF8, text=["Table of Contents"])
+                        ],
                     )
                 )
                 for i, m in enumerate(chapter_marks):
@@ -308,7 +310,7 @@ def process_audiobook_loan(
                             element_id=f"ch{i:02d}",
                             start_time=round(m.start_second * 1000),
                             end_time=round(m.end_second * 1000),
-                            sub_frames=[TIT2(text=[m.title])],
+                            sub_frames=[TIT2(encoding=Encoding.UTF8, text=[m.title])],
                         )
                     )
                     start_time = datetime.timedelta(seconds=m.start_second)
