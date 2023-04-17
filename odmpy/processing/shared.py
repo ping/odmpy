@@ -43,6 +43,8 @@ from mutagen.id3 import (
     TDRL,
     TXXX,
     TCON,
+    PictureType,
+    Encoding,
 )
 from mutagen.mp3 import MP3
 from requests.adapters import HTTPAdapter, Retry
@@ -237,36 +239,47 @@ def write_tags(
         audiofile.tags = ID3()
 
     if always_overwrite or overwrite_title or Tag.Title not in audiofile.tags:
-        audiofile.tags.add(TIT2(encoding=3, text=title))
+        audiofile.tags.add(TIT2(encoding=Encoding.UTF8, text=title))
     if sub_title and (always_overwrite or Tag.SubTitle not in audiofile.tags):
-        audiofile.tags.add(TIT3(encoding=3, text=sub_title))
+        audiofile.tags.add(TIT3(encoding=Encoding.UTF8, text=sub_title))
 
     if always_overwrite or Tag.Album not in audiofile.tags:
-        audiofile.tags.add(TALB(encoding=3, text=title))
+        audiofile.tags.add(TALB(encoding=Encoding.UTF8, text=title))
 
     if authors and (always_overwrite or Tag.Artist not in audiofile.tags):
-        audiofile.tags.add(TPE1(encoding=3, text=delimiter.join(authors)))
+        audiofile.tags.add(TPE1(encoding=Encoding.UTF8, text=delimiter.join(authors)))
     if authors and (always_overwrite or Tag.AlbumArtist not in audiofile.tags):
-        audiofile.tags.add(TPE2(encoding=3, text=delimiter.join(authors)))
+        audiofile.tags.add(TPE2(encoding=Encoding.UTF8, text=delimiter.join(authors)))
     if part_number and (always_overwrite or Tag.TrackNumber not in audiofile.tags):
         audiofile.tags.add(
-            TRCK(encoding=3, text="{:02d}/{:02d}".format(part_number, total_parts))
+            TRCK(
+                encoding=Encoding.UTF8,
+                text="{:02d}/{:02d}".format(part_number, total_parts),
+            )
         )
     if narrators and (always_overwrite or Tag.Conductor not in audiofile):
-        audiofile.tags.add(TPE3(encoding=3, text=delimiter.join(narrators)))
+        audiofile.tags.add(TPE3(encoding=Encoding.UTF8, text=delimiter.join(narrators)))
     if publisher and (always_overwrite or Tag.Publisher not in audiofile.tags):
-        audiofile.tags.add(TPUB(encoding=3, text=publisher))
+        audiofile.tags.add(TPUB(encoding=Encoding.UTF8, text=publisher))
     if description and (always_overwrite or Tag.Comment not in audiofile.tags):
-        audiofile.tags.add(COMM(encoding=3, desc="Description", text=description))
+        audiofile.tags.add(
+            COMM(encoding=Encoding.UTF8, desc="Description", text=description)
+        )
     if genres and (always_overwrite or Tag.Genre not in audiofile.tags):
-        audiofile.tags.add(TCON(encoding=3, text=delimiter.join(genres)))
+        audiofile.tags.add(TCON(encoding=Encoding.UTF8, text=delimiter.join(genres)))
     if languages and (always_overwrite or Tag.Language not in audiofile):
-        audiofile.tags.add(TLAN(encoding=3, text=delimiter.join(languages)))
+        audiofile.tags.add(TLAN(encoding=Encoding.UTF8, text=delimiter.join(languages)))
     if published_date and (always_overwrite or Tag.ReleaseDate not in audiofile):
-        audiofile.tags.add(TDRL(encoding=3, text=published_date))
+        audiofile.tags.add(TDRL(encoding=Encoding.UTF8, text=published_date))
     if cover_bytes:
         audiofile.tags.add(
-            APIC(encoding=3, mime="image/jpeg", type=3, desc="Cover", data=cover_bytes)
+            APIC(
+                encoding=Encoding.UTF8,
+                mime="image/jpeg",
+                type=PictureType.COVER_FRONT,
+                desc="Cover",
+                data=cover_bytes,
+            )
         )
     if series:
         audiofile.tags.add(TXXX(encoding=3, desc="Series", text=series))
@@ -274,7 +287,7 @@ def write_tags(
     if overdrive_id:
         audiofile.tags.add(
             TXXX(
-                encoding=3,
+                encoding=Encoding.UTF8,
                 desc="OverDrive Media ID"
                 if overdrive_id.isdigit()
                 else "OverDrive Reserve ID",
@@ -282,7 +295,7 @@ def write_tags(
             )
         )
     if isbn:
-        audiofile.tags.add(TXXX(encoding=3, desc="ISBN", text=isbn))
+        audiofile.tags.add(TXXX(encoding=Encoding.UTF8, desc="ISBN", text=isbn))
 
 
 def get_best_cover_url(loan: Dict) -> Optional[str]:
