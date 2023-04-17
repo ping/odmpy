@@ -535,11 +535,13 @@ def update_chapters(
         if exit_code:
             logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
             logger.warning(f"Command: {' '.join(cmd)!s}")
-            ffmeta_filepath.unlink(missing_ok=True)
+            if ffmeta_filepath.exists():
+                ffmeta_filepath.unlink()
             return
     except Exception as ffmpeg_ex:  # pylint: disable=broad-except
         logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
-        ffmeta_filepath.unlink(missing_ok=True)
+        if ffmeta_filepath.exists():
+            ffmeta_filepath.unlink()
         return
 
     with ffmeta_filepath.open("a", encoding="utf-8") as f:
@@ -577,14 +579,18 @@ def update_chapters(
         if exit_code:
             logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
             logger.warning(f"Command: {' '.join(cmd)!s}")
-            target_tmp_filepath.unlink(missing_ok=True)
+            if target_tmp_filepath.exists():
+                target_tmp_filepath.unlink()
         else:
             target_tmp_filepath.rename(target_filepath)
-        ffmeta_filepath.unlink(missing_ok=True)
+        if ffmeta_filepath.exists():
+            ffmeta_filepath.unlink()
     except Exception as ffmpeg_ex:  # pylint: disable=broad-except
         logger.warning(f"Error executing ffmpeg: {str(ffmpeg_ex)}")
-        ffmeta_filepath.unlink(missing_ok=True)
-        target_tmp_filepath.unlink(missing_ok=True)
+        if ffmeta_filepath.exists():
+            ffmeta_filepath.unlink()
+        if target_tmp_filepath.exists():
+            target_tmp_filepath.unlink()
 
 
 def remux_mp3(
