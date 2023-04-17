@@ -853,6 +853,7 @@ class OdmpyLibbyTests(BaseTestCase):
             markers = [toc["title"] for toc in json.load(o)["nav"]["toc"]]
 
         mutagen_audio = MP3(mp3_filepath, ID3=ID3)
+        self.logger.debug(mutagen_audio.tags)
         self.assertTrue(mutagen_audio.tags["CTOC:toc"])
         chapters = [t for t in mutagen_audio.tags.getall("CHAP")]
         self.assertEqual(len(markers), len(chapters))

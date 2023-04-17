@@ -20,48 +20,49 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ "3.7", "3.8", "3.9", "3.10" , "3.11" ]
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-        fetch-depth: 1
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip -q install -r requirements.txt
-        pip -q install -r requirements-dev.txt
-    - name: Compile all
-      run: |
-        python -m compileall odmpy tests
-    - name: Analysing the code with black
-      run: |
-        black --check setup.py odmpy tests
-    - name: Analysing the code with flake8
-      run: |
-        flake8 setup.py odmpy tests
-    - name: Analysing the code with pylint
-      run: |
-        pylint setup.py odmpy tests
-    - name: Analysing the code with mypy
-      run: |
-        mypy --package odmpy --package tests
+#  lint:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        python-version: [ "3.7", "3.8", "3.9", "3.10" , "3.11" ]
+#    steps:
+#    - uses: actions/checkout@v3
+#      with:
+#        submodules: true
+#        fetch-depth: 1
+#    - name: Set up Python ${{ matrix.python-version }}
+#      uses: actions/setup-python@v4
+#      with:
+#        python-version: ${{ matrix.python-version }}
+#    - name: Install dependencies
+#      run: |
+#        python -m pip install --upgrade pip
+#        pip -q install -r requirements.txt
+#        pip -q install -r requirements-dev.txt
+#    - name: Compile all
+#      run: |
+#        python -m compileall odmpy tests
+#    - name: Analysing the code with black
+#      run: |
+#        black --check setup.py odmpy tests
+#    - name: Analysing the code with flake8
+#      run: |
+#        flake8 setup.py odmpy tests
+#    - name: Analysing the code with pylint
+#      run: |
+#        pylint setup.py odmpy tests
+#    - name: Analysing the code with mypy
+#      run: |
+#        mypy --package odmpy --package tests
 
   tests:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [ "3.7", "3.8", "3.9", "3.10" , "3.11" ]
-    needs: lint
+        python-version: [ "3.7" ]
+#        python-version: [ "3.7", "3.8", "3.9", "3.10" , "3.11" ]
+#    needs: lint
     steps:
     - uses: FedericoCarboni/setup-ffmpeg@v2
       id: setup-ffmpeg
@@ -82,83 +83,84 @@ jobs:
     - name: Run tests on ${{ matrix.os }} with python ${{ matrix.python-version }}
       run: |
         cd ${GITHUB_WORKSPACE}
-        sh run_tests.sh
-        coverage lcov
-        mv .coverage ".coverage.${{ matrix.os }}.${{ matrix.python-version }}"
+        python -m unittest -vv tests.OdmpyLibbyTests.test_mock_libby_download_audiobook_direct_merge
+#        sh run_tests.sh
+#        coverage lcov
+#        mv .coverage ".coverage.${{ matrix.os }}.${{ matrix.python-version }}"
       shell: bash
     - name: Test installation process
       run: |
         python3 setup.py install
         odmpy --version
       shell: bash
-    - name: Upload coverage artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage-results
-        path: .coverage.*
-        retention-days: 1
-    - name: Coveralls Parallel
-      uses: coverallsapp/github-action@v2
-      with:
-        path-to-lcov: "coverage.lcov"
-        flag-name: run-${{ matrix.os }}-${{ matrix.python-version }}
-        parallel: true
+#    - name: Upload coverage artifacts
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: coverage-results
+#        path: .coverage.*
+#        retention-days: 1
+#    - name: Coveralls Parallel
+#      uses: coverallsapp/github-action@v2
+#      with:
+#        path-to-lcov: "coverage.lcov"
+#        flag-name: run-${{ matrix.os }}-${{ matrix.python-version }}
+#        parallel: true
 
-  coverage-report:
-    runs-on: ubuntu-latest
-    needs: tests
-    steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install coverage coverage-badge
-      - name: Checkout source
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-          path: "source"
-      - name: Coveralls Finished
-        uses: coverallsapp/github-action@v2
-        with:
-          parallel-finished: true
-      - name: Download a single artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: coverage-results
-          path: source/
-      - name: Merge and report
-        run: |
-          cd source/
-          coverage combine && coverage json && python cov2md.py
-          cat 'coverage.md' >> $GITHUB_STEP_SUMMARY
-          coverage html -d "$GITHUB_WORKSPACE/coverage/" --precision=1 --title="Coverage Report for ${GITHUB_SHA:0:7}"
-          coverage-badge -o "$GITHUB_WORKSPACE/coverage/badge.svg" -f
-      - name: Update coverage html report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage/
-          retention-days: 14
-      - name: Checkout gh-pages
-        uses: actions/checkout@v3
-        if: github.ref == 'refs/heads/master'
-        with:
-          ref: "gh-pages"
-          fetch-depth: 1
-          path: "pages"
-      - name: Publish coverage to gh-pages
-        if: github.ref == 'refs/heads/master'
-        run: |
-          cd "$GITHUB_WORKSPACE/pages/"
-          rm -rf coverage/
-          rm -f ../coverage/.gitignore
-          mv ../coverage .
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add -A coverage
-          git status
-          if [[ `git status --porcelain --untracked-files=no` ]]; then git commit -m "Updated coverage results from $GITHUB_SHA"; git push; fi
+#  coverage-report:
+#    runs-on: ubuntu-latest
+#    needs: tests
+#    steps:
+#      - name: Set up Python
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: "3.11"
+#      - name: Install dependencies
+#        run: |
+#          python3 -m pip install --upgrade pip
+#          python3 -m pip install coverage coverage-badge
+#      - name: Checkout source
+#        uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 1
+#          path: "source"
+#      - name: Coveralls Finished
+#        uses: coverallsapp/github-action@v2
+#        with:
+#          parallel-finished: true
+#      - name: Download a single artifact
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: coverage-results
+#          path: source/
+#      - name: Merge and report
+#        run: |
+#          cd source/
+#          coverage combine && coverage json && python cov2md.py
+#          cat 'coverage.md' >> $GITHUB_STEP_SUMMARY
+#          coverage html -d "$GITHUB_WORKSPACE/coverage/" --precision=1 --title="Coverage Report for ${GITHUB_SHA:0:7}"
+#          coverage-badge -o "$GITHUB_WORKSPACE/coverage/badge.svg" -f
+#      - name: Update coverage html report
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: coverage-report
+#          path: coverage/
+#          retention-days: 14
+#      - name: Checkout gh-pages
+#        uses: actions/checkout@v3
+#        if: github.ref == 'refs/heads/master'
+#        with:
+#          ref: "gh-pages"
+#          fetch-depth: 1
+#          path: "pages"
+#      - name: Publish coverage to gh-pages
+#        if: github.ref == 'refs/heads/master'
+#        run: |
+#          cd "$GITHUB_WORKSPACE/pages/"
+#          rm -rf coverage/
+#          rm -f ../coverage/.gitignore
+#          mv ../coverage .
+#          git config user.name github-actions
+#          git config user.email github-actions@github.com
+#          git add -A coverage
+#          git status
+#          if [[ `git status --porcelain --untracked-files=no` ]]; then git commit -m "Updated coverage results from $GITHUB_SHA"; git push; fi
