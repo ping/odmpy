@@ -582,7 +582,12 @@ def update_chapters(
             if target_tmp_filepath.exists():
                 target_tmp_filepath.unlink()
         else:
-            target_tmp_filepath.rename(target_filepath)
+            try:
+                target_tmp_filepath.rename(target_filepath)
+            except FileExistsError:
+                # For Windows
+                target_filepath.unlink()
+                target_tmp_filepath.rename(target_filepath)
         if ffmeta_filepath.exists():
             ffmeta_filepath.unlink()
     except Exception as ffmpeg_ex:  # pylint: disable=broad-except
