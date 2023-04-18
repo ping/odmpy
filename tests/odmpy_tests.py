@@ -100,7 +100,7 @@ class OdmpyTests(BaseTestCase):
             "https://ic.od-cdn.com/resize?type=auto&width=510&height=510&force=true&quality=80&url=%2Fodmpy%2Ftest_data%2Fcover_NOTFOUND.jpg",
             status=404,
         )
-        # responses.add_passthru("https://ping.github.io/odmpy/test_data/")
+
         odm_test_data_dir = self.test_data_dir.joinpath("audiobook", "odm")
         with odm_test_data_dir.joinpath("test.license").open(
             "r", encoding="utf-8"

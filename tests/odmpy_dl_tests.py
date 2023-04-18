@@ -92,6 +92,9 @@ class OdmpyDlTests(BaseTestCase):
                         expected_result.mp3_name_format.format(i)
                     )
                     self.assertTrue(book_file.exists())
+                    mutagen_audio = MP3(book_file)
+                    self.assertTrue(mutagen_audio.tags)
+                    self.assertEqual(mutagen_audio.tags.version[1], 4)
         self.assertTrue(expected_result.book_folder.joinpath("cover.jpg").exists())
 
     @responses.activate
@@ -130,7 +133,7 @@ class OdmpyDlTests(BaseTestCase):
                     )
                     mutagen_audio = MP3(book_file)
                     self.assertTrue(mutagen_audio.tags)
-
+                    self.assertEqual(mutagen_audio.tags.version[1], 3)
                     self.assertTrue(
                         mutagen_audio.tags[Tag.Title]
                         .text[0]
