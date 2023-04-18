@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Any, Union, Dict, List, Optional
 
 import eyed3  # type: ignore[import]
-from eyed3.id3 import ID3_DEFAULT_VERSION, ID3_V2_3, ID3_V2_4
+from eyed3.id3 import ID3_DEFAULT_VERSION, ID3_V2_3, ID3_V2_4  # type: ignore[import]
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 from tqdm import tqdm
