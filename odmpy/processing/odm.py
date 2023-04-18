@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Any, Union, Dict, List, Optional
 
 import eyed3  # type: ignore[import]
+from eyed3.id3 import ID3_DEFAULT_VERSION, ID3_V2_3, ID3_V2_4
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 from tqdm import tqdm
@@ -105,6 +106,14 @@ def process_odm(
         return
 
     ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "fatal"
+
+    id3v2_version = ID3_DEFAULT_VERSION
+    if hasattr(args, "id3v2_version"):
+        if args.id3v2_version == 3:
+            id3v2_version = ID3_V2_3
+        if args.id3v2_version == 4:
+            id3v2_version = ID3_V2_4
+
     xml_doc = ET.parse(odm_file)
     root = xml_doc.getroot()
     overdrive_media_id = root.attrib.get("id", "")
@@ -481,7 +490,7 @@ def process_odm(
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
-            audiofile.tag.save()
+            audiofile.tag.save(version=id3v2_version)
 
             # Notes: Can't switch over to using eyed3 (audiofile.info.time_secs)
             # because it is completely off by about 10-20 seconds.
@@ -576,7 +585,7 @@ def process_odm(
                         colored(str(part_filename), "blue"),
                     )
 
-                audiofile.tag.save()
+                audiofile.tag.save(version=id3v2_version)
 
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(
@@ -700,7 +709,7 @@ def process_odm(
                     colored(str(book_filename), "blue"),
                 )
 
-        audiofile.tag.save()
+        audiofile.tag.save(version=id3v2_version)
 
         if args.merge_format == "mp3":
             logger.info(

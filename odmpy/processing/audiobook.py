@@ -26,6 +26,7 @@ from typing import OrderedDict as OrderedDictType
 
 import eyed3  # type: ignore[import]
 import requests
+from eyed3.id3 import ID3_DEFAULT_VERSION, ID3_V2_3, ID3_V2_4
 from requests.exceptions import HTTPError, ConnectionError
 from termcolor import colored
 from tqdm import tqdm
@@ -74,6 +75,11 @@ def process_audiobook_loan(
     """
 
     ffmpeg_loglevel = "info" if logger.level == logging.DEBUG else "fatal"
+    id3v2_version = ID3_DEFAULT_VERSION
+    if args.id3v2_version == 3:
+        id3v2_version = ID3_V2_3
+    if args.id3v2_version == 4:
+        id3v2_version = ID3_V2_4
 
     title = loan["title"]
     overdrive_media_id = loan["id"]
@@ -272,7 +278,7 @@ def process_audiobook_loan(
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
-            audiofile.tag.save()
+            audiofile.tag.save(version=id3v2_version)
 
             if (
                 args.add_chapters
@@ -315,7 +321,7 @@ def process_audiobook_loan(
                         colored(m.title, "cyan"),
                         colored(str(part_filename), "blue"),
                     )
-                audiofile.tag.save()
+                audiofile.tag.save(version=id3v2_version)
 
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(
@@ -409,7 +415,7 @@ def process_audiobook_loan(
                     colored(str(book_filename), "blue"),
                 )
 
-        audiofile.tag.save()
+        audiofile.tag.save(version=id3v2_version)
 
         if args.merge_format == "mp3":
             logger.info(

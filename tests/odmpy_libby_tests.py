@@ -770,6 +770,8 @@ class OdmpyLibbyTests(BaseTestCase):
             "1",
             "--chapters",
             "--overwritetags",
+            "--id3v2version",
+            "3",
             "--opf",
             "--hideprogress",
             "--debug",
