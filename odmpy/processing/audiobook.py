@@ -274,7 +274,7 @@ def process_audiobook_loan(
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
-            mutagen_audio.save()
+            mutagen_audio.save(v2_version=args.id3v2_version)
 
             if (
                 args.add_chapters
@@ -323,7 +323,7 @@ def process_audiobook_loan(
                         colored(m.title, "cyan"),
                         colored(str(part_filename), "blue"),
                     )
-                mutagen_audio.save()
+                mutagen_audio.save(v2_version=args.id3v2_version)
 
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(
@@ -373,7 +373,7 @@ def process_audiobook_loan(
             always_overwrite=args.overwrite_tags,
             delimiter=args.tag_delimiter,
         )
-        mutagen_audio.save()
+        mutagen_audio.save(v2_version=args.id3v2_version)
 
         if args.add_chapters and (
             args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
@@ -381,7 +381,7 @@ def process_audiobook_loan(
             if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
                 # Clear existing toc
                 mutagen_audio.pop(Tag.TableOfContents)
-                mutagen_audio.save()
+                mutagen_audio.save(v2_version=args.id3v2_version)
 
             merged_markers = merge_toc(parsed_toc)
             debug_meta["merged_markers"] = [

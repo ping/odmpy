@@ -118,6 +118,8 @@ class OdmpyDlTests(BaseTestCase):
                         "--downloaddir",
                         str(self.test_downloads_dir),
                         "--chapters",
+                        "--id3v2version",
+                        "3",
                         "--hideprogress",
                     ],
                     be_quiet=True,

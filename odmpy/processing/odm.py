@@ -486,7 +486,7 @@ def process_odm(
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
-            mutagen_audio.save()
+            mutagen_audio.save(v2_version=args.id3v2_version)
 
             audio_lengths_ms.append(int(round(mutagen_audio.info.length * 1000)))
 
@@ -581,7 +581,7 @@ def process_odm(
                         colored(str(gm["text"]), "cyan"),
                         colored(str(part_filename), "blue"),
                     )
-                mutagen_audio.save()
+                mutagen_audio.save(v2_version=args.id3v2_version)
 
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(
@@ -645,7 +645,7 @@ def process_odm(
             always_overwrite=args.overwrite_tags,
             delimiter=args.tag_delimiter,
         )
-        mutagen_audio.save()
+        mutagen_audio.save(v2_version=args.id3v2_version)
 
         if args.add_chapters and (
             args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
@@ -677,7 +677,7 @@ def process_odm(
             if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
                 # Clear existing toc to prevent "There may only be one top-level table of contents.
                 mutagen_audio.pop(Tag.TableOfContents)
-                mutagen_audio.save()
+                mutagen_audio.save(v2_version=args.id3v2_version)
 
             update_chapters(
                 target_filepath=book_filename,

@@ -235,6 +235,14 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         ),
     )
     parser_dl.add_argument(
+        "--id3v2version",
+        dest="id3v2_version",
+        type=int,
+        default=4,
+        choices=[3, 4],
+        help="ID3 v2 version. 3 = v2.3, 4 = v2.4",
+    )
+    parser_dl.add_argument(
         "--opf",
         dest="generate_opf",
         action="store_true",
