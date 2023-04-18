@@ -95,6 +95,7 @@ class OdmpyDlTests(BaseTestCase):
                     mutagen_audio = MP3(book_file)
                     self.assertTrue(mutagen_audio.tags)
                     self.assertEqual(mutagen_audio.tags.version[1], 4)
+                    self.assertEqual(mutagen_audio.tags[Tag.Language].text[0], "eng")
         self.assertTrue(expected_result.book_folder.joinpath("cover.jpg").exists())
 
     @responses.activate

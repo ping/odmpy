@@ -35,6 +35,7 @@ install_requires = [
     "tqdm>=4.63.0",
     "beautifulsoup4>=4.11.0",
     "lxml>=4.9.0",
+    "iso639-lang>=2.1.0",
 ]
 if sys.version_info < (3, 8):
     install_requires.append("typing_extensions")

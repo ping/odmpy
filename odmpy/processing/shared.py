@@ -49,6 +49,7 @@ from mutagen.id3 import (
 from mutagen.mp3 import MP3
 from requests.adapters import HTTPAdapter, Retry
 from termcolor import colored
+from iso639 import Lang  # type: ignore[import]
 
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyFormats
@@ -268,7 +269,11 @@ def write_tags(
     if genres and (always_overwrite or Tag.Genre not in audiofile.tags):
         audiofile.tags.add(TCON(encoding=Encoding.UTF8, text=delimiter.join(genres)))
     if languages and (always_overwrite or Tag.Language not in audiofile):
-        audiofile.tags.add(TLAN(encoding=Encoding.UTF8, text=delimiter.join(languages)))
+        try:
+            tag_langs = [Lang(lang).pt2b for lang in languages]
+        except:  # noqa, pylint: disable=bare-except
+            tag_langs = languages
+        audiofile.tags.add(TLAN(encoding=Encoding.UTF8, text=delimiter.join(tag_langs)))
     if published_date and (always_overwrite or Tag.ReleaseDate not in audiofile):
         audiofile.tags.add(TDRL(encoding=Encoding.UTF8, text=published_date))
     if cover_bytes:

@@ -815,6 +815,7 @@ class OdmpyLibbyTests(BaseTestCase):
         for part_file in part_files:
             mutagen_audio = MP3(part_file, ID3=ID3)
             self.assertEqual(mutagen_audio.tags.version[1], 3)
+            self.assertEqual(mutagen_audio.tags[Tag.Language].text[0], "eng")
             self.assertTrue(mutagen_audio.tags[f"{Tag.TableOfContents}:toc"])
             # check chapters are generated in sequence
             for i, chap_id in enumerate(
