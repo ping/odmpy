@@ -715,7 +715,22 @@ class OdmpyLibbyTests(BaseTestCase):
                 content_type="application/xml",
                 body=b.read(),
             )
-        responses.add_passthru("https://ping.github.io/odmpy/test_data/")
+        odm_test_data_dir = self.test_data_dir.joinpath("audiobook", "odm")
+        with odm_test_data_dir.joinpath("test.license").open(
+            "r", encoding="utf-8"
+        ) as license_file:
+            responses.get(
+                "https://ping.github.io/odmpy/test_data/test.license",
+                content_type="application/xml",
+                body=license_file.read(),
+            )
+        for mp3 in ("book3/01_ceremonies_herrick_cjph_64kb.mp3",):
+            with odm_test_data_dir.joinpath(mp3).open("rb") as m:
+                responses.get(
+                    f"https://ping.github.io/odmpy/test_data/{mp3}",
+                    content_type="audio/mp3",
+                    body=m.read(),
+                )
 
         test_folder = "test"
 
@@ -742,6 +757,10 @@ class OdmpyLibbyTests(BaseTestCase):
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook.mp3").exists()
         )
+        mutagen_audio = MP3(
+            self.test_downloads_dir.joinpath(test_folder, "ebook.mp3"), ID3=ID3
+        )
+        self.assertEqual(mutagen_audio.tags.version[1], 4)
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
         )
@@ -794,6 +813,7 @@ class OdmpyLibbyTests(BaseTestCase):
 
         for part_file in part_files:
             mutagen_audio = MP3(part_file, ID3=ID3)
+            self.assertEqual(mutagen_audio.tags.version[1], 3)
             self.assertTrue(mutagen_audio.tags["CTOC:toc"])
             # check chapters are generated in sequence
             for i, chap_id in enumerate(
