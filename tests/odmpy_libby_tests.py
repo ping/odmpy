@@ -762,6 +762,7 @@ class OdmpyLibbyTests(BaseTestCase):
             self.test_downloads_dir.joinpath(test_folder, "ebook.mp3"), ID3=ID3
         )
         self.assertEqual(audio_file.tags.version[1], 4)
+        self.assertEqual(audio_file.tags[Tag.Language].text[0], "eng")
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
         )

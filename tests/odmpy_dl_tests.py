@@ -144,6 +144,7 @@ class OdmpyDlTests(BaseTestCase):
                         audio_file.tags[Tag.Album].text[0],
                         "Ceremonies For Christmas",
                     )
+                    self.assertEqual(audio_file.tags[Tag.Language].text[0], "eng")
                     self.assertEqual(
                         audio_file.tags[Tag.Artist].text[0], "Robert Herrick"
                     )
