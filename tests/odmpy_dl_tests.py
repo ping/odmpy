@@ -94,6 +94,7 @@ class OdmpyDlTests(BaseTestCase):
                     mutagen_audio = MP3(book_file)
                     self.assertTrue(mutagen_audio.tags)
                     self.assertEqual(mutagen_audio.tags.version[1], 4)
+                    self.assertEqual(mutagen_audio.tags["TLAN"].text[0], "eng")
         self.assertTrue(expected_result.book_folder.joinpath("cover.jpg").exists())
 
     @responses.activate
@@ -141,9 +142,7 @@ class OdmpyDlTests(BaseTestCase):
                     self.assertEqual(
                         mutagen_audio.tags["TALB"].text[0], "Ceremonies For Christmas"
                     )
-                    self.assertEqual(
-                        mutagen_audio.tags["TALB"].text[0], "Ceremonies For Christmas"
-                    )
+                    self.assertEqual(mutagen_audio.tags["TLAN"].text[0], "eng")
                     self.assertEqual(
                         mutagen_audio.tags["TPE1"].text[0], "Robert Herrick"
                     )

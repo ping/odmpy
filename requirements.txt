@@ -6,3 +6,4 @@ tqdm >= 4.63.0
 typing_extensions; python_version < '3.8'
 beautifulsoup4 >= 4.11.0
 lxml >= 4.9.0
+iso639-lang >= 2.1.0

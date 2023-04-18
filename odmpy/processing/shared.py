@@ -30,6 +30,7 @@ import requests
 from eyed3.utils import art  # type: ignore[import]
 from requests.adapters import HTTPAdapter, Retry
 from termcolor import colored
+from iso639 import Lang  # type: ignore[import]
 
 from ..constants import PERFORMER_FID, LANGUAGE_FID
 from ..errors import OdmpyRuntimeError
@@ -225,9 +226,11 @@ def write_tags(
     if genres and (always_overwrite or not audiofile.tag.genre):
         audiofile.tag.genre = delimiter.join(genres)
     if languages and (always_overwrite or not audiofile.tag.getTextFrame(LANGUAGE_FID)):
-        audiofile.tag.setTextFrame(
-            LANGUAGE_FID, delimiter.join([str(lang) for lang in languages])
-        )
+        try:
+            tag_langs = [Lang(lang).pt2b for lang in languages]
+        except:  # noqa, pylint: disable=bare-except
+            tag_langs = languages
+        audiofile.tag.setTextFrame(LANGUAGE_FID, delimiter.join(tag_langs))
     if published_date and (always_overwrite or not audiofile.tag.release_date):
         audiofile.tag.release_date = published_date
     if cover_bytes:
