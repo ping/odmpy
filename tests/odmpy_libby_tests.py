@@ -758,10 +758,10 @@ class OdmpyLibbyTests(BaseTestCase):
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook.mp3").exists()
         )
-        mutagen_audio = MP3(
+        audio_file = MP3(
             self.test_downloads_dir.joinpath(test_folder, "ebook.mp3"), ID3=ID3
         )
-        self.assertEqual(mutagen_audio.tags.version[1], 4)
+        self.assertEqual(audio_file.tags.version[1], 4)
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook.opf").exists()
         )
@@ -813,20 +813,20 @@ class OdmpyLibbyTests(BaseTestCase):
             markers = [toc["title"] for toc in json.load(o)["nav"]["toc"]]
 
         for part_file in part_files:
-            mutagen_audio = MP3(part_file, ID3=ID3)
-            self.assertEqual(mutagen_audio.tags.version[1], 3)
-            self.assertEqual(mutagen_audio.tags[Tag.Language].text[0], "eng")
-            self.assertTrue(mutagen_audio.tags[f"{Tag.TableOfContents}:toc"])
+            audio_file = MP3(part_file, ID3=ID3)
+            self.assertEqual(audio_file.tags.version[1], 3)
+            self.assertEqual(audio_file.tags[Tag.Language].text[0], "eng")
+            self.assertTrue(audio_file.tags[f"{Tag.TableOfContents}:toc"])
             # check chapters are generated in sequence
             for i, chap_id in enumerate(
-                mutagen_audio.tags[f"{Tag.TableOfContents}:toc"].child_element_ids
+                audio_file.tags[f"{Tag.TableOfContents}:toc"].child_element_ids
             ):
                 self.assertEqual(chap_id, f"ch{i:02d}")
-                chapter = mutagen_audio.tags[f"{Tag.Chapter}:{chap_id}"]
+                chapter = audio_file.tags[f"{Tag.Chapter}:{chap_id}"]
                 self.assertEqual(chapter.sub_frames[Tag.Title].text[0], markers[i])
                 if i > 0:
-                    prev_chapter = mutagen_audio.tags[
-                        f'CHAP:{mutagen_audio.tags[f"{Tag.TableOfContents}:toc"].child_element_ids[i - 1]}'
+                    prev_chapter = audio_file.tags[
+                        f'CHAP:{audio_file.tags[f"{Tag.TableOfContents}:toc"].child_element_ids[i - 1]}'
                     ]
                     self.assertGreater(chapter.start_time, prev_chapter.start_time)
                     self.assertEqual(chapter.start_time, prev_chapter.end_time)
@@ -876,9 +876,9 @@ class OdmpyLibbyTests(BaseTestCase):
         ) as o:
             markers = [toc["title"] for toc in json.load(o)["nav"]["toc"]]
 
-        mutagen_audio = MP3(mp3_filepath, ID3=ID3)
-        self.assertTrue(mutagen_audio.tags["CTOC:toc"])
-        chapters = [t for t in mutagen_audio.tags.getall(Tag.Chapter)]
+        audio_file = MP3(mp3_filepath, ID3=ID3)
+        self.assertTrue(audio_file.tags["CTOC:toc"])
+        chapters = [t for t in audio_file.tags.getall(Tag.Chapter)]
         self.assertEqual(len(markers), len(chapters))
 
         for i, chapter in enumerate(chapters):

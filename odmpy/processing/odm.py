@@ -462,13 +462,13 @@ def process_odm(
 
         try:
             # Fill id3 info for mp3 part
-            mutagen_audio = MP3(part_filename, ID3=ID3)
+            audio_file = MP3(part_filename, ID3=ID3)
 
-            if mutagen_audio.info.bitrate_mode == BitrateMode.CBR:
-                audio_bitrate = int(mutagen_audio.info.bitrate / 1000)
+            if audio_file.info.bitrate_mode == BitrateMode.CBR:
+                audio_bitrate = int(audio_file.info.bitrate / 1000)
 
             write_tags(
-                audiofile=mutagen_audio,
+                audiofile=audio_file,
                 title=title,
                 sub_title=sub_title,
                 authors=authors,
@@ -486,19 +486,19 @@ def process_odm(
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
-            mutagen_audio.save(v2_version=args.id3v2_version)
+            audio_file.save(v2_version=args.id3v2_version)
 
-            audio_lengths_ms.append(int(round(mutagen_audio.info.length * 1000)))
+            audio_lengths_ms.append(int(round(audio_file.info.length * 1000)))
 
             # Extract OD chapter info from mp3s for use in merged file
             if (
-                "TXXX:OverDrive MediaMarkers" in mutagen_audio.tags
-                and mutagen_audio.tags["TXXX:OverDrive MediaMarkers"].text
+                "TXXX:OverDrive MediaMarkers" in audio_file.tags
+                and audio_file.tags["TXXX:OverDrive MediaMarkers"].text
             ):
                 frame_text = re.sub(
                     r"\s&\s",
                     " &amp; ",
-                    mutagen_audio.tags["TXXX:OverDrive MediaMarkers"].text[0],
+                    audio_file.tags["TXXX:OverDrive MediaMarkers"].text[0],
                 )
                 try:
                     tree = ET.fromstring(frame_text)
@@ -520,9 +520,7 @@ def process_odm(
             if (
                 args.add_chapters
                 and not args.merge_output
-                and (
-                    args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
-                )
+                and (args.overwrite_tags or Tag.TableOfContents not in audio_file.tags)
             ):
                 # set the chapter marks
                 generated_markers: List[Dict[str, Union[str, int]]] = []
@@ -533,21 +531,21 @@ def process_odm(
                             "text": file_marker[1],
                             "start_time": int(file_marker[2]),
                             "end_time": int(
-                                round(mutagen_audio.info.length * 1000)
+                                round(audio_file.info.length * 1000)
                                 if j == (len(part_markers) - 1)
                                 else part_markers[j + 1][2]
                             ),
                         }
                     )
 
-                if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
+                if args.overwrite_tags and Tag.TableOfContents in audio_file.tags:
                     # Clear existing toc
-                    mutagen_audio.tags.pop(Tag.TableOfContents)
+                    audio_file.tags.pop(Tag.TableOfContents)
 
                 # We can't use update_chapters here because it requires ffmpeg,
                 # and we only specify the ffmpeg requirement for merging
 
-                mutagen_audio.tags.add(
+                audio_file.tags.add(
                     CTOC(
                         element_id="toc",
                         flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
@@ -559,7 +557,7 @@ def process_odm(
                 )
 
                 for gm in generated_markers:
-                    mutagen_audio.tags.add(
+                    audio_file.tags.add(
                         CHAP(
                             element_id=gm["id"],
                             start_time=gm["start_time"],
@@ -581,7 +579,7 @@ def process_odm(
                         colored(str(gm["text"]), "cyan"),
                         colored(str(part_filename), "blue"),
                     )
-                mutagen_audio.save(v2_version=args.id3v2_version)
+                audio_file.save(v2_version=args.id3v2_version)
 
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(
@@ -622,11 +620,11 @@ def process_odm(
             logger=logger,
         )
 
-        mutagen_audio = MP3(book_filename, ID3=ID3)
-        if not mutagen_audio.tags:
-            mutagen_audio.tags = ID3()
+        audio_file = MP3(book_filename, ID3=ID3)
+        if not audio_file.tags:
+            audio_file.tags = ID3()
         write_tags(
-            audiofile=mutagen_audio,
+            audiofile=audio_file,
             title=title,
             sub_title=sub_title,
             authors=authors,
@@ -645,10 +643,10 @@ def process_odm(
             always_overwrite=args.overwrite_tags,
             delimiter=args.tag_delimiter,
         )
-        mutagen_audio.save(v2_version=args.id3v2_version)
+        audio_file.save(v2_version=args.id3v2_version)
 
         if args.add_chapters and (
-            args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
+            args.overwrite_tags or Tag.TableOfContents not in audio_file.tags
         ):
             merged_markers: List[Dict[str, Union[str, int]]] = []
             for i, f in enumerate(file_tracks):
@@ -674,10 +672,10 @@ def process_odm(
                     )
             debug_meta["merged_markers"] = merged_markers
 
-            if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
+            if args.overwrite_tags and Tag.TableOfContents in audio_file.tags:
                 # Clear existing toc to prevent "There may only be one top-level table of contents.
-                mutagen_audio.pop(Tag.TableOfContents)
-                mutagen_audio.save(v2_version=args.id3v2_version)
+                audio_file.pop(Tag.TableOfContents)
+                audio_file.save(v2_version=args.id3v2_version)
 
             update_chapters(
                 target_filepath=book_filename,

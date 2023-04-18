@@ -250,12 +250,12 @@ def process_audiobook_loan(
                 raise OdmpyRuntimeError("Connection Error while downloading part file.")
 
         try:
-            mutagen_audio = MP3(part_filename, ID3=ID3)
-            if mutagen_audio.info.bitrate_mode == BitrateMode.CBR:
-                audio_bitrate = int(mutagen_audio.info.bitrate / 1000)
+            audio_file = MP3(part_filename, ID3=ID3)
+            if audio_file.info.bitrate_mode == BitrateMode.CBR:
+                audio_bitrate = int(audio_file.info.bitrate / 1000)
 
             write_tags(
-                audiofile=mutagen_audio,
+                audiofile=audio_file,
                 title=title,
                 sub_title=sub_title,
                 authors=authors,
@@ -274,25 +274,23 @@ def process_audiobook_loan(
                 always_overwrite=args.overwrite_tags,
                 delimiter=args.tag_delimiter,
             )
-            mutagen_audio.save(v2_version=args.id3v2_version)
+            audio_file.save(v2_version=args.id3v2_version)
 
             if (
                 args.add_chapters
                 and not args.merge_output
-                and (
-                    args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
-                )
+                and (args.overwrite_tags or Tag.TableOfContents not in audio_file.tags)
             ):
-                if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
+                if args.overwrite_tags and Tag.TableOfContents in audio_file.tags:
                     # Clear existing toc
-                    mutagen_audio.pop(Tag.TableOfContents)
+                    audio_file.pop(Tag.TableOfContents)
 
                 chapter_marks = p["chapters"]
 
                 # We can't use update_chapters here because it requires ffmpeg,
                 # and we only specify the ffmpeg requirement for merging
 
-                mutagen_audio.tags.add(
+                audio_file.tags.add(
                     CTOC(
                         element_id="toc",
                         flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
@@ -305,7 +303,7 @@ def process_audiobook_loan(
                     )
                 )
                 for i, m in enumerate(chapter_marks):
-                    mutagen_audio.tags.add(
+                    audio_file.tags.add(
                         CHAP(
                             element_id=f"ch{i:02d}",
                             start_time=round(m.start_second * 1000),
@@ -323,7 +321,7 @@ def process_audiobook_loan(
                         colored(m.title, "cyan"),
                         colored(str(part_filename), "blue"),
                     )
-                mutagen_audio.save(v2_version=args.id3v2_version)
+                audio_file.save(v2_version=args.id3v2_version)
 
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(
@@ -352,9 +350,9 @@ def process_audiobook_loan(
             hide_progress=args.hide_progress,
             logger=logger,
         )
-        mutagen_audio = MP3(book_filename, ID3=ID3)
+        audio_file = MP3(book_filename, ID3=ID3)
         write_tags(
-            audiofile=mutagen_audio,
+            audiofile=audio_file,
             title=title,
             sub_title=sub_title,
             authors=authors,
@@ -373,15 +371,15 @@ def process_audiobook_loan(
             always_overwrite=args.overwrite_tags,
             delimiter=args.tag_delimiter,
         )
-        mutagen_audio.save(v2_version=args.id3v2_version)
+        audio_file.save(v2_version=args.id3v2_version)
 
         if args.add_chapters and (
-            args.overwrite_tags or Tag.TableOfContents not in mutagen_audio.tags
+            args.overwrite_tags or Tag.TableOfContents not in audio_file.tags
         ):
-            if args.overwrite_tags and Tag.TableOfContents in mutagen_audio.tags:
+            if args.overwrite_tags and Tag.TableOfContents in audio_file.tags:
                 # Clear existing toc
-                mutagen_audio.pop(Tag.TableOfContents)
-                mutagen_audio.save(v2_version=args.id3v2_version)
+                audio_file.pop(Tag.TableOfContents)
+                audio_file.save(v2_version=args.id3v2_version)
 
             merged_markers = merge_toc(parsed_toc)
             debug_meta["merged_markers"] = [

@@ -92,10 +92,10 @@ class OdmpyDlTests(BaseTestCase):
                         expected_result.mp3_name_format.format(i)
                     )
                     self.assertTrue(book_file.exists())
-                    mutagen_audio = MP3(book_file)
-                    self.assertTrue(mutagen_audio.tags)
-                    self.assertEqual(mutagen_audio.tags.version[1], 4)
-                    self.assertEqual(mutagen_audio.tags[Tag.Language].text[0], "eng")
+                    audio_file = MP3(book_file)
+                    self.assertTrue(audio_file.tags)
+                    self.assertEqual(audio_file.tags.version[1], 4)
+                    self.assertEqual(audio_file.tags[Tag.Language].text[0], "eng")
         self.assertTrue(expected_result.book_folder.joinpath("cover.jpg").exists())
 
     @responses.activate
@@ -132,40 +132,36 @@ class OdmpyDlTests(BaseTestCase):
                     book_file = expected_result.book_folder.joinpath(
                         expected_result.mp3_name_format.format(i)
                     )
-                    mutagen_audio = MP3(book_file)
-                    self.assertTrue(mutagen_audio.tags)
-                    self.assertEqual(mutagen_audio.tags.version[1], 3)
+                    audio_file = MP3(book_file)
+                    self.assertTrue(audio_file.tags)
+                    self.assertEqual(audio_file.tags.version[1], 3)
                     self.assertTrue(
-                        mutagen_audio.tags[Tag.Title]
+                        audio_file.tags[Tag.Title]
                         .text[0]
                         .startswith(part_title_formats[test_odm_file].format(i))
                     )
                     self.assertEqual(
-                        mutagen_audio.tags[Tag.Album].text[0],
+                        audio_file.tags[Tag.Album].text[0],
                         "Ceremonies For Christmas",
                     )
                     self.assertEqual(
-                        mutagen_audio.tags[Tag.Artist].text[0], "Robert Herrick"
+                        audio_file.tags[Tag.Artist].text[0], "Robert Herrick"
                     )
                     self.assertEqual(
-                        mutagen_audio.tags[Tag.AlbumArtist].text[0],
+                        audio_file.tags[Tag.AlbumArtist].text[0],
                         album_artists[test_odm_file],
                     )
-                    self.assertEqual(mutagen_audio.tags[Tag.TrackNumber], str(i))
+                    self.assertEqual(audio_file.tags[Tag.TrackNumber], str(i))
+                    self.assertEqual(audio_file.tags[Tag.Publisher].text[0], "Librivox")
                     self.assertEqual(
-                        mutagen_audio.tags[Tag.Publisher].text[0], "Librivox"
-                    )
-                    self.assertEqual(
-                        mutagen_audio.tags[Tag.Conductor].text[0],
+                        audio_file.tags[Tag.Conductor].text[0],
                         "LibriVox Volunteers",
                     )
-                    self.assertTrue(mutagen_audio.tags[f"{Tag.TableOfContents}:toc"])
+                    self.assertTrue(audio_file.tags[f"{Tag.TableOfContents}:toc"])
                     for j, chap_id in enumerate(
-                        mutagen_audio.tags[
-                            f"{Tag.TableOfContents}:toc"
-                        ].child_element_ids
+                        audio_file.tags[f"{Tag.TableOfContents}:toc"].child_element_ids
                     ):
-                        chap_tag = mutagen_audio.tags[f"{Tag.Chapter}:{chap_id}"]
+                        chap_tag = audio_file.tags[f"{Tag.Chapter}:{chap_id}"]
                         self.assertTrue(chap_tag.sub_frames)
                         self.assertEqual(
                             chap_tag.sub_frames[Tag.Title].text[0],
