@@ -748,18 +748,34 @@ class OdmpyLibbyTests(BaseTestCase):
             "1",
             "--opf",
             "--merge",
+            "--chapters",
             "--hideprogress",
             "--writejson",
         ]
         if self.is_verbose:
             run_command.insert(0, "--verbose")
         run(run_command, be_quiet=not self.is_verbose)
-        self.assertTrue(
-            self.test_downloads_dir.joinpath(test_folder, "ebook.mp3").exists()
-        )
-        audio_file = MP3(
-            self.test_downloads_dir.joinpath(test_folder, "ebook.mp3"), ID3=ID3
-        )
+
+        mp3_filepath = self.test_downloads_dir.joinpath(test_folder, "ebook.mp3")
+        self.assertTrue(mp3_filepath.exists())
+        audio_file = MP3(mp3_filepath, ID3=ID3)
+        self.assertEqual(audio_file.tags["TIT2"].text[0], "Ceremonies For Christmas")
+        self.assertEqual(audio_file.tags["TALB"].text[0], "Ceremonies For Christmas")
+        self.assertEqual(audio_file.tags["TPE1"].text[0], "Robert Herrick")
+        self.assertEqual(audio_file.tags["TPE2"].text[0], "Robert Herrick")
+        self.assertEqual(audio_file.tags["TPE3"].text[0], "LibriVox Volunteers")
+        self.assertEqual(audio_file.tags["TPUB"].text[0], "Librivox")
+        self.assertTrue(audio_file.tags["CTOC:toc"])
+        chapters = [t for t in audio_file.tags.getall("CHAP")]
+
+        for i, chapter in enumerate(chapters):
+            # check tags are written in time sequence for merged files
+            # because ffmpeg conversion from mp3 to m4b bugs out when
+            # CHAPs are not written out in time sequence
+            # https://github.com/quodlibet/mutagen/issues/506
+            if i > 0:
+                self.assertGreater(chapter.start_time, chapters[i - 1].start_time)
+
         self.assertEqual(audio_file.tags.version[1], 4)
         self.assertEqual(audio_file.tags["TLAN"].text[0], "eng")
         self.assertTrue(
@@ -806,14 +822,35 @@ class OdmpyLibbyTests(BaseTestCase):
             self.test_downloads_dir.joinpath(test_folder, "test-audiobook.opf").exists()
         )
 
+        with self.test_data_dir.joinpath("audiobook", "sync.json").open(
+            "r", encoding="utf-8"
+        ) as f:
+            loan = json.load(f)["loans"][0]
+
         # book only has 1 part
         with self.test_data_dir.joinpath("audiobook", "openbook.json").open(
             "r", encoding="utf-8"
         ) as o:
-            markers = [toc["title"] for toc in json.load(o)["nav"]["toc"]]
+            openbook = json.load(o)
+            markers = [toc["title"] for toc in openbook["nav"]["toc"]]
 
         for part_file in part_files:
             audio_file = MP3(part_file, ID3=ID3)
+            self.assertEqual(audio_file.tags["TIT2"].text[0], loan["title"])
+            self.assertEqual(audio_file.tags["TALB"].text[0], loan["title"])
+            self.assertEqual(audio_file.tags["TPE1"].text[0], loan["firstCreatorName"])
+            self.assertEqual(audio_file.tags["TPE2"].text[0], loan["firstCreatorName"])
+            self.assertEqual(
+                audio_file.tags["TPE3"].text[0],
+                [c for c in openbook["creator"] if c["role"] == "narrator"][0]["name"],
+            )
+            self.assertEqual(
+                audio_file.tags["TPUB"].text[0], loan["publisherAccount"]["name"]
+            )
+            self.assertEqual(
+                audio_file.tags["TXXX:ISBN"].text[0],
+                [f for f in loan["formats"] if f.get("isbn")][0]["isbn"],
+            )
             self.assertEqual(audio_file.tags.version[1], 3)
             self.assertEqual(audio_file.tags["TLAN"].text[0], "eng")
             self.assertTrue(audio_file.tags["CTOC:toc"])
@@ -868,13 +905,34 @@ class OdmpyLibbyTests(BaseTestCase):
         mp3_filepath = self.test_downloads_dir.joinpath(test_folder, "ebook.mp3")
         self.assertTrue(mp3_filepath.exists())
 
+        with self.test_data_dir.joinpath("audiobook", "sync.json").open(
+            "r", encoding="utf-8"
+        ) as f:
+            loan = json.load(f)["loans"][0]
+
         # book only has 1 part
         with self.test_data_dir.joinpath("audiobook", "openbook.json").open(
             "r", encoding="utf-8"
         ) as o:
-            markers = [toc["title"] for toc in json.load(o)["nav"]["toc"]]
+            openbook = json.load(o)
+            markers = [toc["title"] for toc in openbook["nav"]["toc"]]
 
         audio_file = MP3(mp3_filepath, ID3=ID3)
+        self.assertEqual(audio_file.tags["TIT2"].text[0], loan["title"])
+        self.assertEqual(audio_file.tags["TALB"].text[0], loan["title"])
+        self.assertEqual(audio_file.tags["TPE1"].text[0], loan["firstCreatorName"])
+        self.assertEqual(audio_file.tags["TPE2"].text[0], loan["firstCreatorName"])
+        self.assertEqual(
+            audio_file.tags["TPE3"].text[0],
+            [c for c in openbook["creator"] if c["role"] == "narrator"][0]["name"],
+        )
+        self.assertEqual(
+            audio_file.tags["TPUB"].text[0], loan["publisherAccount"]["name"]
+        )
+        self.assertEqual(
+            audio_file.tags["TXXX:ISBN"].text[0],
+            [f for f in loan["formats"] if f.get("isbn")][0]["isbn"],
+        )
         self.assertTrue(audio_file.tags["CTOC:toc"])
         chapters = [t for t in audio_file.tags.getall("CHAP")]
         self.assertEqual(len(markers), len(chapters))
