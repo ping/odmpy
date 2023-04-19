@@ -183,6 +183,7 @@ class Tag(str, Enum):
     ReleaseDate = "TDRL"
     TableOfContents = "CTOC"
     Chapter = "CHAP"
+    UserDefinedText = "TXXX"
 
     def __str__(self):
         return str(self.value)

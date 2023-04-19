@@ -6,6 +6,14 @@
   },
   "creator": [
     {
+      "name": "Test Author",
+      "role": "author"
+    },
+    {
+      "name": "Test Narrator",
+      "role": "narrator"
+    },
+    {
       "name": "Test Publisher",
       "role": "pbl"
     }
