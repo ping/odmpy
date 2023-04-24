@@ -109,7 +109,7 @@ def generate_names(
             "Author": ", ".join(authors),
             "Series": series or "",
             "Edition": edition,
-            "ID": sanitize_path(title_id),
+            "ID": title_id,
         }
     )
     # declare book folder/file names here together, so that we can catch problems from too long names
@@ -157,7 +157,7 @@ def generate_names(
                 "Author": authors[0] if authors else "",
                 "Series": series or "",
                 "Edition": edition,
-                "ID": sanitize_path(title_id),
+                "ID": title_id,
             }
         )
         book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
