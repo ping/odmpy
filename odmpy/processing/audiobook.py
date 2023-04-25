@@ -249,85 +249,94 @@ def process_audiobook_loan(
                 logger.error(f"ConnectionError: {str(ce)}")
                 raise OdmpyRuntimeError("Connection Error while downloading part file.")
 
-        try:
-            audio_file = MP3(part_filename, ID3=ID3)
-            if audio_file.info.bitrate_mode == BitrateMode.CBR:
-                audio_bitrate = int(audio_file.info.bitrate / 1000)
+            # Save id3 info only on new download, ref #42
+            # This also makes handling of part files consistent with merged files
+            try:
+                audio_file = MP3(part_filename, ID3=ID3)
+                if audio_file.info.bitrate_mode == BitrateMode.CBR:
+                    audio_bitrate = int(audio_file.info.bitrate / 1000)
 
-            write_tags(
-                audiofile=audio_file,
-                title=title,
-                sub_title=sub_title,
-                authors=authors,
-                narrators=narrators,
-                publisher=publisher,
-                description=description,
-                cover_bytes=cover_bytes,
-                genres=subjects,
-                languages=languages,
-                published_date=publish_date,
-                series=series,
-                part_number=part_number,
-                total_parts=len(download_parts),
-                overdrive_id=overdrive_media_id,
-                isbn=extract_isbn(loan.get("formats", []), [LibbyFormats.AudioBookMP3]),
-                always_overwrite=args.overwrite_tags,
-                delimiter=args.tag_delimiter,
-            )
-            audio_file.save(v2_version=args.id3v2_version)
-
-            if (
-                args.add_chapters
-                and not args.merge_output
-                and (args.overwrite_tags or Tag.TableOfContents not in audio_file.tags)
-            ):
-                if args.overwrite_tags and Tag.TableOfContents in audio_file.tags:
-                    # Clear existing toc
-                    audio_file.pop(Tag.TableOfContents)
-
-                chapter_marks = p["chapters"]
-
-                # We can't use update_chapters here because it requires ffmpeg,
-                # and we only specify the ffmpeg requirement for merging
-
-                audio_file.tags.add(
-                    CTOC(
-                        element_id="toc",
-                        flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
-                        child_element_ids=[
-                            f"ch{i:02d}" for i, _ in enumerate(chapter_marks)
-                        ],
-                        sub_frames=[
-                            TIT2(encoding=Encoding.UTF8, text=["Table of Contents"])
-                        ],
-                    )
+                write_tags(
+                    audiofile=audio_file,
+                    title=title,
+                    sub_title=sub_title,
+                    authors=authors,
+                    narrators=narrators,
+                    publisher=publisher,
+                    description=description,
+                    cover_bytes=cover_bytes,
+                    genres=subjects,
+                    languages=languages,
+                    published_date=publish_date,
+                    series=series,
+                    part_number=part_number,
+                    total_parts=len(download_parts),
+                    overdrive_id=overdrive_media_id,
+                    isbn=extract_isbn(
+                        loan.get("formats", []), [LibbyFormats.AudioBookMP3]
+                    ),
+                    always_overwrite=args.overwrite_tags,
+                    delimiter=args.tag_delimiter,
                 )
-                for i, m in enumerate(chapter_marks):
-                    audio_file.tags.add(
-                        CHAP(
-                            element_id=f"ch{i:02d}",
-                            start_time=round(m.start_second * 1000),
-                            end_time=round(m.end_second * 1000),
-                            sub_frames=[TIT2(encoding=Encoding.UTF8, text=[m.title])],
-                        )
-                    )
-                    start_time = datetime.timedelta(seconds=m.start_second)
-                    end_time = datetime.timedelta(seconds=m.end_second)
-                    logger.debug(
-                        'Added chap tag => %s: %s-%s "%s" to "%s"',
-                        colored(f"ch{i:02d}", "cyan"),
-                        start_time,
-                        end_time,
-                        colored(m.title, "cyan"),
-                        colored(str(part_filename), "blue"),
-                    )
                 audio_file.save(v2_version=args.id3v2_version)
 
-        except Exception as e:  # pylint: disable=broad-except
-            logger.warning(
-                "Error saving ID3: %s", colored(str(e), "red", attrs=["bold"])
-            )
-            keep_cover = True
+                if (
+                    args.add_chapters
+                    and not args.merge_output
+                    and (
+                        args.overwrite_tags
+                        or Tag.TableOfContents not in audio_file.tags
+                    )
+                ):
+                    if args.overwrite_tags and Tag.TableOfContents in audio_file.tags:
+                        # Clear existing toc
+                        audio_file.pop(Tag.TableOfContents)
+
+                    chapter_marks = p["chapters"]
+
+                    # We can't use update_chapters here because it requires ffmpeg,
+                    # and we only specify the ffmpeg requirement for merging
+
+                    audio_file.tags.add(
+                        CTOC(
+                            element_id="toc",
+                            flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
+                            child_element_ids=[
+                                f"ch{i:02d}" for i, _ in enumerate(chapter_marks)
+                            ],
+                            sub_frames=[
+                                TIT2(encoding=Encoding.UTF8, text=["Table of Contents"])
+                            ],
+                        )
+                    )
+                    for i, m in enumerate(chapter_marks):
+                        audio_file.tags.add(
+                            CHAP(
+                                element_id=f"ch{i:02d}",
+                                start_time=round(m.start_second * 1000),
+                                end_time=round(m.end_second * 1000),
+                                sub_frames=[
+                                    TIT2(encoding=Encoding.UTF8, text=[m.title])
+                                ],
+                            )
+                        )
+                        start_time = datetime.timedelta(seconds=m.start_second)
+                        end_time = datetime.timedelta(seconds=m.end_second)
+                        logger.debug(
+                            'Added chap tag => %s: %s-%s "%s" to "%s"',
+                            colored(f"ch{i:02d}", "cyan"),
+                            start_time,
+                            end_time,
+                            colored(m.title, "cyan"),
+                            colored(str(part_filename), "blue"),
+                        )
+                    audio_file.save(v2_version=args.id3v2_version)
+
+            except Exception as e:  # pylint: disable=broad-except
+                logger.warning(
+                    "Error saving ID3: %s", colored(str(e), "red", attrs=["bold"])
+                )
+                keep_cover = True
 
         logger.info('Saved "%s"', colored(str(part_filename), "magenta"))
         file_tracks.append({"file": part_filename})
