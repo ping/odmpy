@@ -251,85 +251,90 @@ def process_audiobook_loan(
                 logger.error(f"ConnectionError: {str(ce)}")
                 raise OdmpyRuntimeError("Connection Error while downloading part file.")
 
-        try:
-            # Fill id3 info for mp3 part
-            audiofile = eyed3.load(part_filename)
-            variable_bitrate, audio_bitrate = audiofile.info.bit_rate
-            if variable_bitrate:
-                # don't use vbr
-                audio_bitrate = 0
-            write_tags(
-                audiofile=audiofile,
-                title=title,
-                sub_title=sub_title,
-                authors=authors,
-                narrators=narrators,
-                publisher=publisher,
-                description=description,
-                cover_bytes=cover_bytes,
-                genres=subjects,
-                languages=languages,
-                published_date=publish_date,
-                series=series,
-                part_number=part_number,
-                total_parts=len(download_parts),
-                overdrive_id=overdrive_media_id,
-                isbn=extract_isbn(loan.get("formats", []), [LibbyFormats.AudioBookMP3]),
-                always_overwrite=args.overwrite_tags,
-                delimiter=args.tag_delimiter,
-            )
-            audiofile.tag.save(version=id3v2_version)
-
-            if (
-                args.add_chapters
-                and not args.merge_output
-                and (args.overwrite_tags or not audiofile.tag.table_of_contents)
-            ):
-                if args.overwrite_tags and audiofile.tag.table_of_contents:
-                    # Clear existing toc to prevent "There may only be one top-level table of contents.
-                    # Toc 'b'toc'' is current top-level." error
-                    for f in list(audiofile.tag.table_of_contents):
-                        audiofile.tag.table_of_contents.remove(f.element_id)  # type: ignore[attr-defined]
-
-                toc = audiofile.tag.table_of_contents.set(
-                    "toc".encode("ascii"),
-                    toplevel=True,
-                    ordered=True,
-                    child_ids=[],
-                    description="Table of Contents",
+            # Save id3 info only on new download, ref #42
+            # This also makes handling of part files consistent with merged files
+            try:
+                # Fill id3 info for mp3 part
+                audiofile = eyed3.load(part_filename)
+                variable_bitrate, audio_bitrate = audiofile.info.bit_rate
+                if variable_bitrate:
+                    # don't use vbr
+                    audio_bitrate = 0
+                write_tags(
+                    audiofile=audiofile,
+                    title=title,
+                    sub_title=sub_title,
+                    authors=authors,
+                    narrators=narrators,
+                    publisher=publisher,
+                    description=description,
+                    cover_bytes=cover_bytes,
+                    genres=subjects,
+                    languages=languages,
+                    published_date=publish_date,
+                    series=series,
+                    part_number=part_number,
+                    total_parts=len(download_parts),
+                    overdrive_id=overdrive_media_id,
+                    isbn=extract_isbn(
+                        loan.get("formats", []), [LibbyFormats.AudioBookMP3]
+                    ),
+                    always_overwrite=args.overwrite_tags,
+                    delimiter=args.tag_delimiter,
                 )
-                chapter_marks = p["chapters"]
-                for i, m in enumerate(chapter_marks):
-                    title_frameset = eyed3.id3.frames.FrameSet()
-                    title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, m.title)
-                    chap = audiofile.tag.chapters.set(
-                        f"ch{i:02d}".encode("ascii"),
-                        times=(
-                            round(m.start_second * 1000),
-                            round(m.end_second * 1000),
-                        ),
-                        sub_frames=title_frameset,
-                    )
-                    toc.child_ids.append(chap.element_id)
-                    start_time = datetime.timedelta(seconds=m.start_second)
-                    end_time = datetime.timedelta(seconds=m.end_second)
-                    logger.debug(
-                        'Added chap tag => %s: %s-%s "%s" to "%s"',
-                        colored(f"ch{i:02d}", "cyan"),
-                        start_time,
-                        end_time,
-                        colored(m.title, "cyan"),
-                        colored(str(part_filename), "blue"),
-                    )
                 audiofile.tag.save(version=id3v2_version)
 
-        except Exception as e:  # pylint: disable=broad-except
-            logger.warning(
-                "Error saving ID3: %s", colored(str(e), "red", attrs=["bold"])
-            )
-            keep_cover = True
+                if (
+                    args.add_chapters
+                    and not args.merge_output
+                    and (args.overwrite_tags or not audiofile.tag.table_of_contents)
+                ):
+                    if args.overwrite_tags and audiofile.tag.table_of_contents:
+                        # Clear existing toc to prevent "There may only be one top-level table of contents.
+                        # Toc 'b'toc'' is current top-level." error
+                        for f in list(audiofile.tag.table_of_contents):
+                            audiofile.tag.table_of_contents.remove(f.element_id)  # type: ignore[attr-defined]
 
-        logger.info('Saved "%s"', colored(str(part_filename), "magenta"))
+                    toc = audiofile.tag.table_of_contents.set(
+                        "toc".encode("ascii"),
+                        toplevel=True,
+                        ordered=True,
+                        child_ids=[],
+                        description="Table of Contents",
+                    )
+                    chapter_marks = p["chapters"]
+                    for i, m in enumerate(chapter_marks):
+                        title_frameset = eyed3.id3.frames.FrameSet()
+                        title_frameset.setTextFrame(eyed3.id3.frames.TITLE_FID, m.title)
+                        chap = audiofile.tag.chapters.set(
+                            f"ch{i:02d}".encode("ascii"),
+                            times=(
+                                round(m.start_second * 1000),
+                                round(m.end_second * 1000),
+                            ),
+                            sub_frames=title_frameset,
+                        )
+                        toc.child_ids.append(chap.element_id)
+                        start_time = datetime.timedelta(seconds=m.start_second)
+                        end_time = datetime.timedelta(seconds=m.end_second)
+                        logger.debug(
+                            'Added chap tag => %s: %s-%s "%s" to "%s"',
+                            colored(f"ch{i:02d}", "cyan"),
+                            start_time,
+                            end_time,
+                            colored(m.title, "cyan"),
+                            colored(str(part_filename), "blue"),
+                        )
+                    audiofile.tag.save(version=id3v2_version)
+
+            except Exception as e:  # pylint: disable=broad-except
+                logger.warning(
+                    "Error saving ID3: %s", colored(str(e), "red", attrs=["bold"])
+                )
+                keep_cover = True
+
+            logger.info('Saved "%s"', colored(str(part_filename), "magenta"))
+
         file_tracks.append({"file": part_filename})
 
     debug_meta["file_tracks"] = [{"file": str(ft["file"])} for ft in file_tracks]
