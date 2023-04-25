@@ -1,4 +1,6 @@
 import json
+import os
+import time
 import unittest
 from datetime import datetime
 from http import HTTPStatus
@@ -1367,3 +1369,116 @@ class OdmpyLibbyTests(BaseTestCase):
         self.assertTrue(
             self.test_downloads_dir.joinpath(test_folder, "ebook_9999999.acsm").exists()
         )
+
+    @responses.activate
+    def test_mock_libby_issue_42_odm(self):
+        settings_folder = self._generate_fake_settings()
+        self._setup_audiobook_direct_responses()
+        with self.test_data_dir.joinpath("audiobook", "book.odm").open(
+            "r", encoding="utf-8"
+        ) as b:
+            responses.get(
+                "https://sentry-read.svc.overdrive.com/card/123456789/loan/9999999/fulfill/audiobook-mp3",
+                content_type="application/xml",
+                body=b.read(),
+            )
+        odm_test_data_dir = self.test_data_dir.joinpath("audiobook", "odm")
+        with odm_test_data_dir.joinpath("test.license").open(
+            "r", encoding="utf-8"
+        ) as license_file:
+            responses.get(
+                "https://ping.github.io/odmpy/test_data/test.license",
+                content_type="application/xml",
+                body=license_file.read(),
+            )
+        for mp3 in ("book3/01_ceremonies_herrick_cjph_64kb.mp3",):
+            with odm_test_data_dir.joinpath(mp3).open("rb") as m:
+                responses.get(
+                    f"https://ping.github.io/odmpy/test_data/{mp3}",
+                    content_type="audio/mp3",
+                    body=m.read(),
+                )
+
+        test_folder = "test"
+
+        run_command = [
+            "libby",
+            "--settings",
+            str(settings_folder),
+            "--downloaddir",
+            str(self.test_downloads_dir),
+            "--bookfolderformat",
+            test_folder,
+            "--bookfileformat",
+            "ebook",
+            "--latest",
+            "10",
+            "--hideprogress",
+        ]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+        part_files = self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
+
+        run1_modfified_time = 0
+        for part in part_files:
+            run1_modfified_time = os.path.getmtime(part)
+        self.assertTrue(run1_modfified_time)
+
+        # delay before second run to ensure that some time has elapsed
+        time.sleep(1.5)
+        run(run_command, be_quiet=not self.is_verbose)
+
+        part_files = self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
+
+        run2_modfified_time = 0
+        for part in part_files:
+            run2_modfified_time = os.path.getmtime(part)
+        self.assertTrue(run2_modfified_time)
+
+        self.assertEqual(run1_modfified_time, run2_modfified_time)
+
+    @responses.activate
+    def test_mock_libby_issue_42_direct(self):
+        settings_folder = self._generate_fake_settings()
+        self._setup_audiobook_direct_responses()
+
+        test_folder = "test"
+
+        run_command = [
+            "libby",
+            "--settings",
+            str(settings_folder),
+            "--downloaddir",
+            str(self.test_downloads_dir),
+            "--bookfolderformat",
+            test_folder,
+            "--bookfileformat",
+            "ebook",
+            "--direct",
+            "--latest",
+            "10",
+            "--hideprogress",
+        ]
+        if self.is_verbose:
+            run_command.insert(0, "--verbose")
+        run(run_command, be_quiet=not self.is_verbose)
+        part_files = self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
+
+        run1_modfified_time = 0
+        for part in part_files:
+            run1_modfified_time = os.path.getmtime(part)
+        self.assertTrue(run1_modfified_time)
+
+        # delay before second run to ensure that some time has elapsed
+        time.sleep(1.5)
+        run(run_command, be_quiet=not self.is_verbose)
+
+        part_files = self.test_downloads_dir.joinpath(test_folder).glob("*part-*.mp3")
+
+        run2_modfified_time = 0
+        for part in part_files:
+            run2_modfified_time = os.path.getmtime(part)
+        self.assertTrue(run2_modfified_time)
+
+        self.assertEqual(run1_modfified_time, run2_modfified_time)

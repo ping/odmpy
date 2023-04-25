@@ -460,134 +460,143 @@ def process_odm(
                 logger.error(f"ConnectionError: {str(ce)}")
                 raise OdmpyRuntimeError("Connection Error while downloading part file.")
 
-        try:
-            # Fill id3 info for mp3 part
-            audio_file = MP3(part_filename, ID3=ID3)
+            # Save id3 info only on new download, ref #42
+            # This also makes handling of part files consistent with merged files
+            try:
+                # Fill id3 info for mp3 part
+                audio_file = MP3(part_filename, ID3=ID3)
 
-            if audio_file.info.bitrate_mode == BitrateMode.CBR:
-                audio_bitrate = int(audio_file.info.bitrate / 1000)
+                if audio_file.info.bitrate_mode == BitrateMode.CBR:
+                    audio_bitrate = int(audio_file.info.bitrate / 1000)
 
-            write_tags(
-                audiofile=audio_file,
-                title=title,
-                sub_title=sub_title,
-                authors=authors,
-                narrators=narrators,
-                publisher=publisher,
-                description=description,
-                cover_bytes=cover_bytes,
-                genres=subjects,
-                languages=languages,
-                published_date=None,  # odm does not contain date info
-                series=series,
-                part_number=part_number,
-                total_parts=len(download_parts),
-                overdrive_id=overdrive_media_id,
-                always_overwrite=args.overwrite_tags,
-                delimiter=args.tag_delimiter,
-            )
-            audio_file.save(v2_version=args.id3v2_version)
-
-            audio_lengths_ms.append(int(round(audio_file.info.length * 1000)))
-
-            # Extract OD chapter info from mp3s for use in merged file
-            if (
-                "TXXX:OverDrive MediaMarkers" in audio_file.tags
-                and audio_file.tags["TXXX:OverDrive MediaMarkers"].text
-            ):
-                frame_text = re.sub(
-                    r"\s&\s",
-                    " &amp; ",
-                    audio_file.tags["TXXX:OverDrive MediaMarkers"].text[0],
+                write_tags(
+                    audiofile=audio_file,
+                    title=title,
+                    sub_title=sub_title,
+                    authors=authors,
+                    narrators=narrators,
+                    publisher=publisher,
+                    description=description,
+                    cover_bytes=cover_bytes,
+                    genres=subjects,
+                    languages=languages,
+                    published_date=None,  # odm does not contain date info
+                    series=series,
+                    part_number=part_number,
+                    total_parts=len(download_parts),
+                    overdrive_id=overdrive_media_id,
+                    always_overwrite=args.overwrite_tags,
+                    delimiter=args.tag_delimiter,
                 )
-                try:
-                    tree = ET.fromstring(frame_text)
-                except UnicodeEncodeError:
-                    tree = ET.fromstring(
-                        frame_text.encode("ascii", "ignore").decode("ascii")
+                audio_file.save(v2_version=args.id3v2_version)
+
+                audio_lengths_ms.append(int(round(audio_file.info.length * 1000)))
+
+                # Extract OD chapter info from mp3s for use in merged file
+                if (
+                    "TXXX:OverDrive MediaMarkers" in audio_file.tags
+                    and audio_file.tags["TXXX:OverDrive MediaMarkers"].text
+                ):
+                    frame_text = re.sub(
+                        r"\s&\s",
+                        " &amp; ",
+                        audio_file.tags["TXXX:OverDrive MediaMarkers"].text[0],
                     )
-                except ET.ParseError:
-                    tree = ET.fromstring(_patch_for_parse_error(frame_text))
-                for marker in tree.iter("Marker"):  # type: ET.Element
-                    marker_name = get_element_text(marker.find("Name")).strip()
-                    marker_timestamp = get_element_text(marker.find("Time"))
+                    try:
+                        tree = ET.fromstring(frame_text)
+                    except UnicodeEncodeError:
+                        tree = ET.fromstring(
+                            frame_text.encode("ascii", "ignore").decode("ascii")
+                        )
+                    except ET.ParseError:
+                        tree = ET.fromstring(_patch_for_parse_error(frame_text))
+                    for marker in tree.iter("Marker"):  # type: ET.Element
+                        marker_name = get_element_text(marker.find("Name")).strip()
+                        marker_timestamp = get_element_text(marker.find("Time"))
 
-                    # 2 timestamp formats found ("%M:%S.%f", "%H:%M:%S.%f")
-                    ts_mark = parse_duration_to_milliseconds(marker_timestamp)
-                    track_count += 1
-                    part_markers.append((f"ch{track_count:02d}", marker_name, ts_mark))
+                        # 2 timestamp formats found ("%M:%S.%f", "%H:%M:%S.%f")
+                        ts_mark = parse_duration_to_milliseconds(marker_timestamp)
+                        track_count += 1
+                        part_markers.append(
+                            (f"ch{track_count:02d}", marker_name, ts_mark)
+                        )
 
-            if (
-                args.add_chapters
-                and not args.merge_output
-                and (args.overwrite_tags or Tag.TableOfContents not in audio_file.tags)
-            ):
-                # set the chapter marks
-                generated_markers: List[Dict[str, Union[str, int]]] = []
-                for j, file_marker in enumerate(part_markers):
-                    generated_markers.append(
-                        {
-                            "id": file_marker[0],
-                            "text": file_marker[1],
-                            "start_time": int(file_marker[2]),
-                            "end_time": int(
-                                round(audio_file.info.length * 1000)
-                                if j == (len(part_markers) - 1)
-                                else part_markers[j + 1][2]
-                            ),
-                        }
+                if (
+                    args.add_chapters
+                    and not args.merge_output
+                    and (
+                        args.overwrite_tags
+                        or Tag.TableOfContents not in audio_file.tags
                     )
+                ):
+                    # set the chapter marks
+                    generated_markers: List[Dict[str, Union[str, int]]] = []
+                    for j, file_marker in enumerate(part_markers):
+                        generated_markers.append(
+                            {
+                                "id": file_marker[0],
+                                "text": file_marker[1],
+                                "start_time": int(file_marker[2]),
+                                "end_time": int(
+                                    round(audio_file.info.length * 1000)
+                                    if j == (len(part_markers) - 1)
+                                    else part_markers[j + 1][2]
+                                ),
+                            }
+                        )
 
-                if args.overwrite_tags and Tag.TableOfContents in audio_file.tags:
-                    # Clear existing toc
-                    audio_file.tags.pop(Tag.TableOfContents)
+                    if args.overwrite_tags and Tag.TableOfContents in audio_file.tags:
+                        # Clear existing toc
+                        audio_file.tags.pop(Tag.TableOfContents)
 
-                # We can't use update_chapters here because it requires ffmpeg,
-                # and we only specify the ffmpeg requirement for merging
+                    # We can't use update_chapters here because it requires ffmpeg,
+                    # and we only specify the ffmpeg requirement for merging
 
-                audio_file.tags.add(
-                    CTOC(
-                        element_id="toc",
-                        flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
-                        child_element_ids=[m["id"] for m in generated_markers],
-                        sub_frames=[
-                            TIT2(encoding=Encoding.UTF8, text=["Table of Contents"])
-                        ],
-                    )
-                )
-
-                for gm in generated_markers:
                     audio_file.tags.add(
-                        CHAP(
-                            element_id=gm["id"],
-                            start_time=gm["start_time"],
-                            end_time=gm["end_time"],
+                        CTOC(
+                            element_id="toc",
+                            flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
+                            child_element_ids=[m["id"] for m in generated_markers],
                             sub_frames=[
-                                TIT2(encoding=Encoding.UTF8, text=[gm["text"]])
+                                TIT2(encoding=Encoding.UTF8, text=["Table of Contents"])
                             ],
                         )
                     )
-                    start_time = datetime.timedelta(
-                        milliseconds=float(gm["start_time"])
-                    )
-                    end_time = datetime.timedelta(milliseconds=float(gm["end_time"]))
-                    logger.debug(
-                        'Added chap tag => %s: %s-%s "%s" to "%s"',
-                        colored(str(gm["id"]), "cyan"),
-                        start_time,
-                        end_time,
-                        colored(str(gm["text"]), "cyan"),
-                        colored(str(part_filename), "blue"),
-                    )
-                audio_file.save(v2_version=args.id3v2_version)
 
-        except Exception as e:  # pylint: disable=broad-except
-            logger.warning(
-                "Error saving ID3: %s", colored(str(e), "red", attrs=["bold"])
-            )
-            keep_cover = True
+                    for gm in generated_markers:
+                        audio_file.tags.add(
+                            CHAP(
+                                element_id=gm["id"],
+                                start_time=gm["start_time"],
+                                end_time=gm["end_time"],
+                                sub_frames=[
+                                    TIT2(encoding=Encoding.UTF8, text=[gm["text"]])
+                                ],
+                            )
+                        )
+                        start_time = datetime.timedelta(
+                            milliseconds=float(gm["start_time"])
+                        )
+                        end_time = datetime.timedelta(
+                            milliseconds=float(gm["end_time"])
+                        )
+                        logger.debug(
+                            'Added chap tag => %s: %s-%s "%s" to "%s"',
+                            colored(str(gm["id"]), "cyan"),
+                            start_time,
+                            end_time,
+                            colored(str(gm["text"]), "cyan"),
+                            colored(str(part_filename), "blue"),
+                        )
+                    audio_file.save(v2_version=args.id3v2_version)
 
-        logger.info('Saved "%s"', colored(str(part_filename), "magenta"))
+            except Exception as e:  # pylint: disable=broad-except
+                logger.warning(
+                    "Error saving ID3: %s", colored(str(e), "red", attrs=["bold"])
+                )
+                keep_cover = True
+
+            logger.info('Saved "%s"', colored(str(part_filename), "magenta"))
 
         file_tracks.append(
             {
