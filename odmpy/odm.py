@@ -17,13 +17,13 @@
 #
 
 import argparse
-import datetime
 import io
 import json
 import logging
 import os
 import sys
 import time
+from datetime import datetime, timezone
 from http.client import HTTPConnection
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -902,9 +902,9 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 ps(len(libby_loans), "loan"),
             )
             for index, loan in enumerate(libby_loans, start=1):
-                expiry_date = datetime.datetime.strptime(
+                expiry_date = datetime.strptime(
                     loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
-                )
+                ).replace(tzinfo=timezone.utc)
                 hold = next(
                     iter(
                         [
@@ -916,9 +916,9 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     None,
                 )
                 hold_date = (
-                    datetime.datetime.strptime(
+                    datetime.strptime(
                         hold["placedDate"], "%Y-%m-%dT%H:%M:%S.%fZ"
-                    )
+                    ).replace(tzinfo=timezone.utc)
                     if hold
                     else None
                 )
