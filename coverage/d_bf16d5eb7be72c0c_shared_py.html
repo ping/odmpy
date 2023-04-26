@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.3">coverage.py v7.2.3</a>,
-            created at 2023-04-25 13:59 +0000
+            created at 2023-04-26 03:51 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -99,10 +99,10 @@
     <p class="pln"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="com">#</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">import</span> <span class="nam">argparse</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">import</span> <span class="nam">logging</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="key">import</span> <span class="nam">subprocess</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="key">import</span> <span class="nam">xml</span><span class="op">.</span><span class="nam">etree</span><span class="op">.</span><span class="nam">ElementTree</span> <span class="key">as</span> <span class="nam">ET</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">import</span> <span class="nam">logging</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">import</span> <span class="nam">subprocess</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="key">import</span> <span class="nam">xml</span><span class="op">.</span><span class="nam">etree</span><span class="op">.</span><span class="nam">ElementTree</span> <span class="key">as</span> <span class="nam">ET</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">datetime</span><span class="op">,</span> <span class="nam">timezone</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="key">from</span> <span class="nam">pathlib</span> <span class="key">import</span> <span class="nam">Path</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span><span class="op">,</span> <span class="nam">Dict</span><span class="op">,</span> <span class="nam">List</span><span class="op">,</span> <span class="nam">Tuple</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t"><span class="key">from</span> <span class="nam">urllib</span><span class="op">.</span><span class="nam">parse</span> <span class="key">import</span> <span class="nam">urlparse</span>&nbsp;</span><span class="r"></span></p>
@@ -110,9 +110,9 @@
     <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="key">import</span> <span class="nam">eyed3</span>  <span class="com"># type: ignore[import]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t"><span class="key">import</span> <span class="nam">requests</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="key">from</span> <span class="nam">eyed3</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">art</span>  <span class="com"># type: ignore[import]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="key">from</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">adapters</span> <span class="key">import</span> <span class="nam">HTTPAdapter</span><span class="op">,</span> <span class="nam">Retry</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="key">from</span> <span class="nam">termcolor</span> <span class="key">import</span> <span class="nam">colored</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">from</span> <span class="nam">iso639</span> <span class="key">import</span> <span class="nam">Lang</span>  <span class="com"># type: ignore[import]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="key">from</span> <span class="nam">iso639</span> <span class="key">import</span> <span class="nam">Lang</span>  <span class="com"># type: ignore[import]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="key">from</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">adapters</span> <span class="key">import</span> <span class="nam">HTTPAdapter</span><span class="op">,</span> <span class="nam">Retry</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">from</span> <span class="nam">termcolor</span> <span class="key">import</span> <span class="nam">colored</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">constants</span> <span class="key">import</span> <span class="nam">PERFORMER_FID</span><span class="op">,</span> <span class="nam">LANGUAGE_FID</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">errors</span> <span class="key">import</span> <span class="nam">OdmpyRuntimeError</span>&nbsp;</span><span class="r"></span></p>
@@ -977,9 +977,9 @@
     <p class="pln"><span class="n"><a id="t895" href="#t895">895</a></span><span class="t">            <span class="key">and</span> <span class="nam">loan_format</span> <span class="op">==</span> <span class="nam">LibbyFormats</span><span class="op">.</span><span class="nam">MagazineOverDrive</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t896" href="#t896">896</a></span><span class="t">            <span class="key">and</span> <span class="nam">media_info</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"estimatedReleaseDate"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t897" href="#t897">897</a></span><span class="t">        <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t898" href="#t898">898</a></span><span class="t">            <span class="nam">est_release_date</span> <span class="op">=</span> <span class="nam">datetime</span><span class="op">.</span><span class="nam">datetime</span><span class="op">.</span><span class="nam">strptime</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t898" href="#t898">898</a></span><span class="t">            <span class="nam">est_release_date</span> <span class="op">=</span> <span class="nam">datetime</span><span class="op">.</span><span class="nam">strptime</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t899" href="#t899">899</a></span><span class="t">                <span class="nam">media_info</span><span class="op">[</span><span class="str">"estimatedReleaseDate"</span><span class="op">]</span><span class="op">,</span> <span class="str">"%Y-%m-%dT%H:%M:%SZ"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t900" href="#t900">900</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t900" href="#t900">900</a></span><span class="t">            <span class="op">)</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">tzinfo</span><span class="op">=</span><span class="nam">timezone</span><span class="op">.</span><span class="nam">utc</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t901" href="#t901">901</a></span><span class="t">            <span class="nam">reading_order</span> <span class="op">=</span> <span class="str">f"{est_release_date:%y%j}"</span>  <span class="com"># use release date to construct a pseudo reading order</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t902" href="#t902">902</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t903" href="#t903">903</a></span><span class="t">        <span class="key">if</span> <span class="nam">reading_order</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -1056,7 +1056,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.3">coverage.py v7.2.3</a>,
-            created at 2023-04-25 13:59 +0000
+            created at 2023-04-26 03:51 +0000
         </p>
     </div>
 </footer>
