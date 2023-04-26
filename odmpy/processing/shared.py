@@ -17,16 +17,17 @@
 #
 
 import argparse
-import datetime
 import logging
 import subprocess
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple, NamedTuple
 from urllib.parse import urlparse
 
 import requests
+from iso639 import Lang  # type: ignore[import]
 from mutagen.id3 import (
     ID3,
     TIT2,
@@ -49,7 +50,6 @@ from mutagen.id3 import (
 from mutagen.mp3 import MP3
 from requests.adapters import HTTPAdapter, Retry
 from termcolor import colored
-from iso639 import Lang  # type: ignore[import]
 
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyFormats
@@ -1058,9 +1058,9 @@ def build_opf_package(
             and loan_format == LibbyFormats.MagazineOverDrive
             and media_info.get("estimatedReleaseDate")
         ):
-            est_release_date = datetime.datetime.strptime(
+            est_release_date = datetime.strptime(
                 media_info["estimatedReleaseDate"], "%Y-%m-%dT%H:%M:%SZ"
-            )
+            ).replace(tzinfo=timezone.utc)
             reading_order = f"{est_release_date:%y%j}"  # use release date to construct a pseudo reading order
 
         if reading_order:
