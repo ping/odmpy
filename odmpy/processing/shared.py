@@ -20,7 +20,6 @@ import argparse
 import logging
 import subprocess
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 from urllib.parse import urlparse
@@ -35,7 +34,7 @@ from termcolor import colored
 from ..constants import PERFORMER_FID, LANGUAGE_FID
 from ..errors import OdmpyRuntimeError
 from ..libby import USER_AGENT, LibbyFormats
-from ..utils import slugify, sanitize_path, is_windows
+from ..utils import slugify, sanitize_path, is_windows, parse_datetime
 
 
 #
@@ -895,9 +894,7 @@ def build_opf_package(
             and loan_format == LibbyFormats.MagazineOverDrive
             and media_info.get("estimatedReleaseDate")
         ):
-            est_release_date = datetime.strptime(
-                media_info["estimatedReleaseDate"], "%Y-%m-%dT%H:%M:%SZ"
-            ).replace(tzinfo=timezone.utc)
+            est_release_date = parse_datetime(media_info["estimatedReleaseDate"])
             reading_order = f"{est_release_date:%y%j}"  # use release date to construct a pseudo reading order
 
         if reading_order:
