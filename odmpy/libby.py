@@ -28,6 +28,8 @@ from typing import OrderedDict as OrderedDictType
 from urllib import request
 from urllib.parse import urljoin
 
+from .utils import parse_datetime
+
 if sys.version_info >= (3, 8):
     from typing import TypedDict
 else:
@@ -587,9 +589,7 @@ class LibbyClient(object):
         if not loan.get("renewableOn"):
             raise ValueError("Unable to get renewable date")
         # Example: 2023-02-23T07:33:55Z
-        renewable_on = datetime.strptime(
-            loan["renewableOn"], "%Y-%m-%dT%H:%M:%SZ"
-        ).replace(tzinfo=timezone.utc)
+        renewable_on = parse_datetime(loan["renewableOn"])
         return renewable_on <= datetime.utcnow().replace(tzinfo=timezone.utc)
 
     def get_loans(self) -> List[Dict]:

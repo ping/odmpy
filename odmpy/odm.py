@@ -23,7 +23,6 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime, timezone
 from http.client import HTTPConnection
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -52,7 +51,7 @@ from .processing.shared import (
     init_session,
     extract_authors_from_openbook,
 )
-from .utils import slugify, plural_or_singular_noun as ps
+from .utils import slugify, plural_or_singular_noun as ps, parse_datetime
 
 #
 # Orchestrates the interaction between the CLI, APIs and the processing bits
@@ -897,9 +896,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 ps(len(libby_loans), "loan"),
             )
             for index, loan in enumerate(libby_loans, start=1):
-                expiry_date = datetime.strptime(
-                    loan["expireDate"], "%Y-%m-%dT%H:%M:%SZ"
-                ).replace(tzinfo=timezone.utc)
+                expiry_date = parse_datetime(loan["expireDate"])
                 hold = next(
                     iter(
                         [
@@ -910,13 +907,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     ),
                     None,
                 )
-                hold_date = (
-                    datetime.strptime(
-                        hold["placedDate"], "%Y-%m-%dT%H:%M:%S.%fZ"
-                    ).replace(tzinfo=timezone.utc)
-                    if hold
-                    else None
-                )
+                hold_date = parse_datetime(hold["placedDate"]) if hold else None
 
                 logger.info(
                     "%s: %-55s  %s %-25s  \n    * %s  %s%s",
