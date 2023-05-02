@@ -11,6 +11,7 @@ import ebooklib  # type: ignore[import]
 import responses
 from bs4 import BeautifulSoup
 from ebooklib import epub
+from lxml import etree  # type: ignore[import]
 from mutagen.id3 import ID3
 from mutagen.mp3 import MP3
 from responses import matchers
@@ -386,6 +387,33 @@ class OdmpyLibbyTests(BaseTestCase):
             None,
         )
         self.assertTrue(nav)
+
+        # Check sections are rendered properly in the ncx
+        nav_doc = etree.fromstring(nav.get_content())
+        ns = {"d": "http://www.daisy.org/z3986/2005/ncx/"}
+        nav_map = nav_doc.find(".//d:navMap", namespaces=ns)
+        self.assertIsNotNone(nav_map)
+        section_nav_point = [c for c in nav_map][1]
+        section_articles = section_nav_point.find(".//d:navPoint", namespaces=ns)
+        self.assertEqual(len(section_articles), 2)
+
+        # Check sections are rendered properly in the nav.xhtml
+        epub_nav = next(
+            iter(
+                [
+                    d
+                    for d in list(book.get_items_of_type(ebooklib.ITEM_DOCUMENT))
+                    if type(d) == ebooklib.epub.EpubNav
+                ]
+            ),
+            None,
+        )
+        self.assertTrue(epub_nav)
+        soup = BeautifulSoup(epub_nav.get_content(), features="html.parser")
+        toc = soup.find(id="toc")
+        sub_ol_ele = toc.select("li ol")
+        self.assertEqual(len(sub_ol_ele), 1)
+        self.assertEqual(len(sub_ol_ele[0].find_all("li")), 2)
 
         css = next(
             iter([b for b in list(book.get_items_of_type(ebooklib.ITEM_STYLE))]),
