@@ -66,6 +66,38 @@ NAV_XHTMLTEMPLATE = """
 """
 
 
+def _sort_toc(toc: Dict) -> List:
+    """
+    Sorts the ToC dict from openbook into a hierarchical structure
+
+    :param toc:
+    :return:
+    """
+    hierarchical_toc = []
+    current_section = {}  # type: Dict
+    for i, item in enumerate(toc, start=1):
+        if not item.get("sectionName"):
+            hierarchical_toc.append(item)
+            continue
+        if item["sectionName"] not in current_section or i == len(toc):
+            # new section or last item
+            if i == len(toc):
+                current_section.setdefault(item["sectionName"], []).append(item)
+            section_names = list(current_section.keys())
+            for section_name in section_names:
+                hierarchical_toc.append(
+                    {
+                        "sectionName": section_name,
+                        "items": current_section[section_name],
+                    }
+                )
+                del current_section[section_name]
+        if i < len(toc):
+            current_section.setdefault(item["sectionName"], []).append(item)
+
+    return hierarchical_toc
+
+
 def _build_ncx(media_info: Dict, openbook: Dict) -> ET.Element:
     """
     Build the ncx from openbook
@@ -111,12 +143,39 @@ def _build_ncx(media_info: Dict, openbook: Dict) -> ET.Element:
     doc_author_text.text = openbook["creator"][0]["name"]
 
     nav_map = ET.SubElement(ncx, "navMap")
-    for i, item in enumerate(openbook["nav"]["toc"], start=1):
-        nav_point = ET.SubElement(nav_map, "navPoint", attrib={"id": f"navPoint{i}"})
+    hierarchical_toc = _sort_toc(openbook["nav"]["toc"])
+    nav_point_counter = 0
+    for item in hierarchical_toc:
+        nav_point_counter += 1
+        if not item.get("sectionName"):
+            nav_point = ET.SubElement(
+                nav_map, "navPoint", attrib={"id": f"navPoint{nav_point_counter}"}
+            )
+            nav_label = ET.SubElement(nav_point, "navLabel")
+            nav_label_text = ET.SubElement(nav_label, "text")
+            nav_label_text.text = item["title"]
+            ET.SubElement(nav_point, "content", attrib={"src": item["path"]})
+            continue
+
+        nav_point = ET.SubElement(
+            nav_map, "navPoint", attrib={"id": f"navPoint{nav_point_counter}"}
+        )
         nav_label = ET.SubElement(nav_point, "navLabel")
         nav_label_text = ET.SubElement(nav_label, "text")
-        nav_label_text.text = item["title"]
-        ET.SubElement(nav_point, "content", attrib={"src": item["path"]})
+        nav_label_text.text = item["sectionName"]
+        # since we don't have a section content page, link section to first article path
+        ET.SubElement(nav_point, "content", attrib={"src": item["items"][0]["path"]})
+        for section_item in item["items"]:
+            nav_point_counter += 1
+            section_item_nav_point = ET.SubElement(
+                nav_point, "navPoint", attrib={"id": f"navPoint{nav_point_counter}"}
+            )
+            section_item_nav_label = ET.SubElement(section_item_nav_point, "navLabel")
+            section_item_nav_label_text = ET.SubElement(section_item_nav_label, "text")
+            section_item_nav_label_text.text = section_item["title"]
+            ET.SubElement(
+                section_item_nav_point, "content", attrib={"src": section_item["path"]}
+            )
     return ncx
 
 
@@ -598,12 +657,35 @@ def process_ebook_loan(
         nav_soup = BeautifulSoup(NAV_XHTMLTEMPLATE, features="html.parser")
         nav_soup.find("title").append(loan["title"])  # type: ignore[union-attr]
         toc_ele = nav_soup.find(id="toc")
-        for item in openbook_toc:
+
+        # sort toc into hierarchical sections
+        hierarchical_toc = _sort_toc(openbook_toc)
+        for item in hierarchical_toc:
             li_ele = nav_soup.new_tag("li")
-            a_ele = nav_soup.new_tag("a", attrs={"href": item["path"]})
-            a_ele.append(item["title"])
+            if not item.get("sectionName"):
+                a_ele = nav_soup.new_tag("a", attrs={"href": item["path"]})
+                a_ele.append(item["title"])
+                li_ele.append(a_ele)
+                toc_ele.append(li_ele)  # type: ignore[union-attr]
+                continue
+            # since we don't have a section content page, and this can cause problems,
+            # link section to first article path
+            a_ele = nav_soup.new_tag("a", attrs={"href": item["items"][0]["path"]})
+            a_ele.append(item["sectionName"])
             li_ele.append(a_ele)
+            ol_ele = nav_soup.new_tag("ol")
+            for section_item in item.get("items", []):
+                section_li_ele = nav_soup.new_tag("li")
+                section_item_a_ele = nav_soup.new_tag(
+                    "a", attrs={"href": section_item["path"]}
+                )
+                section_item_a_ele.append(section_item["title"])
+                section_li_ele.append(section_item_a_ele)
+                ol_ele.append(section_li_ele)
+                continue
+            li_ele.append(ol_ele)
             toc_ele.append(li_ele)  # type: ignore[union-attr]
+
         # we give the nav an id-stamped file name to avoid accidentally overwriting
         # an existing file name
         nav_file_name = f'nav_{loan["id"]}.xhtml'
