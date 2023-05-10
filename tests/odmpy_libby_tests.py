@@ -1041,6 +1041,33 @@ class OdmpyLibbyTests(BaseTestCase):
             for loan in loans:
                 self.assertIn("id", loan)
 
+    @responses.activate
+    def test_mock_libby_noaudiobooks(self):
+        """
+        `odmpy libby --exportloans --noaudiobooks`
+        """
+        settings_folder = self._generate_fake_settings()
+        self._setup_audiobook_direct_responses()
+
+        loans_file_name = self.test_downloads_dir.joinpath(
+            f"test_loans_{int(datetime.utcnow().timestamp()*1000)}.json"
+        )
+        run(
+            [
+                "libby",
+                "--settings",
+                str(settings_folder),
+                "--exportloans",
+                str(loans_file_name),
+                "--noaudiobooks",
+            ],
+            be_quiet=True,
+        )
+        self.assertTrue(loans_file_name.exists())
+        with loans_file_name.open("r", encoding="utf-8") as f:
+            loans = json.load(f)
+            self.assertEqual(len(loans), 0)
+
     @staticmethod
     def _libby_setup_prompt(text: str) -> str:
         if "Enter the 8-digit Libby code and press enter" in text:
