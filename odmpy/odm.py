@@ -123,6 +123,13 @@ def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
             else "Include magazines loans."
         ),
     )
+    parser_libby.add_argument(
+        "--noaudiobooks",
+        dest="exclude_audiobooks",
+        default=False,
+        action="store_true",
+        help="Exclude audiobooks.",
+    )
 
 
 def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
@@ -753,7 +760,10 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 [
                     book
                     for book in synced_state.get("loans", [])
-                    if libby_client.is_downloadable_audiobook_loan(book)
+                    if (
+                        (not args.exclude_audiobooks)
+                        and libby_client.is_downloadable_audiobook_loan(book)
+                    )
                     or (
                         args.include_ebooks
                         and libby_client.is_downloadable_ebook_loan(book)
