@@ -27,7 +27,7 @@ You must already have [Python](https://wiki.python.org/moin/BeginnersGuide/Downl
 
 ```bash
 # Install / Update to specific version
-python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.7 --upgrade
+python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.8 --upgrade
 
 # Install / Update from latest source
 python3 -m pip install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -80,7 +80,7 @@ Available commands:
     ret                 Return an audiobook loan file (odm).
     info                Get information about an audiobook loan file (odm).
 
-Version 0.7.7. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
+Version 0.7.8. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
 ```
 
 ### Download via Libby
@@ -91,13 +91,14 @@ You will be prompted for a Libby setup code the first time you run the `libby` c
 
 ```
 usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--ebooks] [--magazines]
-                   [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}] [-k]
-                   [-f] [--nobookfolder]
+                   [--noaudiobooks] [-d DOWNLOAD_DIR] [-c] [-m]
+                   [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder]
                    [--bookfolderformat BOOK_FOLDER_FORMAT]
                    [--bookfileformat BOOK_FILE_FORMAT] [--overwritetags]
-                   [--tagsdelimiter DELIMITER] [--opf] [-r OBSOLETE_RETRIES]
-                   [-j] [--hideprogress] [--direct] [--keepodm] [--latest N]
-                   [--select N [N ...]] [--selectid ID [ID ...]]
+                   [--tagsdelimiter DELIMITER] [--id3v2version {3,4}] [--opf]
+                   [-r OBSOLETE_RETRIES] [-j] [--hideprogress] [--direct]
+                   [--keepodm] [--latest N] [--select N [N ...]]
+                   [--selectid ID [ID ...]]
                    [--exportloans LOANS_JSON_FILEPATH] [--reset] [--check]
                    [--debug]
 
@@ -114,6 +115,7 @@ options:
                         An open EPUB/PDF (no DRM) loan will be downloaded as an .epub/.pdf file which can be opened
                         in any EPUB/PDF-compatible reader.
   --magazines           Include magazines loans (experimental).
+  --noaudiobooks        Exclude audiobooks.
   -d DOWNLOAD_DIR, --downloaddir DOWNLOAD_DIR
                         Download folder path.
   -c, --chapters        Add chapter marks (experimental). For audiobooks.
@@ -147,6 +149,7 @@ options:
                         For ID3 tags with multiple values, this defines the delimiter.
                         For example, with the default delimiter ";", authors are written
                         to the artist tag as "Author A;Author B;Author C". For audiobooks.
+  --id3v2version {3,4}  ID3 v2 version. 3 = v2.3, 4 = v2.4
   --opf                 Generate an OPF file for the downloaded audiobook/magazine/ebook.
   -r OBSOLETE_RETRIES, --retry OBSOLETE_RETRIES
                         Obsolete. Do not use.
@@ -227,7 +230,7 @@ odmpy libby --magazines --downloaddir "./" --bookfolderformat "%(Title)s" --book
 ### Return via Libby
 ```
 usage: odmpy libbyreturn [-h] [--settings SETTINGS_FOLDER] [--ebooks]
-                         [--magazines]
+                         [--magazines] [--noaudiobooks]
 
 Interactive Libby Interface for returning loans.
 
@@ -237,12 +240,13 @@ options:
                         Settings folder to store odmpy required settings, e.g. Libby authentication.
   --ebooks              Include ebook (EPUB/PDF) loans.
   --magazines           Include magazines loans.
+  --noaudiobooks        Exclude audiobooks.
 ```
 
 ### Renew via Libby
 ```
 usage: odmpy libbyrenew [-h] [--settings SETTINGS_FOLDER] [--ebooks]
-                        [--magazines]
+                        [--magazines] [--noaudiobooks]
 
 Interactive Libby Interface for renewing loans.
 
@@ -252,6 +256,7 @@ options:
                         Settings folder to store odmpy required settings, e.g. Libby authentication.
   --ebooks              Include ebook (EPUB/PDF) loans.
   --magazines           Include magazines loans.
+  --noaudiobooks        Exclude audiobooks.
 ```
 
 
@@ -266,8 +271,8 @@ usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
                 [-k] [-f] [--nobookfolder]
                 [--bookfolderformat BOOK_FOLDER_FORMAT]
                 [--bookfileformat BOOK_FILE_FORMAT] [--overwritetags]
-                [--tagsdelimiter DELIMITER] [--opf] [-r OBSOLETE_RETRIES] [-j]
-                [--hideprogress]
+                [--tagsdelimiter DELIMITER] [--id3v2version {3,4}] [--opf]
+                [-r OBSOLETE_RETRIES] [-j] [--hideprogress]
                 odm_file
 
 Download from an audiobook loan file (odm).
@@ -310,6 +315,7 @@ options:
                         For ID3 tags with multiple values, this defines the delimiter.
                         For example, with the default delimiter ";", authors are written
                         to the artist tag as "Author A;Author B;Author C". For audiobooks.
+  --id3v2version {3,4}  ID3 v2 version. 3 = v2.3, 4 = v2.4
   --opf                 Generate an OPF file for the downloaded audiobook/magazine/ebook.
   -r OBSOLETE_RETRIES, --retry OBSOLETE_RETRIES
                         Obsolete. Do not use.
