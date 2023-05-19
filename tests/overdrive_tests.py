@@ -70,3 +70,52 @@ class OverDriveClientTests(BaseTestCase):
             ):
                 with self.subTest(key=k):
                     self.assertIn(k, item, msg=f'"{k}" not found')
+
+    def test_library(self):
+        for library_key in ("lapl", "ocpl"):
+            with self.subTest(library_key=library_key):
+                library = self.client.library(library_key)
+                for k in (
+                    "recommendToLibraryEnabled",
+                    "lastModifiedDate",
+                    "allowAnonymousSampling",
+                    "allowDeepSearch",
+                    "isDemo",
+                    "areLuckyDayTitlesAllocated",
+                    "canAddLibrariesInSora",
+                    "isLuckyDayEnabled",
+                    "isLexisNexis",
+                    "isAuroraEnabled",
+                    "isInstantAccessEnabled",
+                    "hasAdvantageAccounts",
+                    "isAutocompleteEnabled",
+                    "allowRecommendToLibrary",
+                    "isConsortium",
+                    "accessId",
+                    "websiteId",
+                    "accounts",
+                    "settings",
+                    "links",
+                    "messages",
+                    "defaultLanguage",
+                    "supportedLanguages",
+                    "formats",
+                    "enabledPlatforms",
+                    "visitableLibraries",
+                    "luckyDayPreferredLendingPeriods",
+                    "visitorsHaveLowerHoldPriority",
+                    "visitorsCanRecommendTitles",
+                    "visitorsCanPlaceHolds",
+                    "isReadingHistoryEnabled",
+                    "parentCRAccessId",
+                    "showcaseTarget",
+                    "type",
+                    "status",
+                    "name",
+                    "fulfillmentId",
+                    "visitorKey",
+                    "preferredKey",
+                    "id",
+                ):
+                    with self.subTest(key=k):
+                        self.assertIn(k, library, msg=f'"{k}" not found')

@@ -465,6 +465,62 @@ class LibbyClientTests(BaseTestCase):
         client = LibbyClient(logger=self.logger, identity_token=".")
         client.borrow_hold(hold)
 
+    @responses.activate
+    def test_libby_link_card(self):
+        website_id = "78"
+        username = "12345678"
+        password = "1234"
+        responses.post(
+            f"https://sentry-read.svc.overdrive.com/auth/link/{website_id}",
+            json={},
+            match=[
+                matchers.json_params_matcher(
+                    {"ils": "default", "username": username, "password": password}
+                )
+            ],
+        )
+        client = LibbyClient(logger=self.logger, identity_token=".")
+        client.link_card(website_id, username, password)
+
+    @responses.activate
+    def test_libby_update_card_name(self):
+        card_id = "12345678"
+        card_name = "Test"
+        responses.put(
+            f"https://sentry-read.svc.overdrive.com/card/{card_id}",
+            json={"message": card_name},
+            match=[matchers.query_param_matcher({"card_name": card_name})],
+        )
+        client = LibbyClient(logger=self.logger, identity_token=".")
+        client.update_card_name(card_id, card_name)
+
+    def test_libby_auth_form(self):
+        client = LibbyClient(logger=self.logger, identity_token=".")
+        for website_id in ("243",):
+            with self.subTest(website_id=website_id):
+                lib_auth_form = client.auth_form(website_id)
+                for k in (
+                    "websiteId",
+                    "forms",
+                    "pinResetForms",
+                    "ghost",
+                    "features",
+                    "captcha",
+                ):
+                    with self.subTest(key=k):
+                        self.assertIn(k, lib_auth_form, msg=f'"{k}" not found')
+                self.assertEqual(int(website_id), lib_auth_form["websiteId"])
+                self.assertTrue(lib_auth_form["forms"])
+                for form in lib_auth_form["forms"]:
+                    for k in ("type", "ilsName", "local"):
+                        with self.subTest(key=k):
+                            self.assertIn(k, form, msg=f'"{k}" not found in form')
+                    form_variables = form["local"]
+                    for k in ("username", "password"):
+                        with self.subTest(key=k):
+                            self.assertTrue(form_variables.get(k))
+                            self.assertIn("enabled", form_variables[k])
+
     def test_has_chip(self):
         client = LibbyClient(logger=self.logger, identity_token=".")
         self.assertFalse(client.has_chip())
