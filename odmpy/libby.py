@@ -458,6 +458,48 @@ class LibbyClient(object):
         res: Dict = self.make_request("chip/sync")
         return res
 
+    def auth_form(self, website_id) -> Dict:
+        """
+        Get the parameters required to link a card.
+
+        :param website_id: Can be gotten from the OverDrive api or "cards" in the sync response
+        :return:
+        """
+        res: Dict = self.make_request(f"auth/forms/{website_id}", authenticated=False)
+        return res
+
+    def link_card(
+        self, website_id: str, username: str, password: str, ils: str = "default"
+    ) -> Dict:
+        """
+        Used to add or verify an existing card. Not currently used by odmpy, not tested.
+        Returns a similar response as sync but with just the one card linked.
+
+        :param website_id: Can be gotten from the OverDrive api or "cards" in the sync response
+        :param username:
+        :param password: Or pin.
+        :param ils: Can be gotten from auth_form() or "cards" dict in the sync response
+        :return:
+        """
+        data = {"ils": ils, "username": username, "password": password}
+        res: Dict = self.make_request(
+            f"auth/link/{website_id}", json_data=data, method="POST"
+        )
+        return res
+
+    def update_card_name(self, card_id: str, card_name: str) -> Dict:
+        """
+        Update a card's name
+
+        :param card_id:
+        :param card_name:
+        :return:
+        """
+        res: Dict = self.make_request(
+            f"card/{card_id}", params={"card_name": card_name}, method="PUT"
+        )
+        return res
+
     def is_logged_in(self) -> bool:
         """
         Check if successfully logged in.

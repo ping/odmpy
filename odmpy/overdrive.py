@@ -151,3 +151,15 @@ class OverDriveClient(object):
         params.update({"titleIds": ",".join(title_ids)})
         params.update(kwargs)
         return self.make_request("media/bulk", params=params)
+
+    def library(self, library_key: str, **kwargs) -> Dict:
+        """
+        Get a library's configuration data.
+
+        :param library_key: A unique key that identifies the library, e.g. lapl
+        :param kwargs:
+        :return:
+        """
+        params = self.default_params()
+        params.update(kwargs)
+        return self.make_request(f"libraries/{library_key}", params=params)
