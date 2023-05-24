@@ -98,12 +98,13 @@ def _sort_toc(toc: Dict) -> List:
     return hierarchical_toc
 
 
-def _build_ncx(media_info: Dict, openbook: Dict) -> ET.Element:
+def _build_ncx(media_info: Dict, openbook: Dict, nav_page: str) -> ET.Element:
     """
     Build the ncx from openbook
 
     :param media_info:
     :param openbook:
+    :param nav_page:
     :return:
     """
 
@@ -155,6 +156,16 @@ def _build_ncx(media_info: Dict, openbook: Dict) -> ET.Element:
             nav_label_text = ET.SubElement(nav_label, "text")
             nav_label_text.text = item["title"]
             ET.SubElement(nav_point, "content", attrib={"src": item["path"]})
+
+            if nav_point_counter == 1 and nav_page:
+                nav_point_counter += 1
+                nav_point = ET.SubElement(
+                    nav_map, "navPoint", attrib={"id": f"navPoint{nav_point_counter}"}
+                )
+                nav_label = ET.SubElement(nav_point, "navLabel")
+                nav_label_text = ET.SubElement(nav_label, "text")
+                nav_label_text.text = "Contents"
+                ET.SubElement(nav_point, "content", attrib={"src": nav_page})
             continue
 
         nav_point = ET.SubElement(
@@ -654,6 +665,11 @@ def process_ebook_loan(
 
     if not has_nav:
         # Generate nav - needed for magazines
+
+        # we give the nav an id-stamped file name to avoid accidentally overwriting
+        # an existing file name
+        nav_file_name = f'nav_{loan["id"]}.xhtml'
+
         nav_soup = BeautifulSoup(NAV_XHTMLTEMPLATE, features="html.parser")
         nav_soup.find("title").append(loan["title"])  # type: ignore[union-attr]
         toc_ele = nav_soup.find(id="toc")
@@ -686,9 +702,6 @@ def process_ebook_loan(
             li_ele.append(ol_ele)
             toc_ele.append(li_ele)  # type: ignore[union-attr]
 
-        # we give the nav an id-stamped file name to avoid accidentally overwriting
-        # an existing file name
-        nav_file_name = f'nav_{loan["id"]}.xhtml'
         with book_content_folder.joinpath(nav_file_name).open(
             "w", encoding="utf-8"
         ) as f_nav:
@@ -696,7 +709,7 @@ def process_ebook_loan(
         manifest_entries.append(
             {
                 "href": nav_file_name,
-                "id": "nav",
+                "id": _sanitise_opf_id(nav_file_name),
                 "media-type": "application/xhtml+xml",
                 "properties": "nav",
             }
@@ -704,7 +717,7 @@ def process_ebook_loan(
 
     if not has_ncx:
         # generate ncx for backward compat
-        ncx = _build_ncx(media_info, openbook)
+        ncx = _build_ncx(media_info, openbook, nav_file_name if not has_nav else "")
         # we give the ncx an id-stamped file name to avoid accidentally overwriting
         # an existing file name
         toc_ncx_name = f'toc_{loan["id"]}.ncx'
@@ -844,7 +857,7 @@ def process_ebook_loan(
     spine_entries = sorted(
         spine_entries, key=cmp_to_key(lambda a, b: _sort_spine_entries(a, b, toc_pages))  # type: ignore[misc]
     )
-    for entry in spine_entries:
+    for spine_idx, entry in enumerate(spine_entries):
         if (
             media_info["type"]["id"] == LibbyMediaTypes.Magazine
             and entry["-odread-original-path"] not in toc_pages
@@ -852,6 +865,9 @@ def process_ebook_loan(
             continue
         item_ref = ET.SubElement(spine, "itemref")
         item_ref.set("idref", _sanitise_opf_id(entry["-odread-original-path"]))
+        if spine_idx == 0 and not has_nav:
+            item_ref = ET.SubElement(spine, "itemref")
+            item_ref.set("idref", _sanitise_opf_id(nav_file_name))
 
     # add guide
     if openbook.get("nav", {}).get("landmarks"):
