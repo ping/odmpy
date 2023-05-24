@@ -351,7 +351,7 @@ class LibbyClientTests(BaseTestCase):
                 "redeliveriesAutomatedCount",
                 # "patronHoldsRatio",
                 # "estimatedWaitDays",
-                "holdsRatio",
+                # "holdsRatio",     # not present in if there are multi-holds per title
                 "estimatedReleaseDate",
             ):
                 with self.subTest(key=k):

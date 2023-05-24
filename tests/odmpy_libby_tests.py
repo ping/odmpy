@@ -393,7 +393,7 @@ class OdmpyLibbyTests(BaseTestCase):
         ns = {"d": "http://www.daisy.org/z3986/2005/ncx/"}
         nav_map = nav_doc.find(".//d:navMap", namespaces=ns)
         self.assertIsNotNone(nav_map)
-        section_nav_point = [c for c in nav_map][1]
+        section_nav_point = [c for c in nav_map][2]
         section_articles = section_nav_point.find(".//d:navPoint", namespaces=ns)
         self.assertEqual(len(section_articles), 2)
 

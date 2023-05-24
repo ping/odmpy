@@ -1,5 +1,7 @@
 import logging
 
+import requests
+
 from odmpy.overdrive import OverDriveClient
 from tests.base import BaseTestCase
 
@@ -119,3 +121,33 @@ class OverDriveClientTests(BaseTestCase):
                 ):
                     with self.subTest(key=k):
                         self.assertIn(k, library, msg=f'"{k}" not found')
+
+    def test_library_media_availability(self):
+        availability = self.client.library_media_availability("lapl", "1330527")
+        for k in (
+            "isAdvantageFiltered",
+            "youngAdultEligible",
+            "juvenileEligible",
+            "visitorEligible",
+            "isRecommendableToLibrary",
+            "isHoldable",
+            "isOwned",
+            "isFastlane",
+            "isAvailable",
+            "formats",
+            "estimatedWaitDays",
+            "holdsRatio",
+            "holdsCount",
+            "luckyDayOwnedCopies",
+            "luckyDayAvailableCopies",
+            "ownedCopies",
+            "availableCopies",
+            "availabilityType",
+            "id",
+        ):
+            with self.subTest(key=k):
+                self.assertIn(k, availability, msg=f'"{k}" not found')
+
+        with self.assertRaises(requests.HTTPError) as context:
+            self.client.library_media_availability("brooklyn", "2006069")
+        self.assertEqual(context.exception.response.status_code, 404)
