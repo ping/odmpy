@@ -163,3 +163,20 @@ class OverDriveClient(object):
         params = self.default_params()
         params.update(kwargs)
         return self.make_request(f"libraries/{library_key}", params=params)
+
+    def library_media_availability(
+        self, library_key: str, title_id: str, **kwargs
+    ) -> dict:
+        """
+        Get title availability.
+
+        :param library_key: A unique key that identifies the library, e.g. lapl
+        :param title_id:
+        :param kwargs:
+        :return:
+        """
+        params = self.default_params()
+        params.update(kwargs)
+        return self.make_request(
+            f"libraries/{library_key}/media/{title_id}/availability", params=params
+        )
