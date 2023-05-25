@@ -689,7 +689,7 @@ def process_ebook_loan(
             a_ele = nav_soup.new_tag("a", attrs={"href": item["items"][0]["path"]})
             a_ele.append(item["sectionName"])
             li_ele.append(a_ele)
-            ol_ele = nav_soup.new_tag("ol")
+            ol_ele = nav_soup.new_tag("ol", attrs={"type": "a"})
             for section_item in item.get("items", []):
                 section_li_ele = nav_soup.new_tag("li")
                 section_item_a_ele = nav_soup.new_tag(
