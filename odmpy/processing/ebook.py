@@ -552,9 +552,9 @@ def process_ebook_loan(
                     for font_family, _ in font_families:
                         new_font_css = font_family[:-1]
                         if "Serif" in font_family:
-                            new_font_css += ",serif"
+                            new_font_css += ',Charter,"Bitstream Charter","Sitka Text",Cambria,serif'
                         elif "Sans" in font_family:
-                            new_font_css += ",sans-serif"
+                            new_font_css += ",system-ui,sans-serif"
                         new_font_css += ";"
                         if "-Bold" in font_family:
                             new_font_css += " font-weight: 700;"
