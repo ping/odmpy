@@ -131,6 +131,7 @@ options:
                           %(Title)s : Title
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
+                          %(ReadingOrder)s: Series Reading Order
                           %(Edition)s: Edition
                           %(ID)s: Title/Loan ID
   --bookfileformat BOOK_FILE_FORMAT
@@ -140,6 +141,7 @@ options:
                           %(Title)s : Title
                           %(Author)s: Comma-separated Author names
                           %(Series)s: Series
+                          %(ReadingOrder)s: Series Reading Order
                           %(Edition)s: Edition
                           %(ID)s: Title/Loan ID
   --overwritetags       Always overwrite ID3 tags.
