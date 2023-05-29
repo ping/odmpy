@@ -87,6 +87,10 @@
         "name": "Tests",
         "id": "12345"
       },
+      "detailedSeries": {
+        "readingOrder": "2",
+        "seriesName": "Test Audiobook"
+      },
       "id": "9999999",
       "firstCreatorName": "Test Author",
       "firstCreatorSortName": "Author, Test",

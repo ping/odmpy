@@ -84,26 +84,34 @@ class ProcessingSharedTests(BaseTestCase):
     def test_generate_names(self):
         args = argparse.Namespace(
             book_file_format="%(Title)s - %(Author)s",
-            book_folder_format="%(Title)s - %(Author)s",
+            book_folder_format="%(Series)s - %(ReadingOrder)s",
             download_dir=str(self.test_downloads_dir),
             no_book_folder=False,
         )
         book_folder, book_file_name = shared.generate_names(
             title="Test Title",
-            series="",
+            series="Test Series",
+            series_reading_order="3",
             authors=["Author1", "Author2"],
             edition="",
             title_id="",
             args=args,
             logger=self.logger,
         )
-        self.assertEqual(book_folder.stem, "Test Title - Author1, Author2")
+        self.assertEqual(book_folder.stem, "Test Series - 3")
         self.assertEqual(book_file_name.name, "Test Title - Author1, Author2.mp3")
 
+        args = argparse.Namespace(
+            book_file_format="%(Title)s - %(Author)s",
+            book_folder_format="%(Title)s - %(Author)s",
+            download_dir=str(self.test_downloads_dir),
+            no_book_folder=False,
+        )
         authors = [f"Test Author {i}" for i in range(1, 50)]
         book_folder, book_file_name = shared.generate_names(
             title="Test Title",
-            series="",
+            series="Test Series",
+            series_reading_order="3",
             authors=authors,
             edition="",
             title_id="",

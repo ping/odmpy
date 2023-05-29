@@ -383,6 +383,7 @@ def process_ebook_loan(
     book_folder, book_file_name = generate_names(
         title=loan["title"],
         series=loan.get("series") or "",
+        series_reading_order=loan.get("detailedSeries", {}).get("readingOrder", ""),
         authors=extract_authors_from_openbook(openbook),
         edition=loan.get("edition") or "",
         title_id=loan["id"],

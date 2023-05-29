@@ -79,6 +79,7 @@ def init_session(max_retries: int = 0) -> requests.Session:
 def generate_names(
     title: str,
     series: str,
+    series_reading_order: str,
     authors: List[str],
     edition: str,
     title_id: str,
@@ -93,6 +94,7 @@ def generate_names(
     :param edition:
     :param title_id:
     :param series:
+    :param series_reading_order:
     :param args:
     :param logger:
     :return:
@@ -103,6 +105,7 @@ def generate_names(
         "Series": sanitize_path(series or ""),
         "Edition": sanitize_path(edition),
         "ID": sanitize_path(title_id),
+        "ReadingOrder": sanitize_path(series_reading_order),
     }
     # unlike book_folder_name, we sanitize the entire book file format
     # because it is expected to be a single name and `os.sep` will be
@@ -115,6 +118,7 @@ def generate_names(
             "Series": series or "",
             "Edition": edition,
             "ID": title_id,
+            "ReadingOrder": series_reading_order,
         }
     )
     # declare book folder/file names here together, so that we can catch problems from too long names
@@ -143,6 +147,7 @@ def generate_names(
             "Author": sanitize_path(authors[0]) if authors else "",
             "Series": sanitize_path(series or ""),
             "ID": sanitize_path(title_id),
+            "ReadingOrder": sanitize_path(series_reading_order),
         }
         book_folder = Path(args.download_dir, book_folder_name)
         if args.no_book_folder:
@@ -163,6 +168,7 @@ def generate_names(
                 "Series": series or "",
                 "Edition": edition,
                 "ID": title_id,
+                "ReadingOrder": series_reading_order,
             }
         )
         book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
