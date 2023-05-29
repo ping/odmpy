@@ -17,10 +17,15 @@
 #
 import argparse
 from enum import Enum
+from typing import Tuple
+
 
 #
 # Stuff for the CLI
 #
+
+
+DEFAULT_FORMAT_FIELDS = ("Title", "Author", "Series", "ReadingOrder", "Edition", "ID")
 
 
 class OdmpyCommands(str, Enum):
@@ -74,15 +79,22 @@ def positive_int(value: str) -> int:
     return int_value
 
 
-def valid_book_folder_file_format(value: str) -> str:
+def valid_book_folder_file_format(
+    value: str,
+    fields: Tuple = DEFAULT_FORMAT_FIELDS,
+) -> str:
     """
     Ensure that the book folder format is valid
 
     :param value:
+    :param fields:
     :return:
     """
+    values_dict = {}
+    for f in fields:
+        values_dict[f] = ""
     try:
-        value % {"Title": "", "Author": "", "Series": "", "Edition": "", "ID": ""}
+        value % values_dict
     except KeyError as err:
         raise argparse.ArgumentTypeError(
             f'"{value}" is not a valid book folder/file name format: Invalid field {err}'

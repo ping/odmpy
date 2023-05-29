@@ -34,6 +34,7 @@ from .cli_utils import (
     OdmpyNoninteractiveOptions,
     positive_int,
     valid_book_folder_file_format,
+    DEFAULT_FORMAT_FIELDS,
 )
 from .errors import LibbyNotConfiguredError, OdmpyRuntimeError
 from .libby import LibbyClient, LibbyFormats
@@ -187,35 +188,43 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Don't create a book subfolder.",
     )
-    parser_dl.add_argument(
-        "--bookfolderformat",
-        dest="book_folder_format",
-        type=valid_book_folder_file_format,
-        default="%(Title)s - %(Author)s",
-        help=(
-            'Book folder format string. Default "%%(Title)s - %%(Author)s".\n'
-            "Available fields:\n"
+
+    available_fields_help = (
+        (
             "  %%(Title)s : Title\n"
             "  %%(Author)s: Comma-separated Author names\n"
             "  %%(Series)s: Series\n"
-            "  %%(Edition)s: Edition\n"
-            "  %%(ID)s: Title/Loan ID\n"
+        )
+        + (
+            "  %%(ReadingOrder)s: Series Reading Order\n"
+            if parser_dl.prog == "odmpy libby"
+            else ""  # odm downloads dont have reading order
+        )
+        + "  %%(Edition)s: Edition\n  %%(ID)s: Title/Loan ID\n"
+    )
+    available_fields = list(DEFAULT_FORMAT_FIELDS)
+    if parser_dl.prog != "odmpy libby":
+        available_fields.remove("ReadingOrder")
+
+    parser_dl.add_argument(
+        "--bookfolderformat",
+        dest="book_folder_format",
+        type=lambda v: valid_book_folder_file_format(v, tuple(available_fields)),
+        default="%(Title)s - %(Author)s",
+        help=(
+            'Book folder format string. Default "%%(Title)s - %%(Author)s".\n'
+            f"Available fields:\n{available_fields_help}"
         ),
     )
     parser_dl.add_argument(
         "--bookfileformat",
         dest="book_file_format",
-        type=valid_book_folder_file_format,
+        type=lambda v: valid_book_folder_file_format(v, tuple(available_fields)),
         default="%(Title)s - %(Author)s",
         help=(
             'Book file format string (without extension). Default "%%(Title)s - %%(Author)s".\n'
             "This applies to only merged audiobooks, ebooks, and magazines.\n"
-            "Available fields:\n"
-            "  %%(Title)s : Title\n"
-            "  %%(Author)s: Comma-separated Author names\n"
-            "  %%(Series)s: Series\n"
-            "  %%(Edition)s: Edition\n"
-            "  %%(ID)s: Title/Loan ID\n"
+            f"Available fields:\n{available_fields_help}"
         ),
     )
     parser_dl.add_argument(
@@ -343,6 +352,9 @@ def extract_loan_file(
         book_folder, book_file_name = generate_names(
             title=selected_loan["title"],
             series=selected_loan.get("series") or "",
+            series_reading_order=selected_loan.get("detailedSeries", {}).get(
+                "readingOrder", ""
+            ),
             authors=extract_authors_from_openbook(openbook)
             or (
                 [selected_loan["firstCreatorName"]]
@@ -890,6 +902,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     if libby_client.is_downloadable_audiobook_loan(selected_loan):
                         process_odm(
                             extract_loan_file(libby_client, selected_loan, args),
+                            selected_loan,
                             args,
                             logger,
                             cleanup_odm_license=not args.keepodm,
@@ -1100,6 +1113,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     if libby_client.is_downloadable_audiobook_loan(selected_loan):
                         process_odm(
                             extract_loan_file(libby_client, selected_loan, args),
+                            selected_loan,
                             args,
                             logger,
                             cleanup_odm_license=not args.keepodm,
@@ -1135,7 +1149,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     'Opening odm "%s"...',
                     colored(args.odm_file, "blue"),
                 )
-            process_odm(Path(args.odm_file), args, logger)
+            process_odm(Path(args.odm_file), {}, args, logger)
             return
 
     except OdmpyRuntimeError as run_err:

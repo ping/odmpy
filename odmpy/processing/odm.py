@@ -88,6 +88,7 @@ def _patch_for_parse_error(text: str) -> str:
 
 def process_odm(
     odm_file: Optional[Path],
+    loan: Dict,
     args: argparse.Namespace,
     logger: logging.Logger,
     cleanup_odm_license: bool = False,
@@ -96,6 +97,7 @@ def process_odm(
     Download the audiobook loan using the specified odm file
 
     :param odm_file:
+    :param loan:
     :param args:
     :param logger:
     :param cleanup_odm_license:
@@ -282,6 +284,7 @@ def process_odm(
     book_folder, book_filename = generate_names(
         title=title,
         series=series,
+        series_reading_order=loan.get("detailedSeries", {}).get("readingOrder", ""),
         authors=authors,
         edition="",
         title_id=overdrive_media_id,

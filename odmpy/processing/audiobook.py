@@ -108,6 +108,7 @@ def process_audiobook_loan(
     publish_date = loan.get("publishDate", None)
     publisher = loan.get("publisherAccount", {}).get("name", "") or ""
     series = loan.get("series", "")
+    series_reading_order = loan.get("detailedSeries", {}).get("readingOrder", "")
     description = (
         openbook.get("description", {}).get("full", "")
         or openbook.get("description", {}).get("short")
@@ -149,6 +150,7 @@ def process_audiobook_loan(
     book_folder, book_filename = generate_names(
         title=title,
         series=series,
+        series_reading_order=series_reading_order,
         authors=authors,
         edition=loan.get("edition") or "",
         title_id=loan["id"],
