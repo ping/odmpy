@@ -189,19 +189,18 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         help="Don't create a book subfolder.",
     )
 
-    available_fields_help = (
-        (
-            "  %%(Title)s : Title\n"
-            "  %%(Author)s: Comma-separated Author names\n"
-            "  %%(Series)s: Series\n"
-        )
-        + (
-            "  %%(ReadingOrder)s: Series Reading Order\n"
-            if parser_dl.prog == "odmpy libby"
-            else ""  # odm downloads dont have reading order
-        )
-        + "  %%(Edition)s: Edition\n  %%(ID)s: Title/Loan ID\n"
+    available_fields_help = [
+        "%%(Title)s : Title",
+        "%%(Author)s: Comma-separated Author names",
+        "%%(Series)s: Series",
+    ]
+    if parser_dl.prog == "odmpy libby":
+        available_fields_help.append("%%(ReadingOrder)s: Series Reading Order")
+    available_fields_help.extend(["%%(Edition)s: Edition", "%%(ID)s: Title/Loan ID"])
+    available_fields_help_text = "Available fields:\n  " + "\n  ".join(
+        available_fields_help
     )
+
     available_fields = list(DEFAULT_FORMAT_FIELDS)
     if parser_dl.prog != "odmpy libby":
         available_fields.remove("ReadingOrder")
@@ -211,10 +210,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         dest="book_folder_format",
         type=lambda v: valid_book_folder_file_format(v, tuple(available_fields)),
         default="%(Title)s - %(Author)s",
-        help=(
-            'Book folder format string. Default "%%(Title)s - %%(Author)s".\n'
-            f"Available fields:\n{available_fields_help}"
-        ),
+        help=f'Book folder format string. Default "%%(Title)s - %%(Author)s".\n{available_fields_help_text}',
     )
     parser_dl.add_argument(
         "--bookfileformat",
@@ -223,8 +219,7 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         default="%(Title)s - %(Author)s",
         help=(
             'Book file format string (without extension). Default "%%(Title)s - %%(Author)s".\n'
-            "This applies to only merged audiobooks, ebooks, and magazines.\n"
-            f"Available fields:\n{available_fields_help}"
+            f"This applies to only merged audiobooks, ebooks, and magazines.\n{available_fields_help_text}"
         ),
     )
     parser_dl.add_argument(
