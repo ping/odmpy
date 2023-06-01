@@ -629,7 +629,6 @@ def update_chapters(
         str(target_tmp_filepath),
     ]
     try:
-        logger.info(f"Command: {' '.join(cmd)!s}")
         exit_code = subprocess.call(cmd)
         if exit_code:
             logger.warning(f"ffmpeg exited with the code: {exit_code!s}")
