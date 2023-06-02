@@ -169,6 +169,13 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         help="Merged file format (m4b is slow, experimental, requires ffmpeg). For audiobooks.",
     )
     parser_dl.add_argument(
+        "--mergecodec",
+        dest="merge_codec",
+        choices=["aac", "libfdk_aac"],
+        default="aac",
+        help="Audio codec of merged m4b file. (requires ffmpeg; using libfdk_aac requires ffmpeg compiled with libfdk_aac support). For audiobooks. Has no effect if mergeformat is not set to m4b.",
+    )
+    parser_dl.add_argument(
         "-k",
         "--keepcover",
         dest="always_keep_cover",
