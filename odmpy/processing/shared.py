@@ -408,6 +408,7 @@ def convert_to_m4b(
     book_filename: Path,
     book_m4b_filename: Path,
     cover_filename: Path,
+    merge_codec: str,
     audio_bitrate: int,
     ffmpeg_loglevel: str,
     hide_progress: str,
@@ -419,6 +420,7 @@ def convert_to_m4b(
     :param book_filename: mp3 file name
     :param book_m4b_filename:
     :param cover_filename:
+    :param merge_codec:
     :param audio_bitrate:
     :param ffmpeg_loglevel:
     :param hide_progress:
@@ -450,7 +452,7 @@ def convert_to_m4b(
             "-map",
             "0:a",
             "-c:a",
-            "aac",
+            merge_codec,
             "-b:a",
             f"{audio_bitrate}k"
             if audio_bitrate
