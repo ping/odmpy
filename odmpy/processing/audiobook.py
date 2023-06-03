@@ -430,6 +430,7 @@ def process_audiobook_loan(
                 book_filename=book_filename,
                 book_m4b_filename=book_m4b_filename,
                 cover_filename=cover_filename,
+                merge_codec=args.merge_codec,
                 audio_bitrate=audio_bitrate,
                 ffmpeg_loglevel=ffmpeg_loglevel,
                 hide_progress=args.hide_progress,
