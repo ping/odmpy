@@ -92,7 +92,8 @@ You will be prompted for a Libby setup code the first time you run the `libby` c
 ```
 usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--ebooks] [--magazines]
                    [--noaudiobooks] [-d DOWNLOAD_DIR] [-c] [-m]
-                   [--mergeformat {mp3,m4b}] [-k] [-f] [--nobookfolder]
+                   [--mergeformat {mp3,m4b}] [--mergecodec {aac,libfdk_aac}]
+                   [-k] [-f] [--nobookfolder]
                    [--bookfolderformat BOOK_FOLDER_FORMAT]
                    [--bookfileformat BOOK_FILE_FORMAT] [--overwritetags]
                    [--tagsdelimiter DELIMITER] [--id3v2version {3,4}] [--opf]
@@ -122,6 +123,8 @@ options:
   -m, --merge           Merge into 1 file (experimental, requires ffmpeg). For audiobooks.
   --mergeformat {mp3,m4b}
                         Merged file format (m4b is slow, experimental, requires ffmpeg). For audiobooks.
+  --mergecodec {aac,libfdk_aac}
+                        Audio codec of merged m4b file. (requires ffmpeg, using libfdk_aac requires ffmpeg compiled with libfdk_aac support). For audiobooks. Has no effect if mergeformat is mp3.
   -k, --keepcover       Always generate the cover image file (cover.jpg).
   -f, --keepmp3         Keep downloaded mp3 files (after merging). For audiobooks.
   --nobookfolder        Don't create a book subfolder.
