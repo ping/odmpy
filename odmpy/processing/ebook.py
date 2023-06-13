@@ -55,7 +55,9 @@ from ..utils import slugify, is_windows, guess_mimetype
 NAV_XHTMLTEMPLATE = """
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
-<head><title></title></head>
+<head><title></title>
+<style>#toc { list-style-type: none; padding-left: 0; }</style>
+</head>
 <body>
 <nav epub:type="toc">
 <h1>Contents</h1>
@@ -690,7 +692,7 @@ def process_ebook_loan(
             a_ele = nav_soup.new_tag("a", attrs={"href": item["items"][0]["path"]})
             a_ele.append(item["sectionName"])
             li_ele.append(a_ele)
-            ol_ele = nav_soup.new_tag("ol", attrs={"type": "a"})
+            ol_ele = nav_soup.new_tag("ol", attrs={"type": "1"})
             for section_item in item.get("items", []):
                 section_li_ele = nav_soup.new_tag("li")
                 section_item_a_ele = nav_soup.new_tag(
