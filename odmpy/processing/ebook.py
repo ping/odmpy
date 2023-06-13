@@ -56,7 +56,10 @@ NAV_XHTMLTEMPLATE = """
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
 <head><title></title>
-<style>#toc { list-style-type: none; padding-left: 0; }</style>
+<style>
+    #toc { list-style-type: none; padding-left: 0; }
+    #toc > li { margin-top: 0.5rem; }
+</style>
 </head>
 <body>
 <nav epub:type="toc">
