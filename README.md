@@ -27,7 +27,7 @@ You must already have [Python](https://wiki.python.org/moin/BeginnersGuide/Downl
 
 ```bash
 # Install / Update to specific version
-python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.8 --upgrade
+python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.9 --upgrade
 
 # Install / Update from latest source
 python3 -m pip install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -80,7 +80,7 @@ Available commands:
     ret                 Return an audiobook loan file (odm).
     info                Get information about an audiobook loan file (odm).
 
-Version 0.7.8. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
+Version 0.7.9. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
 ```
 
 ### Download via Libby
