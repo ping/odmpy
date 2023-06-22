@@ -287,7 +287,7 @@ def process_odm(
         series_reading_order=loan.get("detailedSeries", {}).get("readingOrder", ""),
         authors=authors,
         edition="",
-        title_id=overdrive_media_id,
+        title_id=loan.get("id") or overdrive_media_id,
         args=args,
         logger=logger,
     )
