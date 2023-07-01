@@ -419,7 +419,7 @@ class LibbyClient(object):
         :return:
         """
         res: Dict = self.make_request(
-            "/chip",
+            "chip",
             params={"client": "dewey"},
             method="POST",
             authenticated=authenticated,
