@@ -562,7 +562,7 @@ class LibbyClient(object):
         )
 
     @staticmethod
-    def get_loan_format(loan: Dict) -> str:
+    def get_loan_format(loan: Dict, prefer_open_format: bool = True) -> str:
         locked_in_format = next(
             iter([f["id"] for f in loan["formats"] if f.get("isLockedIn")]), None
         )
@@ -581,8 +581,10 @@ class LibbyClient(object):
                 loan
             ) and LibbyClient.has_format(loan, LibbyFormats.AudioBookMP3):
                 return LibbyFormats.AudioBookMP3
-            elif LibbyClient.is_open_ebook_loan(loan) and LibbyClient.has_format(
-                loan, LibbyFormats.EBookEPubOpen
+            elif (
+                LibbyClient.is_open_ebook_loan(loan)
+                and LibbyClient.has_format(loan, LibbyFormats.EBookEPubOpen)
+                and prefer_open_format
             ):
                 return LibbyFormats.EBookEPubOpen
             elif LibbyClient.is_downloadable_magazine_loan(
@@ -593,9 +595,11 @@ class LibbyClient(object):
                 loan
             ) and LibbyClient.has_format(loan, LibbyFormats.EBookEPubAdobe):
                 return LibbyFormats.EBookEPubAdobe
-            elif LibbyClient.is_downloadable_ebook_loan(
-                loan
-            ) and LibbyClient.has_format(loan, LibbyFormats.EBookPDFOpen):
+            elif (
+                LibbyClient.is_downloadable_ebook_loan(loan)
+                and LibbyClient.has_format(loan, LibbyFormats.EBookPDFOpen)
+                and prefer_open_format
+            ):
                 return LibbyFormats.EBookPDFOpen
             elif LibbyClient.is_downloadable_ebook_loan(
                 loan
