@@ -258,6 +258,12 @@ def write_tags(
 
 
 def get_best_cover_url(loan: Dict) -> Optional[str]:
+    """
+    Extracts the highest resolution cover image for the loan
+
+    :param loan:
+    :return:
+    """
     covers: List[Dict] = sorted(
         list(loan.get("covers", []).values()),
         key=lambda c: c.get("width", 0),
