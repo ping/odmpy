@@ -538,7 +538,7 @@ def process_ebook_loan(
             # use the libby client session because the required
             # auth cookies are set there
             res: requests.Response = libby_client.make_request(
-                entry_url, headers=headers, return_res=True
+                entry_url, headers=headers, authenticated=False, return_res=True
             )
 
             # patch magazine css to fix various rendering problems
