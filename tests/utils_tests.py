@@ -32,18 +32,28 @@ class UtilsTests(unittest.TestCase):
             "Español 中文 русский 한국어 日本語",
         )
 
-    @unittest.skipUnless(is_windows, "Not Windows")
-    def test_sanitize_path_on_windows(self):
-        # test if the folder can actually be created
+    def test_sanitize_path_mkdir(self):
+        # test if the folder and file can actually be created on the OS
         ts = int(datetime.utcnow().timestamp() * 1000)
         random_text = "".join(choices(string.ascii_lowercase, k=10))
         sanitized_path = utils.sanitize_path(
-            rf'{random_text}_{ts}<>:"/\|?*', sub_text=""
+            rf'test_{random_text}_{ts}<>:"/\|?*', sub_text=""
         )
-        self.assertEqual(sanitized_path, f"{random_text}_{ts}")
-        p = Path(sanitized_path)
-        p.mkdir(parents=True)
-        p.rmdir()
+        if is_windows:
+            self.assertEqual(sanitized_path, f"{random_text}_{ts}")
+        test_path = Path(sanitized_path)
+        test_file = test_path.joinpath(f"{sanitized_path}.txt")
+        try:
+            test_path.mkdir(parents=True)
+            self.assertTrue(test_path.is_dir())
+            with test_file.open("w", encoding="utf-8") as f:
+                f.write(sanitized_path)
+            self.assertTrue(test_file.is_file())
+        finally:
+            if test_file.exists():
+                test_file.unlink()
+            if test_path.exists():
+                test_path.rmdir()
 
     def test_slugify(self):
         self.assertEqual(
