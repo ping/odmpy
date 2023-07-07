@@ -40,7 +40,7 @@ class UtilsTests(unittest.TestCase):
             rf'test_{random_text}_{ts}<>:"/\|?*', sub_text=""
         )
         if is_windows:
-            self.assertEqual(sanitized_path, f"{random_text}_{ts}")
+            self.assertEqual(sanitized_path, f"test_{random_text}_{ts}")
         test_path = Path(sanitized_path)
         test_file = test_path.joinpath(f"{sanitized_path}.txt")
         try:
