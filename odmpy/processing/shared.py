@@ -76,12 +76,16 @@ def generate_names(
     :return:
     """
     book_folder_name = args.book_folder_format % {
-        "Title": sanitize_path(title),
-        "Author": sanitize_path(", ".join(authors)),
-        "Series": sanitize_path(series or ""),
-        "Edition": sanitize_path(edition),
-        "ID": sanitize_path(title_id),
-        "ReadingOrder": sanitize_path(series_reading_order),
+        "Title": sanitize_path(title, exclude_chars=args.remove_from_paths),
+        "Author": sanitize_path(
+            ", ".join(authors), exclude_chars=args.remove_from_paths
+        ),
+        "Series": sanitize_path(series or "", exclude_chars=args.remove_from_paths),
+        "Edition": sanitize_path(edition, exclude_chars=args.remove_from_paths),
+        "ID": sanitize_path(title_id, exclude_chars=args.remove_from_paths),
+        "ReadingOrder": sanitize_path(
+            series_reading_order, exclude_chars=args.remove_from_paths
+        ),
     }
     # unlike book_folder_name, we sanitize the entire book file format
     # because it is expected to be a single name and `os.sep` will be
@@ -95,7 +99,8 @@ def generate_names(
             "Edition": edition,
             "ID": title_id,
             "ReadingOrder": series_reading_order,
-        }
+        },
+        exclude_chars=args.remove_from_paths,
     )
     # declare book folder/file names here together, so that we can catch problems from too long names
     book_folder = Path(args.download_dir, book_folder_name)
@@ -119,11 +124,15 @@ def generate_names(
         # Ref OSError: [Errno 36] File name too long https://github.com/ping/odmpy/issues/5
         # create book folder with just the title and first author
         book_folder_name = args.book_folder_format % {
-            "Title": sanitize_path(title),
-            "Author": sanitize_path(authors[0]) if authors else "",
-            "Series": sanitize_path(series or ""),
-            "ID": sanitize_path(title_id),
-            "ReadingOrder": sanitize_path(series_reading_order),
+            "Title": sanitize_path(title, exclude_chars=args.remove_from_paths),
+            "Author": sanitize_path(authors[0], exclude_chars=args.remove_from_paths)
+            if authors
+            else "",
+            "Series": sanitize_path(series or "", exclude_chars=args.remove_from_paths),
+            "ID": sanitize_path(title_id, exclude_chars=args.remove_from_paths),
+            "ReadingOrder": sanitize_path(
+                series_reading_order, exclude_chars=args.remove_from_paths
+            ),
         }
         book_folder = Path(args.download_dir, book_folder_name)
         if args.no_book_folder:
@@ -145,7 +154,8 @@ def generate_names(
                 "Edition": edition,
                 "ID": title_id,
                 "ReadingOrder": series_reading_order,
-            }
+            },
+            exclude_chars=args.remove_from_paths,
         )
         book_filename = book_folder.joinpath(f"{book_file_format}.mp3")
     return book_folder, book_filename

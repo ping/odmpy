@@ -31,6 +31,14 @@ class UtilsTests(unittest.TestCase):
             utils.sanitize_path("Español 中文 русский 한국어 日本語"),
             "Español 中文 русский 한국어 日本語",
         )
+        self.assertEqual(
+            utils.sanitize_path("abc_def.,ghi", "-", exclude_chars="_.,"),
+            "abc-def--ghi",
+        )
+        self.assertEqual(
+            utils.sanitize_path("abc_def.,ghi", "-", exclude_chars="_.,-"),
+            "abcdefghi",
+        )
 
     def test_sanitize_path_mkdir(self):
         # test if the folder and file can actually be created on the OS

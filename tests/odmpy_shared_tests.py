@@ -87,6 +87,7 @@ class ProcessingSharedTests(BaseTestCase):
             book_folder_format="%(Series)s - %(ReadingOrder)s",
             download_dir=str(self.test_downloads_dir),
             no_book_folder=False,
+            remove_from_paths=None,
         )
         book_folder, book_file_name = shared.generate_names(
             title="Test Title",
@@ -106,6 +107,7 @@ class ProcessingSharedTests(BaseTestCase):
             book_folder_format="%(Title)s - %(Author)s",
             download_dir=str(self.test_downloads_dir),
             no_book_folder=False,
+            remove_from_paths=None,
         )
         authors = [f"Test Author {i}" for i in range(1, 50)]
         book_folder, book_file_name = shared.generate_names(

@@ -230,6 +230,13 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         ),
     )
     parser_dl.add_argument(
+        "--removefrompaths",
+        dest="remove_from_paths",
+        metavar="ILLEGAL_CHARS",
+        type=str,
+        help=r'Remove characters in string specified from folder and file names, example "<>:"/\|?*"',
+    )
+    parser_dl.add_argument(
         "--overwritetags",
         dest="overwrite_tags",
         action="store_true",

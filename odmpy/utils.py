@@ -112,18 +112,27 @@ def plural_or_singular_noun(
     return plural_noun if value != 1 else singular_noun
 
 
-def sanitize_path(text: str, sub_text: str = "-") -> str:
+def sanitize_path(text: str, sub_text: str = "-", exclude_chars: str = "") -> str:
     """
     Strips invalid characters from a local file path component.
 
     :param text:
     :param sub_text:
+    :param exclude_chars:
     :return:
     """
+    if not exclude_chars:
+        exclude_chars = ""
     if os.name == "nt" or platform.system().lower() == "windows":
         # just replacing `os.sep` is not enough on Windows
         # ref https://github.com/ping/odmpy/issues/30
         text = ILLEGAL_WIN_PATH_CHARS_RE.sub(sub_text, text)
+    for c in exclude_chars:
+        # example, if "-" is in additional_exclude_chars, we can't use "-" as replacement,
+        # so we'll just remove it
+        text = text.replace(
+            c, sub_text if sub_text and sub_text not in exclude_chars else ""
+        )
 
     text = text.replace(os.sep, sub_text)
     # also strip away non-printable chars just to be safe
