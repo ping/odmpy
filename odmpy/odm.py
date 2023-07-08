@@ -39,6 +39,7 @@ from .cli_utils import (
 from .errors import LibbyNotConfiguredError, OdmpyRuntimeError
 from .libby import LibbyClient, LibbyFormats
 from .libby_errors import ClientBadRequestError, ClientError
+from .overdrive import OverDriveClient
 from .processing import (
     process_odm,
     process_audiobook_loan,
@@ -293,6 +294,36 @@ def add_common_download_arguments(parser_dl: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Hide the download progress bar (e.g. during testing).",
     )
+
+
+def extract_bundled_contents(
+    libby_client: LibbyClient,
+    overdrive_client: OverDriveClient,
+    selected_loan: Dict,
+    cards: List[Dict],
+    args: argparse.Namespace,
+):
+    format_id = libby_client.get_loan_format(selected_loan)
+    format_info: Dict = next(
+        iter([f for f in selected_loan.get("formats", []) if f["id"] == format_id]),
+        {},
+    )
+    card: Dict = next(
+        iter([c for c in cards if c["cardId"] == selected_loan["cardId"]]), {}
+    )
+    if format_info.get("isBundleParent") and format_info.get("bundledContent", []):
+        bundled_contents_ids = list(
+            set([bc["titleId"] for bc in format_info["bundledContent"]])
+        )
+        for bundled_content_id in bundled_contents_ids:
+            bundled_media = overdrive_client.library_media(
+                card["advantageKey"], bundled_content_id
+            )
+            if not libby_client.is_downloadable_ebook_loan(bundled_media):
+                continue
+            # patch in cardId from parent loan details
+            bundled_media["cardId"] = selected_loan["cardId"]
+            extract_loan_file(libby_client, bundled_media, args)
 
 
 def extract_loan_file(
@@ -719,6 +750,12 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     logger=logger,
                 )
 
+            overdrive_client = OverDriveClient(
+                user_agent=libby_client.user_agent,
+                timeout=args.timeout,
+                retry=args.retries,
+            )
+
             if args.command_name == OdmpyCommands.Libby and args.reset_settings:
                 libby_client.clear_settings()
                 logger.info("Cleared settings.")
@@ -781,6 +818,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     ) from ce
 
             synced_state = libby_client.sync()
+            cards = synced_state.get("cards", [])
             # sort by checkout date so that recent most is at the bottom
             libby_loans = sorted(
                 [
@@ -894,6 +932,13 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                                 args,
                                 logger,
                             )
+                            extract_bundled_contents(
+                                libby_client,
+                                overdrive_client,
+                                selected_loan,
+                                cards,
+                                args,
+                            )
                             continue
                         elif libby_client.is_downloadable_ebook_loan(
                             selected_loan
@@ -916,6 +961,14 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                             logger,
                             cleanup_odm_license=not args.keepodm,
                         )
+                        extract_bundled_contents(
+                            libby_client,
+                            overdrive_client,
+                            selected_loan,
+                            cards,
+                            args,
+                        )
+
                     elif libby_client.is_downloadable_ebook_loan(
                         selected_loan
                     ) or libby_client.is_downloadable_magazine_loan(selected_loan):
@@ -925,7 +978,6 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 return  # non-interactive libby downloads
 
             # Interactive mode
-            cards = synced_state.get("cards", [])
             holds = synced_state.get("holds", [])
             logger.info(
                 "Found %s %s.",
@@ -1103,6 +1155,13 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                                 args,
                                 logger,
                             )
+                            extract_bundled_contents(
+                                libby_client,
+                                overdrive_client,
+                                selected_loan,
+                                cards,
+                                args,
+                            )
                             continue
                         elif libby_client.is_downloadable_ebook_loan(
                             selected_loan
@@ -1126,6 +1185,9 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                             args,
                             logger,
                             cleanup_odm_license=not args.keepodm,
+                        )
+                        extract_bundled_contents(
+                            libby_client, overdrive_client, selected_loan, cards, args
                         )
                         continue
                     elif libby_client.is_downloadable_ebook_loan(
