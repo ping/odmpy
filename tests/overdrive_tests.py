@@ -151,3 +151,32 @@ class OverDriveClientTests(BaseTestCase):
         with self.assertRaises(requests.HTTPError) as context:
             self.client.library_media_availability("brooklyn", "2006069")
         self.assertEqual(context.exception.response.status_code, 404)
+
+    def test_library_media(self):
+        media = self.client.library_media("lapl", "7017021")
+
+        for k in (
+            "id",
+            "title",
+            "sortTitle",
+            "description",
+            "publishDate",
+            "type",
+            "formats",
+            "covers",
+            "languages",
+            "creators",
+            "subjects",
+            "isAdvantageFiltered",
+            "youngAdultEligible",
+            "juvenileEligible",
+            "visitorEligible",
+            "isRecommendableToLibrary",
+            "isHoldable",
+            "isOwned",
+            "isFastlane",
+            "isAvailable",
+            "isBundledChild",
+        ):
+            with self.subTest(key=k):
+                self.assertIn(k, media, msg=f'"{k}" not found')
