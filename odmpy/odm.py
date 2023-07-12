@@ -72,6 +72,7 @@ requests_logger.propagate = True
 __version__ = "0.7.9"  # also update ../setup.py
 TAGS_ENDPOINT = "https://api.github.com/repos/ping/odmpy/tags"
 REPOSITORY_URL = "https://github.com/ping/odmpy"
+OLD_SETTINGS_FOLDER_DEFAULT = Path("./odmpy_settings")
 
 
 def check_version(timeout: int, max_retries: int) -> None:
@@ -94,7 +95,7 @@ def add_common_libby_arguments(parser_libby: argparse.ArgumentParser) -> None:
         "--settings",
         dest="settings_folder",
         type=str,
-        default="./odmpy_settings",
+        default="",
         metavar="SETTINGS_FOLDER",
         help="Settings folder to store odmpy required settings, e.g. Libby authentication.",
     )
@@ -693,8 +694,24 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
             download_dir.mkdir(parents=True, exist_ok=True)
         args.download_dir = str(download_dir.expanduser())
 
-    if hasattr(args, "settings_folder") and args.settings_folder:
-        args.settings_folder = str(Path(args.settings_folder).expanduser())
+    if hasattr(args, "settings_folder"):
+        default_config_folder = (
+            Path(
+                os.environ.get("APPDATA")
+                or os.environ.get("XDG_CONFIG_HOME")
+                or Path(os.environ.get("HOME", "./")).joinpath(".config")
+            )
+            .joinpath("odmpy")
+            .expanduser()
+        )
+        if args.settings_folder:
+            args.settings_folder = str(Path(args.settings_folder).expanduser())
+        elif OLD_SETTINGS_FOLDER_DEFAULT.joinpath("libby.json").exists():
+            # handle backward-compat for versions <= 0.7.9
+            args.settings_folder = str(OLD_SETTINGS_FOLDER_DEFAULT)
+        else:
+            args.settings_folder = str(default_config_folder)
+
     if hasattr(args, "export_loans_path") and args.export_loans_path:
         args.export_loans_path = str(Path(args.export_loans_path).expanduser())
 
