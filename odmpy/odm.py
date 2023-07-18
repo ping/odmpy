@@ -69,7 +69,7 @@ requests_logger.addHandler(ch)
 requests_logger.setLevel(logging.ERROR)
 requests_logger.propagate = True
 
-__version__ = "0.7.9"  # also update ../setup.py
+__version__ = "0.8.0"  # also update ../setup.py
 TAGS_ENDPOINT = "https://api.github.com/repos/ping/odmpy/tags"
 REPOSITORY_URL = "https://github.com/ping/odmpy"
 OLD_SETTINGS_FOLDER_DEFAULT = Path("./odmpy_settings")
@@ -707,7 +707,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
         if args.settings_folder:
             args.settings_folder = str(Path(args.settings_folder).expanduser())
         elif OLD_SETTINGS_FOLDER_DEFAULT.joinpath("libby.json").exists():
-            # handle backward-compat for versions <= 0.7.9
+            # handle backward-compat for versions <= 0.8.0
             args.settings_folder = str(OLD_SETTINGS_FOLDER_DEFAULT)
         else:
             args.settings_folder = str(default_config_folder)

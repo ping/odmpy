@@ -27,7 +27,7 @@ You must already have [Python](https://wiki.python.org/moin/BeginnersGuide/Downl
 
 ```bash
 # Install / Update to specific version
-python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.7.9 --upgrade
+python3 -m pip install git+https://git@github.com/ping/odmpy.git@0.8.0 --upgrade
 
 # Install / Update from latest source
 python3 -m pip install git+https://git@github.com/ping/odmpy.git --upgrade --force-reinstall
@@ -80,7 +80,7 @@ Available commands:
     ret                 Return an audiobook loan file (odm).
     info                Get information about an audiobook loan file (odm).
 
-Version 0.7.9. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
+Version 0.8.0. [Python 3.10.6-darwin] Source at https://github.com/ping/odmpy
 ```
 
 ### Download via Libby
@@ -95,7 +95,8 @@ usage: odmpy libby [-h] [--settings SETTINGS_FOLDER] [--ebooks] [--magazines]
                    [--mergeformat {mp3,m4b}] [--mergecodec {aac,libfdk_aac}]
                    [-k] [-f] [--nobookfolder]
                    [--bookfolderformat BOOK_FOLDER_FORMAT]
-                   [--bookfileformat BOOK_FILE_FORMAT] [--overwritetags]
+                   [--bookfileformat BOOK_FILE_FORMAT]
+                   [--removefrompaths ILLEGAL_CHARS] [--overwritetags]
                    [--tagsdelimiter DELIMITER] [--id3v2version {3,4}] [--opf]
                    [-r OBSOLETE_RETRIES] [-j] [--hideprogress] [--direct]
                    [--keepodm] [--latest N] [--select N [N ...]]
@@ -124,7 +125,7 @@ options:
   --mergeformat {mp3,m4b}
                         Merged file format (m4b is slow, experimental, requires ffmpeg). For audiobooks.
   --mergecodec {aac,libfdk_aac}
-                        Audio codec of merged m4b file. (requires ffmpeg, using libfdk_aac requires ffmpeg compiled with libfdk_aac support). For audiobooks. Has no effect if mergeformat is mp3.
+                        Audio codec of merged m4b file. (requires ffmpeg; using libfdk_aac requires ffmpeg compiled with libfdk_aac support). For audiobooks. Has no effect if mergeformat is not set to m4b.
   -k, --keepcover       Always generate the cover image file (cover.jpg).
   -f, --keepmp3         Keep downloaded mp3 files (after merging). For audiobooks.
   --nobookfolder        Don't create a book subfolder.
@@ -147,6 +148,8 @@ options:
                           %(ReadingOrder)s: Series Reading Order
                           %(Edition)s: Edition
                           %(ID)s: Title/Loan ID
+  --removefrompaths ILLEGAL_CHARS
+                        Remove characters in string specified from folder and file names, example "<>:"/\|?*"
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
                         This option forces odmpy to overwrite tags where possible. For audiobooks.
@@ -275,7 +278,8 @@ These commands are still supported but are expected to be less popular as OverDr
 usage: odmpy dl [-h] [-d DOWNLOAD_DIR] [-c] [-m] [--mergeformat {mp3,m4b}]
                 [--mergecodec {aac,libfdk_aac}] [-k] [-f] [--nobookfolder]
                 [--bookfolderformat BOOK_FOLDER_FORMAT]
-                [--bookfileformat BOOK_FILE_FORMAT] [--overwritetags]
+                [--bookfileformat BOOK_FILE_FORMAT]
+                [--removefrompaths ILLEGAL_CHARS] [--overwritetags]
                 [--tagsdelimiter DELIMITER] [--id3v2version {3,4}] [--opf]
                 [-r OBSOLETE_RETRIES] [-j] [--hideprogress]
                 odm_file
@@ -315,6 +319,8 @@ options:
                           %(Series)s: Series
                           %(Edition)s: Edition
                           %(ID)s: Title/Loan ID
+  --removefrompaths ILLEGAL_CHARS
+                        Remove characters in string specified from folder and file names, example "<>:"/\|?*"
   --overwritetags       Always overwrite ID3 tags.
                         By default odmpy tries to non-destructively tag audiofiles.
                         This option forces odmpy to overwrite tags where possible. For audiobooks.
