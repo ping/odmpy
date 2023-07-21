@@ -653,8 +653,9 @@ class LibbyClient(object):
         if not loan.get("renewableOn"):
             raise ValueError("Unable to get renewable date")
         # Example: 2023-02-23T07:33:55Z
-        renewable_on = LibbyClient.parse_datetime(loan["renewableOn"])
-        return renewable_on <= datetime.utcnow().replace(tzinfo=timezone.utc)
+        return LibbyClient.parse_datetime(loan["renewableOn"]) <= datetime.now(
+            tz=timezone.utc
+        )
 
     def get_loans(self) -> List[Dict]:
         """
