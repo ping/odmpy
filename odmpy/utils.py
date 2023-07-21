@@ -21,7 +21,6 @@ import platform
 import re
 import unicodedata
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
 from mimetypes import guess_type
 from pathlib import Path
 from typing import Optional
