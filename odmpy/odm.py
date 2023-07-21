@@ -53,7 +53,7 @@ from .processing.shared import (
     init_session,
     extract_authors_from_openbook,
 )
-from .utils import slugify, plural_or_singular_noun as ps, parse_datetime
+from .utils import slugify, plural_or_singular_noun as ps
 
 #
 # Orchestrates the interaction between the CLI, APIs and the processing bits
@@ -1002,7 +1002,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                 ps(len(libby_loans), "loan"),
             )
             for index, loan in enumerate(libby_loans, start=1):
-                expiry_date = parse_datetime(loan["expireDate"])
+                expiry_date = LibbyClient.parse_datetime(loan["expireDate"])
                 hold = next(
                     iter(
                         [
@@ -1013,7 +1013,9 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                     ),
                     None,
                 )
-                hold_date = parse_datetime(hold["placedDate"]) if hold else None
+                hold_date = (
+                    LibbyClient.parse_datetime(hold["placedDate"]) if hold else None
+                )
 
                 logger.info(
                     "%s: %-55s  %s %-25s  \n    * %s  %s%s",

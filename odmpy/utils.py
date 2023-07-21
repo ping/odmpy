@@ -54,25 +54,6 @@ MIMETYPE_MAP = {
 }
 
 
-def parse_datetime(value: str) -> datetime:  # type: ignore[return]
-    """
-    Parses a datetime string from the API into a datetime.
-
-    :param value:
-    :return:
-    """
-    formats = ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ")
-    for i, fmt in enumerate(formats, start=1):
-        try:
-            dt = datetime.strptime(value, fmt)
-            if not dt.tzinfo:
-                dt = dt.replace(tzinfo=timezone.utc)
-            return dt
-        except ValueError:
-            if i == len(formats):
-                raise
-
-
 def guess_mimetype(url: str) -> Optional[str]:
     """
     Attempt to guess the mimetype for a given url
