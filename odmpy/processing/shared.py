@@ -402,7 +402,7 @@ def merge_into_mp3(
             f"concat:{'|'.join([str(ft['file']) for ft in file_tracks])}",
             "-acodec",
             "copy",
-            "-c",
+            "-vcodec",
             "copy",
             "-b:a",
             f"{audio_bitrate}k"
