@@ -402,7 +402,7 @@ class OdmpyLibbyTests(BaseTestCase):
                 [
                     d
                     for d in list(book.get_items_of_type(ebooklib.ITEM_DOCUMENT))
-                    if type(d) == ebooklib.epub.EpubNav
+                    if isinstance(d, ebooklib.epub.EpubNav)
                 ]
             ),
             None,

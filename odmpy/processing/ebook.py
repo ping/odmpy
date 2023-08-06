@@ -766,7 +766,7 @@ def process_ebook_loan(
                 meta_id = ncx_soup.find("meta", attrs={"name": "dtb:uid"})
                 if (
                     meta_id
-                    and type(meta_id) == Tag
+                    and isinstance(meta_id, Tag)
                     and meta_id.get("content")
                     and meta_id["content"] != expected_book_identifier
                 ):
