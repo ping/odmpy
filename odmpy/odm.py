@@ -1250,7 +1250,7 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
         )
         raise
 
-    except Exception:  # noqa, pylint: disable=broad-except
+    except Exception:  # noqa: E722, pylint: disable=broad-except
         logger.exception(colored("An unexpected error has occurred", "red"))
         raise
 

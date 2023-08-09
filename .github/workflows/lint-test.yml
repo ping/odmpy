@@ -45,9 +45,13 @@ jobs:
     - name: Analysing the code with black
       run: |
         black --check setup.py odmpy tests
-    - name: Analysing the code with flake8
+    # - name: Analysing the code with flake8
+    #   run: |
+    #     flake8 setup.py odmpy tests
+    - name: Analysing the code with ruff
       run: |
-        flake8 setup.py odmpy tests
+        ruff check setup.py odmpy tests
+    # keep pylint until https://github.com/astral-sh/ruff/issues/970
     - name: Analysing the code with pylint
       run: |
         pylint setup.py odmpy tests

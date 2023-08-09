@@ -1,0 +1,10 @@
+# Never enforce `E501` (line length violations).
+# E203: https://github.com/psf/black/issues/1437
+ignore = ["E501", "E203"]
+
+# Assume Python 3.8 because calibre
+target-version = "py38"
+
+# F401: imported but unused
+[per-file-ignores]
+"__init__.py" = ["F401"]

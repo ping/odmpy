@@ -243,7 +243,7 @@ def write_tags(
     if languages and (always_overwrite or not audiofile.tag.getTextFrame(LANGUAGE_FID)):
         try:
             tag_langs = [Lang(lang).pt2b for lang in languages]
-        except:  # noqa, pylint: disable=bare-except
+        except:  # noqa: E722, pylint: disable=bare-except
             tag_langs = languages
         audiofile.tag.setTextFrame(LANGUAGE_FID, delimiter.join(tag_langs))
     if published_date and (always_overwrite or not audiofile.tag.release_date):
