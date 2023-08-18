@@ -902,7 +902,7 @@ class LibbyClient(object):
         self, title_id: str, title_format: str, card_id: str, days: int = 21
     ) -> Dict:
         """
-        Return a title.
+        Renew a title.
 
         :param title_id:
         :param title_format: Type ID
