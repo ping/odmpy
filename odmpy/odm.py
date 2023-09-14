@@ -322,9 +322,18 @@ def extract_bundled_contents(
             )
             if not libby_client.is_downloadable_ebook_loan(bundled_media):
                 continue
-            # patch in cardId from parent loan details
-            bundled_media["cardId"] = selected_loan["cardId"]
-            extract_loan_file(libby_client, bundled_media, args)
+            try:
+                # patch in cardId from parent loan details
+                bundled_media["cardId"] = selected_loan["cardId"]
+                extract_loan_file(libby_client, bundled_media, args)
+            except ClientError:
+                # Oddly having a valid loan to the audiobook does not always mean
+                # having access to the bundled content? Ref https://github.com/ping/odmpy/issues/54
+                # Let this fail without affecting the main download since it's not critical
+                logger.exception(
+                    'Unable to download bundled content for "%s"',
+                    bundled_media.get("title", ""),
+                )
 
 
 def extract_loan_file(
@@ -1206,7 +1215,11 @@ def run(custom_args: Optional[List[str]] = None, be_quiet: bool = False) -> None
                             cleanup_odm_license=not args.keepodm,
                         )
                         extract_bundled_contents(
-                            libby_client, overdrive_client, selected_loan, cards, args
+                            libby_client,
+                            overdrive_client,
+                            selected_loan,
+                            cards,
+                            args,
                         )
                         continue
                     elif libby_client.is_downloadable_ebook_loan(
