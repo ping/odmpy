@@ -631,16 +631,23 @@ class LibbyClient(object):
         :param value:
         :return:
         """
-        formats = ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ")
-        for i, fmt in enumerate(formats, start=1):
+        formats = (
+            "%Y-%m-%dT%H:%M:%SZ",
+            "%Y-%m-%dT%H:%M:%S.%fZ",
+            "%Y-%m-%dT%H:%M:%S%z",
+            "%Y-%m-%dT%H:%M:%S.%f%z",
+            "%m/%d/%Y",  # publishDateText
+        )
+        for fmt in formats:
             try:
                 dt = datetime.strptime(value, fmt)
                 if not dt.tzinfo:
                     dt = dt.replace(tzinfo=timezone.utc)
                 return dt
             except ValueError:
-                if i == len(formats):
-                    raise
+                pass
+
+        raise ValueError(f"time data '{value}' does not match known formats {formats}")
 
     @staticmethod
     def is_renewable(loan: Dict) -> bool:

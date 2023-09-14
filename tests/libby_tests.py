@@ -668,3 +668,18 @@ class LibbyClientTests(BaseTestCase):
             ),
             LibbyFormats.MagazineOverDrive,
         )
+
+    def test_parse_datetime(self):
+        for value in (
+            "2017-06-06T04:00:00Z",  # estimatedReleaseDate, publishDate
+            "2023-08-10T23:00:01.000Z",  # expireDate
+            "2023-07-31T08:00:01.000+00:00",  # placedDate
+            "2023-08-01T10:00:01.000Z",  # placedDate
+            "2023-09-14T07:20:30+00:00",  # expireDate
+            "05/30/2023",
+        ):
+            with self.subTest(value=value):
+                LibbyClient.parse_datetime(value)
+
+        with self.assertRaises(ValueError):
+            LibbyClient.parse_datetime("2023/05/30 23:01:14")
