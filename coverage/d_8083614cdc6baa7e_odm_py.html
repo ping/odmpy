@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.3.1">coverage.py v7.3.1</a>,
-            created at 2023-09-14 06:39 +0000
+            created at 2023-09-14 08:51 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -151,7 +151,7 @@
     <p class="run"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t"><span class="nam">requests_logger</span><span class="op">.</span><span class="nam">setLevel</span><span class="op">(</span><span class="nam">logging</span><span class="op">.</span><span class="nam">ERROR</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t"><span class="nam">requests_logger</span><span class="op">.</span><span class="nam">propagate</span> <span class="op">=</span> <span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t"><span class="nam">__version__</span> <span class="op">=</span> <span class="str">"0.8.0"</span>  <span class="com"># also update ../setup.py</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t"><span class="nam">__version__</span> <span class="op">=</span> <span class="str">"0.8.1"</span>  <span class="com"># also update ../setup.py</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t"><span class="nam">TAGS_ENDPOINT</span> <span class="op">=</span> <span class="str">"https://api.github.com/repos/ping/odmpy/tags"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t"><span class="nam">REPOSITORY_URL</span> <span class="op">=</span> <span class="str">"https://github.com/ping/odmpy"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t"><span class="nam">OLD_SETTINGS_FOLDER_DEFAULT</span> <span class="op">=</span> <span class="nam">Path</span><span class="op">(</span><span class="str">"./odmpy_settings"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -798,7 +798,7 @@
     <p class="run"><span class="n"><a id="t716" href="#t716">716</a></span><span class="t">        <span class="key">if</span> <span class="nam">args</span><span class="op">.</span><span class="nam">settings_folder</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t717" href="#t717">717</a></span><span class="t">            <span class="nam">args</span><span class="op">.</span><span class="nam">settings_folder</span> <span class="op">=</span> <span class="nam">str</span><span class="op">(</span><span class="nam">Path</span><span class="op">(</span><span class="nam">args</span><span class="op">.</span><span class="nam">settings_folder</span><span class="op">)</span><span class="op">.</span><span class="nam">expanduser</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t718" href="#t718">718</a></span><span class="t">        <span class="key">elif</span> <span class="nam">OLD_SETTINGS_FOLDER_DEFAULT</span><span class="op">.</span><span class="nam">joinpath</span><span class="op">(</span><span class="str">"libby.json"</span><span class="op">)</span><span class="op">.</span><span class="nam">exists</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t719" href="#t719">719</a></span><span class="t">            <span class="com"># handle backward-compat for versions &lt;= 0.8.0</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t719" href="#t719">719</a></span><span class="t">            <span class="com"># handle backward-compat for versions &lt;= 0.8.1</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t720" href="#t720">720</a></span><span class="t">            <span class="nam">args</span><span class="op">.</span><span class="nam">settings_folder</span> <span class="op">=</span> <span class="nam">str</span><span class="op">(</span><span class="nam">OLD_SETTINGS_FOLDER_DEFAULT</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t721" href="#t721">721</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t722" href="#t722">722</a></span><span class="t">            <span class="nam">args</span><span class="op">.</span><span class="nam">settings_folder</span> <span class="op">=</span> <span class="nam">str</span><span class="op">(</span><span class="nam">default_config_folder</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -1360,7 +1360,7 @@
             <a id="nextFileLink" class="nav" href="d_8083614cdc6baa7e_overdrive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.3.1">coverage.py v7.3.1</a>,
-            created at 2023-09-14 06:39 +0000
+            created at 2023-09-14 08:51 +0000
         </p>
     </div>
 </footer>
