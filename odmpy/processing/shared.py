@@ -247,7 +247,7 @@ def write_tags(
             tag_langs = languages
         audiofile.tag.setTextFrame(LANGUAGE_FID, delimiter.join(tag_langs))
     if published_date and (always_overwrite or not audiofile.tag.release_date):
-        audiofile.tag.release_date = published_date
+        audiofile.tag.release_date = LibbyClient.parse_datetime(published_date).strftime("%Y-%m-%d")
     if cover_bytes:
         audiofile.tag.images.set(
             art.TO_ID3_ART_TYPES[art.FRONT_COVER][0],
