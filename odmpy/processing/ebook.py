@@ -861,7 +861,7 @@ def process_ebook_loan(
 
     # Ignoring mypy error below because of https://github.com/python/mypy/issues/9372
     spine_entries = sorted(
-        spine_entries, key=cmp_to_key(lambda a, b: _sort_spine_entries(a, b, toc_pages))  # type: ignore[misc]
+        spine_entries, key=cmp_to_key(lambda a, b: _sort_spine_entries(a, b, toc_pages))  # type: ignore[misc,arg-type]
     )
     for spine_idx, entry in enumerate(spine_entries):
         if (
