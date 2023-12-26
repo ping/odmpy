@@ -372,7 +372,7 @@ def process_odm(
             logger.debug(f"Saved license file {license_file}")
 
         except HTTPError as he:
-            if he.response is not None :
+            if he.response is not None:
                 if he.response.status_code == 404:
                     # odm file has expired
                     logger.error(
@@ -462,7 +462,7 @@ def process_odm(
                 )
 
             except HTTPError as he:
-                if he.response is not None :
+                if he.response is not None:
                     logger.error(f"HTTPError: {str(he)}")
                     logger.debug(he.response.content)
                 raise OdmpyRuntimeError("HTTP Error while downloading part file.")
@@ -834,7 +834,7 @@ def process_odm_return(args: argparse.Namespace, logger: logging.Logger) -> None
         early_return_res.raise_for_status()
         logger.info(f"Loan returned successfully: {args.odm_file}")
     except HTTPError as he:
-        if he.response is not None :
+        if he.response is not None:
             if he.response.status_code == 403:
                 logger.warning("Loan is probably already returned.")
                 return

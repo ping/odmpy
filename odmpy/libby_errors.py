@@ -77,8 +77,8 @@ class ErrorHandler(object):
         :return:
         """
         # json response
-        if http_err.response is not None :
-            if hasattr(http_err.response, 'json') and callable(http_err.response.json):
+        if http_err.response is not None:
+            if hasattr(http_err.response, "json") and callable(http_err.response.json):
                 if (
                     http_err.response.status_code == HTTPStatus.BAD_REQUEST
                     and http_err.response.headers.get("content-type", "").startswith(
@@ -100,7 +100,7 @@ class ErrorHandler(object):
                             http_status=http_err.response.status_code,
                             error_response=http_err.response.text,
                         ) from http_err
-                    
+
                 # final fallback
                 raise ClientError(
                     msg=str(http_err),
