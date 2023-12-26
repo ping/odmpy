@@ -245,8 +245,9 @@ def process_audiobook_loan(
                 )
 
             except HTTPError as he:
-                logger.error(f"HTTPError: {str(he)}")
-                logger.debug(he.response.content)
+                if he.response is not None :
+                    logger.error(f"HTTPError: {str(he)}")
+                    logger.debug(he.response.content)
                 raise OdmpyRuntimeError("HTTP Error while downloading part file.")
 
             except ConnectionError as ce:
